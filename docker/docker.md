@@ -231,7 +231,7 @@ Este arquivo é um YAML que diz o que o composer terá de realizar para poder co
 
 Por exemplo, vamos criar um blog Wordpress utilizando o MySQL. Anteriormente tivemos que rodar vários comandos como o `docker run` com uma série de flags e parâmetros de configuração que podem dar errado muitas vezes. Vamos criar uma pasta chamada `blog` e, dentro dela, criar um arquivo `docker-compose.yml` com o conteúdo:
 
-```yml
+```yaml
 db: # Nome do primeiro container (o do mysql, equivalente ao --name do docker)
   image: mysql # Imagem que será usada para a criação deste container
   environment: # Variáveis de ambiente que iremos passar (o equivalente ao --e)
@@ -319,7 +319,7 @@ Mesmo destruindo todos os containers, os arquivos permanecem. Podemos aplicar es
 
 Para usar o comando de criação de volumes no arquivo YML do docker compose, basta adicionar `volumes` e criar a lista de pastas que serão mapeadas.
 
-```yml
+```yaml
 db: # Nome do primeiro container (o do mysql, equivalente ao --name do docker)
   image: mysql # Imagem que será usada para a criação deste container
   volumes:
@@ -339,7 +339,7 @@ blog: # Criamos outro container chamado "blog", que será o container do wordpre
 
 Usando o mesmo exemplo anterior:
 
-```yml
+```yaml
 db: # Nome do primeiro container (o do mysql, equivalente ao --name do docker)
   image: mysql # Imagem que será usada para a criação deste container
   volumes:
