@@ -3,15 +3,15 @@
 <!-- TOC -->
 
 - [Web Performance 1](#web-performance-1)
-  - [Motivos para otimização](#motivos-para-otimizao)
+  - [Motivos para otimização](#motivos-para-otimiza%C3%A7%C3%A3o)
   - [Tamanho dos arquivos](#tamanho-dos-arquivos)
-    - [Minificação](#minificao)
+    - [Minificação](#minifica%C3%A7%C3%A3o)
     - [GZIP](#gzip)
     - [Imagens](#imagens)
       - [Tamanho](#tamanho)
       - [Metadados](#metadados)
       - [SVG](#svg)
-      - [Ferramentas de otimização de imagens](#ferramentas-de-otimizao-de-imagens)
+      - [Ferramentas de otimização de imagens](#ferramentas-de-otimiza%C3%A7%C3%A3o-de-imagens)
   - [Custo de requests](#custo-de-requests)
     - [Apendice: Google App Engine](#apendice-google-app-engine)
       - [Parte 1: Baixando o SDK](#parte-1-baixando-o-sdk)
@@ -19,7 +19,10 @@
       - [Parte 3: Adicionando o projeto](#parte-3-adicionando-o-projeto)
       - [Parte 4: Incluindo no cloud platform](#parte-4-incluindo-no-cloud-platform)
       - [Parte 5: Iniciando o aplicativo](#parte-5-iniciando-o-aplicativo)
-    - [Ferramentas de análise](#ferramentas-de-anlise)
+    - [Ferramentas de análise](#ferramentas-de-an%C3%A1lise)
+    - [Concatenação de CSS](#concatena%C3%A7%C3%A3o-de-css)
+    - [Sprites](#sprites)
+      - [Sprites SVG](#sprites-svg)
 
 <!-- /TOC -->
 
@@ -173,3 +176,70 @@ Existem serviços online de análise de performance.
 
 - PageSpeed Insights: Ferramenta do Google para fazer análises de performances
 - WebPageTest: [Neste link](http://webpagetest.org), é possível escolher a localização do teste e também o navegador que será utilizado. É uma das ferramentas mais complexas e completas que existem para essa finalidade.
+
+### Concatenação de CSS
+
+Para diminuir o número de requests é importante reduzir a quantidade de arquivos que são baixados pelo browser. Em sites modernos, é uma prática comum modularizar a maioria dos arquivos de imagem ou texto, como CSS, JS e etc. 
+
+Na situação atual, uma quantidade muito grande de arquivos CSS ou JS pode criar um gargalo de implementação e de performance em um site, pois utilizamos todas as 6 conexões de rede do browser par baixar apenas arquivos CSS e "travamos" todos os outros recursos.
+
+O mundo ideal seria termos um unico arquivo CSS, mas isso sujaria nosso código fonte, porque teríamos um unico arquivo fonte que seria muito grande. Desta forma é mais amigável que tenhamos o arquivo único apenas no ambiente de desenvolvimento.
+
+> É importante mudar também o direcionamento no HTML
+
+Um dos plugins mais interessantes é o [Gulp UseRef](https://www.npmjs.com/package/gulp-useref).
+
+### Sprites
+
+Spriting consiste em juntar todas as imagens do site ou app em um unico arquivo a fim de reduzir a quantidade de requisições feitas pelo browser.
+
+A imagem completa é grande e contem todas as imagens necessárias, e no html temos como colocar um background e posicionar esse background para que a div seja uma "janela" para essa imagem maior, exibindo somente uma parte dele.
+
+Temos como automatizar essa tarefas utilizando o gulp ou o [ImageMagick](http://www.imagemagick.org/script/index.php) utilizando o comando `convert <caminho> -append <destino>`.
+
+A automatização de sprites pode ser muito útil. Uma vez que ela pode gerar tanto os sprites sozinha quanto também o css já preparado com as coordenadas.
+
+- [Sprity](https://www.npmjs.com/package/sprity)
+- [SpriteSmith](https://github.com/Ensighten/spritesmith)
+- [Gulp-SpriteSmith](https://www.npmjs.com/package/gulp-spritesmith)
+
+#### Sprites SVG
+
+O modo de spriting mostrado acima só é válido para imagens do tipo bitmap, como o PNG. Para SVG temos que adotar uma abordagem diferente.
+
+Uma vez que o SVG é basicamente um XML, basta que criemos um novo arquivo `.svg` e criamos essas imagens todas internamente.
+
+Vamos criar um arquivo `file.svg` e copiar o conteúdo de outro svg já pronto para dentro dele:
+
+```svg
+<svg width=0 height=0 xmlns="http://www.w3.org/2000/svg"> <!-- Abrimos a tag SVG -->
+
+<defs> <!-- Criamos a tag de definições
+
+</defs>
+
+</svg>
+```
+
+Dentro da tag `defs` temos a capacidade de criar símbolos, e dentro de cada símbolo podemos reutilizar vários outros svgs como icones reutilizáveis.
+
+```svg
+<svg width=0 height=0 xmlns="http://www.w3.org/2000/svg"> <!-- Abrimos a tag SVG -->
+
+<defs> <!-- Criamos a tag de definições
+
+<symbol id="ID do symbol, que vai permitir que encontremos ele depois">
+<!-- Conteúdo original do SVG aqui dentro -->
+</symbol>
+
+</defs>
+
+</svg>
+```
+
+Para utilizarmos isso no html basta criarmos uma tag svg:
+
+```html
+<svg><use xlink:href="caminho/da/imagem.svg#id_do_simbolo"/></svg>
+```
+
