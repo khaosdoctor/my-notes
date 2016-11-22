@@ -129,6 +129,66 @@ public function adiciona(Usuario $usuario) {
 
 Esta função irá retornar o resultado desta query para um novo objeto chamado `Vendor\Model\Usuario`, que será uma instancia da classe usuário.
 
+### mysql_query
+
+Encontramos outro erro em nossa aplicação, dessa vez com a função `mysql_query`.
+
+![](https://s3.amazonaws.com/caelum-online-public/php+7/3_2+mostranod+o++erro+na+linha+41.png)
+
+![](https://s3.amazonaws.com/caelum-online-public/php+7/3_3+mostrando+o+erro+da+linha+41.png)
+
+Assim como fizemos anteriormente com as outras funções de execução de query, vamos ter de preparar o statement antes de poder executá-lo como uma query normal. Até ai nenhuma informação nova.
+
+Porém o grande problema é que, como estamos tratando com postagens, poderemos ter várias postagens, ou seja, vamos ter de utilizar a função `fetchObject` e também adicionar o objeto ao array de postagens.
+
+## Melhorias do PHP7
+
+### Parâmetros tipados
+
+Com o PHP7 foi adicionada a possibilidade de criarmos parâmetros tipados para funções simples, por exemplo:
+
+```php
+public function foo($param) {}
+```
+
+Podemos especificar que `$param` pode ser apenas inteiro:
+
+```php
+public function foo(int $param) {}
+```
+
+O PHP é, por padrão, uma linguagem com tipos dinâmicos. Isso significa que o compilador se adequa aos tipos que são enviados para as variáveis, independente de como esses valores estão sendo usados. Com a tipagem dinâmica, os desenvolvedores ganham duas habilidades, a primeira delas é que o compilador fica mais rápido, pois ele não precisa passar pelo processo de _parsing_ de tipos, já que ele já sabe qual é o tipo esperado para essa variável.
+
+A segunda habilidade é o fato de que é mais fácil debugar um código quando já se sabe aonde o erro esta, uma vez que o erro será muito mais detalhado.
+
+### Intdiv
+
+O novo operador do PHP é o `intdiv` que possibilita a divisão inteira, ou seja, quando o valor é menor que 1, é assumido o valor mais próximo (seja ele max ou min) de acordo com os seus decimais, por exemplo, se o resultado de uma conta for `0.658` o operador arredondará para 1, caso contrário para 0.
+
+![](https://s3.amazonaws.com/caelum-online-public/php+7/3_19+mostrando+o+posts+por+semana.png)
+
+```php
+return intdiv(dividendo, divisor);
+```
+
+Como estamos tratando de um blog, vamos dividir o número de postagens pela diferença de dias.
+
+```php
+return intdiv($numerodepostagens, $diferenca);
+```
+
+### Retornos tipados
+
+Além de podermos especificar o tipo de parâmetros, também podemos especificar qual é o tipo de retorno que uma função vai sempre retornar:
+
+```php
+public function foo(String $param) : int {}
+```
+
+Fará com que a função `foo()` retorne sempre um inteiro.
+
+> É possível especificar __qualquer__ tipo de retorno, desde tipos primitivos, arrays e até classes completas.
+
 
 
 
