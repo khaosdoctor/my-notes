@@ -189,6 +189,35 @@ Fará com que a função `foo()` retorne sempre um inteiro.
 
 > É possível especificar __qualquer__ tipo de retorno, desde tipos primitivos, arrays e até classes completas.
 
+### Namespaces gerais
 
+Com o PHP7 é possível agora declarar em cláusulas `use` várias classes separadas por vírgula. Anteriormente era necessário utilizar o caminho todo do `use` mesmo quando havia o mesmo namespace:
 
+```php
+use Vendor\Model\Postagem;
+use Vendor\Model\Usuario;
+```
 
+Vai se tornar
+
+```php
+use Vendor\Model\{Postagem,Usuario};
+```
+
+> Lembrando que isso é possível apenas quando existe o mesmo namespace para ambos.
+
+### NullCoalesce Operator
+
+O novo operador permite que uma variável seja comparada com um valor nulo, caso o valor seja de fato nulo, então um valor padrão é utilizado, caso contrário o valor definido é o que será definido.
+
+```php
+if(isset($_GET['p'])) {
+    $p = $_GET['p'];
+} else {
+    $p = '';
+}
+```
+
+Pode ser substituido pelo ternário `$p = (isset($_GET['p'])) ? $_GET['p'] : '';` ou então pelo novo operador `$p = $_GET['p'] ?? ''` que significa:
+
+> Se `$_GET['p']` for nulo, deixe vazio, se não use o valor do mesmo
