@@ -214,7 +214,7 @@ Vamos criar um arquivo `file.svg` e copiar o conteúdo de outro svg já pronto p
 ```svg
 <svg width=0 height=0 xmlns="http://www.w3.org/2000/svg"> <!-- Abrimos a tag SVG -->
 
-<defs> <!-- Criamos a tag de definições
+<defs> <!-- Criamos a tag de definições -->
 
 </defs>
 
@@ -242,4 +242,43 @@ Para utilizarmos isso no html basta criarmos uma tag svg:
 ```html
 <svg><use xlink:href="caminho/da/imagem.svg#id_do_simbolo"/></svg>
 ```
+
+A ténica de usar `<symbol>` é muito útil mas não funciona em todos os navegadores. Em especial, IEs mais antigos. Mas, para isso, podemos usar um polyfill.
+
+Uma bem famosa é a [svg4everybody](https://jonathantneal.github.io/svg4everybody/). Basta adicionar um script simples na página e chamar svg4everybody().
+
+## Inline de recursos
+
+Além de podermos também utilizar arquivos externos como scripts e css, também podemos embutir scripts como tags inline.
+
+Como a tag `<script>` e a tag `<style>` podem ser usadas dentro do HTML própriamente dito isso pode ser uma boa prática para economizar requests.
+
+Arquivos JS e CSS com poucas linhas podem ser simplifados para que sejam carregados inline dentro do html, sendo executados muito antes dos scripts e css que são executados através de requests externas.
+
+> É claro que, de acordo com o asset, não é viável transcrever tudo para o HTML e também não é uma boa prática.
+
+Também é possível utilizar SVG's inline dentro do HTML, isso facilita a manipulação do SVG dentro da página através de CSS puro, mas também faz com que a página carregue a imagem muito mas rápido, já que ela vai estar embutida dentro do HTML.
+
+Em suma: _Embutir recursos dentro do HTML de forma linear é um jeito de minimizar o máximo o custo de requests e também acelerar o carregamento de recursos_.
+
+### Automatização de recursos inline
+
+O plugin do gulp chamado __Inline Source__ consegue automatizar o processo de linearização através do gulp.
+
+Isso funciona da seguinte forma, utilizando o plugin, basta que coloquemos o atributo `inline` na tag `<script>` desta forma `<script inline src=''>` e quando rodarmos o processo de tarefas, então ele será colado na página do HTML.
+
+### Até onde vale a pena?
+
+__Vale a pena__:
+
+- Para recursos pequenos (até 3Kb)
+- Poucas informações
+
+__Contras__:
+
+- O cache desses elementos desaparece, porque a cada requisição ele é baixado novamente
+- Quando utilizado em muitos recursos fica inviável
+
+O tamanho ideal do HTML deveria ser menor que 14Kb, isso devido ao protocolo TCP/IP, pois cada pacote recebido pelo protocolo é de 1.4Kb e, no modelo atual, o browser recebe 4 segmentos TCP iniciais, ou seja, 5.8kb, mas existe uma nova RFC (que já é utilizada pela maioria dos browsers) que amplia esse limite de pacotes para 10 segmentos, tornando o tamanho ideal de 14kb.
+
 
