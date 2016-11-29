@@ -23,6 +23,16 @@
     - [Concatenação de CSS](#concatena%C3%A7%C3%A3o-de-css)
     - [Sprites](#sprites)
       - [Sprites SVG](#sprites-svg)
+  - [Inline de recursos](#inline-de-recursos)
+    - [Automatização de recursos inline](#automatiza%C3%A7%C3%A3o-de-recursos-inline)
+    - [Até onde vale a pena?](#at%C3%A9-onde-vale-a-pena)
+  - [Requests paralelos](#requests-paralelos)
+    - [Limites](#limites)
+  - [Cache](#cache)
+    - [Escolhendo o cache](#escolhendo-o-cache)
+    - [Cache-Control Header](#cache-control-header)
+    - [Fingerprinting](#fingerprinting)
+      - [Isso deve ser feito com HTML?](#isso-deve-ser-feito-com-html)
 
 <!-- /TOC -->
 
@@ -281,4 +291,88 @@ __Contras__:
 
 O tamanho ideal do HTML deveria ser menor que 14Kb, isso devido ao protocolo TCP/IP, pois cada pacote recebido pelo protocolo é de 1.4Kb e, no modelo atual, o browser recebe 4 segmentos TCP iniciais, ou seja, 5.8kb, mas existe uma nova RFC (que já é utilizada pela maioria dos browsers) que amplia esse limite de pacotes para 10 segmentos, tornando o tamanho ideal de 14kb.
 
+## Requests paralelos
+
+Por possuirmos apenas 6 conexões disponíveis simultaneamente, geralmente temos vários recursos que ficam esperando para serem consumidos e baixados.
+
+O ideal é: _sempre_ tentar reduzir ao máximo o número de requisições, mas existe um limite máximo para quantas conexões podemos reduzir.
+
+Na verdade, há um meio de "burlarmos" a quantidade de conexões.
+
+O limite de conexões não é por browser, mas sim por hostname, ou seja, quando temos diversos hostnames podemos fazer o download da página muito mais rapidamente e __de forma paralela__, pois o browser pode abrir até 6 conexões diferentes para cada hostname (note que um subdominio também altera o hostname, então `ex.com` é diferente de `a1.ex.com`).
+
+![](https://s3.amazonaws.com/caelum-online-public/Perfomance/7_1/7_8+mostrando+o+gr%C3%A1fico+de+cascata.png)
+
+Uma boa técnica é usar diversos hostnames para servir imagens e conteúdos estáticos. Quando temos dois hostnames diferentes vamos ter 12 conexões diferentes que podem ser abertas ao mesmo tempo, fazendo o site carregar na metade do tempo.
+
+![](https://s3.amazonaws.com/caelum-online-public/Perfomance/7_1/7_9+mostrando+o+gr%C3%A1fico.png)
+
+> É assim que CDN's funcionam. Quando temos uma CDN cadastrada, automaticamente o serviço vai replicar os dados estáticos como: imagens, js, css e etc por todos os servidores ao redor do mundo (ou seja, irão haver vários hostnames), dependendo do que está mais próximo do cliente.
+
+### Limites
+
+Existe um limite para a quantidade de requests que podem ser feitos tanto pela rede e pelo navegador, caso contrário o sistema fica sobrecarregado e o site acaba ficando mais lento.
+
+## Cache
+
+Arquivos que não mudam com frequencia não precisam ser baixados com frequencia (ou, pelo menos, não todas as vezes que iniciarmos uma página).
+
+Por padrão o browser não realiza nenhum tipo de cache, vem do servidor a indicação de quando e o que deve ser cacheado. Tudo isso é feito através de _headers_ HTTP.
+
+É possível adicionar um cabeçalho chamado `expires`, que diz por quanto tempo os recursos devem ser cacheados.
+
+![](https://s3.amazonaws.com/caelum-online-public/Perfomance/8_1/8_1_8+possui+expires.png)
+
+No caso do NGINX basta que adicionemos a propriedade `expires <data>` na sua configuração de servidor.
+
+### Escolhendo o cache
+
+Nem tudo deve ser cacheado, alguns recursos como HTML não devem ser cacheados. O ideal é cachear apenas recursos estáticos como JS, CSS e imagens.
+
+No NGINX o ideal seria colocar expires para uma pasta toda usando a seguinte configuração no servidor web:
+
+```json
+server {
+    location /<pasta> {
+        expires 1d;
+    }
+}
+```
+
+### Cache-Control Header
+
+É a mesma coisa do `expires`, porém um pouco mais antigo, é recomendável setar ambos os headers.
+
+Uma diferença entre o `cache-control` e `expires` é que podemos setar quem pode cachear o recurso, isso porque temos vários intermediários entre a nossa requisição e a página aberta em nosso browser.
+
+Usando o header `cache-control: public` dizemos a rede que __todos__ os dispositivos na rede podem cachear esse recurso (ou essa pasta), assim podemos utilizar proxies e firewalls com essa capacidade de cache como uma CDN.
+
+![](https://s3.amazonaws.com/caelum-online-public/Perfomance/8_1/8_1_9+mostrando+o+cache.png)
+
+No NGINX essa adição é feita com `add_header Cache-Control public;`.
+
+Imagine que em uma empresa, temos um proxy com capacidade de cache, se tivermos esse header como `public` dizemos que esse proxy pode cachear o recurso, desta forma todos os usuários da rede irão automaticamente receber o recurso do local mais próximo, uma CDN local.
+
+Para que apenas o browser cacheie o recurso basta colocar `private`.
+
+### Fingerprinting
+
+Quando tivermos arquivos que devem ser cacheados por um longo tempo criamos uma solução e ao mesmo tempo um problema, pois temos um recurso que nunca vai ser baixado, mesmo que ele seja alterado, uma vez que o browser guarda a URL para cachear.
+
+![](https://s3.amazonaws.com/caelum-online-public/Perfomance/8_2/8_2_6+mostrando+o+expires.png)
+
+O fingerprinting é uma tecnica que também é chamada de revisão de arquivos. Quando utilizado com o gulp, é possível utilizar plugins como o `gulp-rev` e o `gulp-revdel`.
+
+- [Rev()](https://github.com/sindresorhus/gulp-rev)
+- [Revdel()](https://github.com/callumacrae/rev-del)
+
+A ideia é que o rev gere os arquivos e sobrescreva no seu html final, que foi minificado todos os caminhos certos para este arquivo calculando um hash baseado em seu conteúdo, ou seja, se o usuário já possuir um cache de um conteúdo que foi alterado e depois desfeito, então ele continuará lá, pois o hash será o mesmo.
+
+![](https://s3.amazonaws.com/caelum-online-public/Perfomance/8_2/8_2_2+mostrando+os+n%C3%BAmeros+que+foram+agregados+ao+nome+dos+arquivos.png)
+
+#### Isso deve ser feito com HTML?
+
+Jamais, se isso for realizado, é possível que o site quebre apenas porque a URL pode mudar, já que a home é o ponto de entrada de um site.
+
+Em suma, nunca mexa no html.
 
