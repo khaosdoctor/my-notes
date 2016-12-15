@@ -304,10 +304,477 @@ class ProdutoController extends Controller {
 
 Mas vamos ter um problema quando precisarmos renderizar isso, porque a variável `$produto` não existe na view, então vamos enviar esse dado como parâmetro, mudando a linha `return view('<nome da view>');` para `return view('<nome da view>')->with('<nome da variável na view>, $produtos);`.
 
+### Incluindo parâmetros com magic methods
+
+Uma curiosidade é que, no lugar de escrever:
+
+```php
+view('listagem')->with('produtos', $produtos);
+```
+
+Você pode chamar um método `withProdutos`:
+
+```php
+view('listagem')->withProdutos($produtos);
+```
+
 O nome da variável na view seria como ela seria chamada quando for enviada para a mesma, e o segundo parametro seria o conteudo.
+
+### Passando um array de dados para a view
+
+Existem diversas outras formas de passar os dados para a view, além do método with. Uma das mais conhecidas e utilizadas é passando um array como segundo parâmetro do método view. Em vez de fazer:
+
+`view('listagem')->with('produtos', $produtos);`
+
+Você faria algo como:
+
+`return view('listagem', ['produtos' => $produtos]);`
+Ou extraindo o array para uma variável:
+
+```php
+$data = ['produtos' => $produtos];
+return view('listagem', $data);
+```
+
+Ou ainda criando o array e adicionando cada item manualmente:
+
+```php
+$data = [];
+$data['produtos'] = $produtos;
+return view('listagem', $data);
+```
+
+### Métodos: exists e file
+
+Outro ponto é que você pode verificar a existência de uma view com o método exists:
+
+```php
+if (view()->exists('listagem'))
+{
+    return view('listagem');
+}
+```
+
+Ou mesmo usar o método file para gerar a view a partir de um caminho/diretório diferente:
+
+`view()->file('/caminho/para/sua/view');`
 
 ### Incluindo CSS
 
 Para incluirmos o CSS podemos apenas incluir na tag `link` o caminho `/css/app.css`.
 
 > O Laravel por padrão já vem com o Bootstrap instalado internamente no arquivo app.css
+
+## QueryString
+
+Quando quisermos exibir apenas um produto, por exemplo, exibir o produto. Primeiro vamos criar um novo método no nosso controller de produtos que vai chamar uma nova view que exibirá apenas um produto
+
+```php
+class ProdutoController extends Controller {
+  public function detalhe() {
+
+    $produtos = DB::select('<query> WHERE <filtro>');
+    return view('<nome da view>')->with('p', $produto[0]);
+  }
+}
+```
+
+Inclusive podemos enviar um parâmetro no where, para que possamos passá-lo mais facilmente:
+
+```php
+$produtos = DB::select('<query> WHERE <campo> = ?', [<campoValor>]);
+```
+
+Para cada `?` adicionado uma nova posição do array pode ser criada.
+
+E na view:
+
+```php
+<h1>Detalhes do produto <?= $p->nome ?></h1>
+. . .
+```
+
+Mas e como fazemos para buscar o QueryString?
+
+### Request
+
+Estamos setando um valor fixo no filtro da query, para podermos mandar esse valor dinamicamente, podemos simplesmente alterar nosso HTML na view para que ele atualize com o ID do produto:
+
+```php
+<table>
+  <tr>
+    <td> <?= $p->nome ?> </td>
+    <td> <a href="/produto?id="<?= $p->id ?>>
+        Visualizar
+      </a>
+    </td>
+  </tr>
+</table>
+```
+
+E então precisamos pegar o query string da URL, para isso vamos editar nosso controller para que possamos pegar essa variável.
+
+Em nossa função, vamos editar o método que mostra o detalhe do produto:
+
+```php
+use Request;
+
+class ProdutoController extends Controller {
+  public function detalhe() {
+
+    $id = Request::input('id');
+    $produtos = DB::select('<query> WHERE <filtro> = ?', [$id]);
+    return view('<nome da view>')->with('p', $produto[0]);
+  }
+}
+```
+
+Note que temos que utilizar o `use` para importarmos o pacote do namespace. Bem como utilizar o método `input` da classe para podermos utiliza-lo como parâmetro.
+
+> De forma mais simples podemos criar um valor padrão para o input utilizando `Request::input('nome', 'default')`
+
+#### Outros métodos da Request
+
+a Request tem uma variedade bem grande de métodos que nos ajudam em trabalhos como esse. Por exemplo, quer saber se existe um parâmetro específico na requisição? Que tal fazer:
+
+```php
+<?php
+if (Request::has('id'))
+{
+  // faz alguma coisa
+}
+```
+
+Há ainda o método all, que retorna um array com todos os parâmetros da requisição, os métodos only e except, com que você pode restringir quais parâmetros quer listar.
+
+```php
+<?php
+// lista todos os params
+$input = Request::all();
+
+// apenas nome e id
+$input = Request::only('nome', 'id');
+
+// todos os params, menos o id
+$input = Request::except('id');
+```
+
+Há também métodos como url, que retorna a URL da request atual, ou o path que retorna a URI. Por exemplo, em uma requisição para o método mostra, ao fazer:
+
+```php
+<?php
+$url = Request::url();
+O valor da $url seria http://localhost:8000/produtos/mostra, mas já no caso do path:
+
+$uri = Request::path();
+```
+
+E toda a informação pode ser encontrada na [documentação](https://laravel.com/docs/5.3/requests).
+
+## Recursos
+
+Da mesma forma da query string, podemos acessar um recurso como `url/produto/id`, para ficar um pouco mais semantico.
+
+Para isso funcionar vamos precisar editar nosso arquivo de rotas para adicionar um novo parâmetro depois do recurso.
+
+```php
+<?php
+Route::get('/produto/{id}', 'ProdutoController@detalhe');
+```
+
+Agora precisamos trocar o input do request no nosso controller:
+
+```php
+use Request;
+
+class ProdutoController extends Controller {
+  public function detalhe() {
+
+    $id = Request::route('id');
+    $produtos = DB::select('<query> WHERE <filtro> = ?', [$id]);
+    return view('<nome da view>')->with('p', $produto[0]);
+  }
+}
+```
+
+> Note que mudamos de `input` para `route`.
+
+E quanto ao valor default? Quando estávamos usando o método input, nosso código estava assim:
+
+```php
+$id = Request::input('id', '0');
+```
+
+Por que não fizemos o mesmo com o route? A resposta é simples: o `{id}` da rota agora é obrigatório! Se não passar, não entra no método e ponto-final. Se você quiser que o id do final da url seja opcional, você precisará deixar isso explícito no momento de registrar sua rota.
+
+```php
+Route::get('/produtos/mostra/{id?}', 'ProdutoController@mostra');
+```
+
+Repare que há uma `?` após o id indicando que ele é opcional.
+
+Isso não é tudo, o Laravel nos oferece uma forma ainda mais interessante de recuperar parâmetros da URL. Basta adicionar um argumento com o mesmo nome do parâmetro na assinatura do seu método, ele vai ser populado. Veja como fica o método do controller:
+
+```php
+public function mostra($id){
+
+    $resposta = DB::select('select * from produtos where id = ?', [$id]);
+
+    if(empty($resposta)) {
+        return "Esse produto não existe";
+    }
+    return view('detalhes')->with('p', $resposta[0]);
+}
+```
+
+Note que em nenhum momento precisamos usar a `Request`, o framework faz esse trabalho por nós.
+
+### Alguns cuidados necessários com recursos de rotas
+
+Quando estamos usando parâmetros na URL, sempre precisamos nos atentar a alguns detalhes. Por exemplo, em algum momento falamos que o id precisaria ser um número? Não. Isso significa que eu consigo acessar o método pela seguinte URL:
+
+- http://localhost:8000/produto/teste
+
+Claramente isso não deveria acontecer. Por nossa sorte, a única consequência aqui será ver a mensagem de que o produto não foi encontrado. Mas existem problemas piores, como ambiguidade entre rotas.
+
+Em nosso caso, isso seria um pouco difícil, mas imagine que para simplificar optássemos por remover o `/produto` de nossa URL. Isso causaria sérios problemas, pois as seguintes URLs seriam equivalentes:
+
+- http://localhost:8000/1
+- http://localhost:8000/adiciona
+
+Já que o `{id}` pode ser qualquer coisa, inclusive um texto, ele pode ser a palavra adiciona. Em outras palavras, dependendo da ordem em que eu registrar as rotas, pode acontecer de eu acessar `/produto/adiciona` e a aplicação me responder que esse produto não existe.
+
+Nesse caso, precisaríamos de alguma forma ensinar ao Laravel que o `{id}` da rota sempre será um número. Isso pode ser feito com auxilio do método `where`, como no exemplo:
+
+```php
+Route::get(
+  '/produtos/mostra/{id}', 
+  'ProdutoController@mostra'
+  )
+  ->where('id', '[0-9]+');
+```
+
+Observe que estamos passando para o método where o nome do parâmetro e uma expressão regular com o _pattern_ que pode ser seguido.
+
+## Blade
+
+Blade é um template Engine que é implementado no Laravel assim como o JSX ou o EJS é implementado no Node.
+
+Todo arquivo blade __precisa__ ter uma extensão `.blade.php`
+
+### Templates
+
+Para criarmos um template que será seguido por todas as páginas, podemos pegar apenas as partes repetidas das nossas views (como o cabeçalho e o rodapé) e criar um novo arquivo html na pasta de views.
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Titulo</title>
+</head>
+<body>
+<conteudo>
+</body>
+</html>
+```
+
+Repare que o conteúdo é apenas o miolo de nosso HTML. Vamos indicar que é nesta parte que vamos colocar o conteúdo do nosso site:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Titulo</title>
+</head>
+<body>
+  @yield('conteudo')
+</body>
+</html>
+```
+
+> Podemos usar qualquer nome ao invés de 'conteudo'
+
+Agora em nossas páginas reais (aonde está o conteúdo), vamos colocar uma marcação indicando que o arquivo estende um template, e também que ele é o conteúdo de fato
+
+```html
+@extends('<nome do template>')
+
+@section('conteudo')
+<table>
+  <tr>
+    <td>1</td>
+    <td>2</td>
+    <td>3</td>
+  </tr>
+</table>
+@stop
+```
+
+> O nome do template é o nome que demos a view que criamos anteriormente.
+
+Veja que o `@section` define um pedaço de código, um include que poderá ser reutilizado em outros arquivos, mas precisamos colocar o mesmo nome da variável do `@yield` no template.
+
+> Não se esqueça de mudar os nomes das extensões das views para `.blade.php`
+
+### Echo
+
+Utilizamos normalmente as tags `<?= ?>` para printar os resultados das variáveis na tela em um html, no blade podemos apenas circundar com duas chaves:
+
+```php
+<table>
+  <tr>
+    <td> {{$p->nome}} </td>
+    <td> <a href="/produto/{{$p->id}}">
+        Visualizar
+      </a>
+    </td>
+  </tr>
+</table>
+```
+
+> Podemos definir valores padrões para variáveis usando o `or` (`{{$p->id or Sem valor}}`)
+
+### Loops
+
+Podemos substituir os loops do foreach por algo mais simples:
+
+```php
+<table>
+  @foreach($produtos as $p)
+  <tr>
+    <td> {{ $p->nome }} </td>
+  </tr>
+  @endforeach
+</table>
+```
+
+Além do foreach, também podemos fazer o mesmo com o for tradicional:
+
+```php
+@for ($i = 0; $i < 10; $i++)
+    O indice atual é {{ $i }}
+@endfor
+```
+
+Ou ainda com um while:
+
+```php
+@while (true)
+    Entrando em looping infinito!
+@endwhile
+```
+
+Ha ainda uma variação bastante interessante, chamada forelse. Se a lista for vazia, ele executa o código do bloco marcado com @empty:
+
+```php
+@forelse($produtos as $p)
+    <li>{{ $p->nome }}</li>
+@empty
+    <p>Não tem nenhum produto!</p>
+@endforelse
+```
+
+> Podemos usar tanto `{{ $var }}` como `{{$var}}`
+
+### Ternários condicionais
+
+Podemos utilizar ternários para operar sobre variáveis e devolver valores que serão printados no HTML, como, por exemplo, pintar um item se ele estiver fora de estoque:
+
+```html
+<table>
+  @foreach($produtos as $p)
+  <tr class='{{ $p->quantidade <= 1 ? "danger" : "" }}'>
+    <td> {{ $p->nome }} </td>
+  </tr>
+  @endforeach
+</table>
+```
+
+Neste exemplo caso a quantidade em estoque seja menor ou igual a 1 terá a classe danger.
+
+### Condicionais completos
+
+Podemos fazer um if verificando se a lista de produtos está vazia, e se estiver, mostrar uma mensagem de que não existe nenhum produto cadastrado. Em PHP puro, o código ficaria assim:
+
+```php
+<?php if(empty($produtos)) { ?>
+
+<div class="alert alert-danger">
+  Você não tem nenhum produto cadastrado.
+</div>
+
+<?php } else { ?>
+
+  <h1>Listagem de produtos</h1>
+  <table>
+
+  <? foreach ($produtos as $p) { ?>
+?>
+<!-- continuação do código -->
+
+<?php } ?> <!-- fechando o foreach -->
+<?php } ?> <!-- fechando o else -->
+```
+
+Com Blade:
+
+```html
+@if(empty($produtos))
+
+<div class="alert alert-danger">
+  Você não tem nenhum produto cadastrado.
+</div>
+
+@else
+
+  <h1>Listagem de produtos</h1>
+  <table>
+
+  @foreach ($produtos as $p)
+  <!-- continuação do código -->
+  @endforeach
+
+@endif
+```
+
+A ausência das chaves e tags do PHP ajuda bastante, nosso código fica mais simples e legível. O arquivo listagem.blade.php completo pode ficar assim:
+
+```html
+@extends('principal')
+
+@section('conteudo')
+
+ @if(empty($produtos))
+  <div>Você não tem nenhum produto cadastrado.</div>
+
+ @else
+  <h1>Listagem de produtos</h1>
+  <table class="table table-striped table-bordered table-hover">
+    @foreach ($produtos as $p)
+    <tr>
+      <td> {{$p->nome}} </td>
+      <td> {{$p->valor}} </td>
+      <td> {{$p->descricao}} </td>
+      <td> {{$p->quantidade}} </td>
+      <td>
+        <a href="/produtos/mostra/{{$p->id}}>">
+          <span class="glyphicon glyphicon-search"></span>
+        </a>
+      </td>
+    </tr>
+    @endforeach
+  </table>
+
+  @endif
+@stop
+```
+
+Além do `@if` e `@else`, você também pode usar `@elseif` ou mesmo o `@unless`, que faz a condição inversa. Por exemplo, no caso a seguir, o valor condicionado sempre será exibido:
+
+```html
+    @unless (1 == 2)
+      Esse texto sempre será exibido! 
+    @endunless
+```
