@@ -33,6 +33,16 @@ Framework de desenvolvimento rápido para PHP, permite um reaproveitamento de c�
     - [Loops](#loops)
     - [Ternários condicionais](#tern%C3%A1rios-condicionais)
     - [Condicionais completos](#condicionais-completos)
+  - [Outros métodos HTTP](#outros-m%C3%A9todos-http)
+    - [Buscando informações do formulário](#buscando-informa%C3%A7%C3%B5es-do-formul%C3%A1rio)
+    - [Inserindo valores no DB](#inserindo-valores-no-db)
+    - [Método POST](#m%C3%A9todo-post)
+    - [O método match](#o-m%C3%A9todo-match)
+  - [Delegação de resposta](#delega%C3%A7%C3%A3o-de-resposta)
+      - [Escolhendo quais valores manter](#escolhendo-quais-valores-manter)
+    - [Outros tipos de redirect](#outros-tipos-de-redirect)
+    - [Linkando para ações](#linkando-para-a%C3%A7%C3%B5es)
+    - [Outros tipos de resposta](#outros-tipos-de-resposta)
 
 <!-- /TOC -->
 
@@ -812,3 +822,208 @@ Além do `@if` e `@else`, você também pode usar `@elseif` ou mesmo o `@unless`
       Esse texto sempre será exibido! 
     @endunless
 ```
+
+## Outros métodos HTTP
+
+Podemos implementar outras rotas além do `get`. Primeiramente vamos criar a rota que vai nos direcionar para o formulário que iremos preencher:
+
+```php
+<?php
+Route::get('/produto/novo', 'ProdutoController@novo');
+```
+
+E no controler vamos criar nosso método novo:
+
+```php
+<?
+public function novo() {
+  return view('formulario');
+}
+```
+
+Feito isso, vamos criar nossa view de formulário, utilizando o blade podemos criar nosso formulário do modo que queremos. Chamaremos essa view de `formulario.blade.php` em respeito a nosso nome dado para o controle, nesta view teremos apenas um formulário simples.
+
+### Buscando informações do formulário
+
+Para adicionar um novo produto vamos criar uma nova rota para esta ação:
+
+```php
+<?php
+Route::get('/produto/adiciona', 'ProdutoController@adiciona');
+```
+
+E no controler vamos criar nosso método adiciona:
+
+```php
+<?
+public function adiciona() {
+  return view('adiciona');
+}
+```
+
+Temos duas formas de adicionar uma variável de um formulário, um deles é setar o método do `<form>` como `GET` e dar um nome para cada campo, depois podemos pegar esses valores no método `adiciona` com o código `Request::input('campo');`.
+
+### Inserindo valores no DB
+
+Da mesma forma como usamos `DB::select` vamos usar `DB::insert('insert into <tabela> (campos) values (?,?,?)', [1,2,3])` para podermos inserir o valor dentro do banco de dados.
+
+### Método POST
+
+Utilizando o método POST do formulário, podemos esconder os valores na requisição.
+
+Um dos problemas que isso gera é o tratamento do CSRF, que evita que requests não permitidas sejam feitas para o app. Para podermos tratar esse tipo de requisição, vamos adicionar o token CSRF que o próprio framework gera através de um input simples:
+
+```html
+<input type="hidden" name="_token" value=" {{ csrf_token() }}"/>
+```
+
+Dentro do nosso formulário, atente-se que o nome do token __deve__ ser `_token`.
+
+Após isso vamos ter que adicionar uma modificação nas nossas rotas para que ela identifique o método POST.
+
+```php
+<?php
+Route::post('/produto/adiciona', 'ProdutoController@adiciona');
+```
+
+Assim podemos buscar as informações ainda por `input` da request.
+
+### O método match
+
+Além de get, post e any, a interface Route ainda nos oferece um método chamado match, que nos permite passar um array especificando exatamente quais métodos HTTP devem ser aceitos. Um exemplo seria:
+
+```php
+  Route::match(array('GET', 'POST'),
+    '/produtos/adiciona',
+    'ProdutoController@adiciona');
+```
+
+Neste caso, requisições de tipo GET ou POST seriam aceitas.
+
+## Delegação de resposta
+
+Podemos redirecionar os métodos para outras rotas inicialmente, ou seja, para que elas ajam como se fossem chamadas pelo browser, podemos utilizar simplesmente o método `Redirect`, utilizado da seguinte maneira:
+
+```php
+return redirect('/rota');
+```
+
+Porém isso vai zerar todos os nossos dados da requisição anterior, ou seja, perderemos a capacidade de exibir uma mensagem na listagem de produtos, informando que o produto foi cadastrado com sucesso. Para que isso seja possível vamos usar o método `withInput` do Laravel:
+
+```php
+return redirect('/rota')->withInput();
+```
+
+Mas isso sozinho não é suficiente, precisamos também, na nossa view de listagem, verificar se essa variável (da requisição anterior) existe e, se existir, mostrar a mensagem de informação cadastrada com sucesso. Para isto vamos usar um if com o método `old()`:
+
+```html
+@if(old('nome do input'))
+  <h1>O produto {{ old('nome do input') }} foi adicionado com sucesso</h1>
+@endif
+```
+
+#### Escolhendo quais valores manter
+
+O problema de usar o withInput dessa forma é que todos os parâmetros são mantidos, mas isso é desnecessário, já que estamos usando apenas o nome. Para evitar que isso aconteça, você pode definir explicitamente quais parâmetros devem ser mantidos:
+
+```php
+return redirect('/produtos')
+    ->withInput(Request::only('nome'));
+```
+
+O mesmo vale para os outros métodos da Request, como por exemplo o except. No caso a seguir, todos os parâmetros exceto a senha serão mantidos na próxima requisição.
+
+```php
+return redirect('/usuarios')
+    ->withInput(Request::except('senha'));
+```
+
+### Outros tipos de redirect
+
+Além de como fizemos, existem diversas possibilidades interessantes para o método redirect. Uma delas é redirecionar para uma ação do controller e não uma URI.
+
+Redirecionando para uma action
+Quer ver como é simples? Como o método adiciona quer redirecionar para o método lista, da classe `ProdutoController`, em vez de usar o `redirect('/produtos')`, ou seja, com a URI, ele pode fazer:
+
+```php
+return redirect()
+    ->action('ProdutoController@lista')
+    ->withInput(Request::only('nome'));
+```
+
+Assim ele está dizendo explicitamente qual o método que quer redirecionar, independente de sua URI. Se decidirmos no futuro mudar a rota desse método, precisaríamos lembrar de mudar todos os lugares que faziam redirect. Já quando fazemos dessa forma, apontando para uma action específica, tudo continua funcionado.
+
+Claro, se alguém mudar o nome do método o redirect também vai parar de funcionar, mas esse tipo de mudança acontece com uma frequência bem menor do que a mudança de URI.
+
+Mas oferecer essa possibilidade apenas para o redirect não ajudaria muito, pois, todos os links quebrariam se uma rota fosse alterada.
+
+É justo, afinal, ele vai continuar apontando para a URI anterior já que estamos deixando isso fixo em nosso HTML. Repare no `navbar` do layout principal.blade.php:
+
+```html
+<ul class="nav navbar-nav navbar-right">
+  <li><a href="/produtos">Listagem</a></li>
+  <li><a href="/produtos/novo">Novo</a></li>
+</ul>
+```
+
+### Linkando para ações
+
+Em vez de linkar para uma URI, é sempre mais interessante linkar para uma ação do controller, assim como fizemos no `redirect`. A mudança será simples, basta chamar o método auxiliar action de dentro das chaves duplas do blade. Os links devem ficar assim:
+
+```html
+<ul class="nav navbar-nav navbar-right">
+  <li>
+      <a href="{{action('ProdutoController@lista')}}">
+          Listagem
+      </a>
+  </li>
+  <li>
+      <a href="{{action('ProdutoController@novo')}}">
+          Novo
+      </a>
+  </li>
+</ul>
+```
+
+###  Outros tipos de resposta
+
+Além de retornar uma view, ou redirecionar para outra lógica, existem momentos em que queremos enviar outros tipos de resposta, por exemplo quando estamos trabalhando com serviços ou comunicação entre sistemas.
+
+Um formato bem comum e muito utilizado atualmente é o JSON, e por esse motivo ele é o formato padrão de resposta do Laravel. Você em algum momento já experimentou retornar um objeto ou variável no lugar de uma view? Se não fez, com certeza vai gostar de testar.
+
+Podemos criar um novo método no `ProdutoController` chamado `listaJson`, que pode fazer o seguinte:
+
+```php
+public function listaJson(){
+    $produtos = DB::select('select * from produtos');
+    return $produtos;
+}
+```
+
+Não se esqueça de que a cada novo método uma rota deve ser criada no routes.php, para que ele fique acessível pelo navegador.
+
+```php
+Route::get('/produtos/json', 'ProdutoController@listaJson');
+```
+
+Agora que já temos o método e ele está devidamente mapeado, podemos acessar sua URL pelo navegador:
+
+O resultado foram todos os produtos _serializados_ em formato json. Mas também podemos fazer isso explicitamente. Em vez de retornar a lista de produtos, poderíamos fazer:
+
+```php
+public function listaJson(){
+    $produtos = DB::select('select * from produtos');
+    return response()->json($produtos);
+}
+```
+
+Executando no navegador, o resultado será o mesmo.
+
+No caso de o JSON retornar o objeto ou lista de objetos diretamente seria muito mais simples, mas além do método json existem diversos outros que podem ser muito úteis em nosso dia a dia. Um exemplo seria:
+
+```php
+return response()
+    ->download($caminhoParaUmArquivo);
+```
+
+Acessar um método com esse retorno resultaria no download do arquivo presente no caminho especificado.
