@@ -2,6 +2,40 @@
 
 Framework de desenvolvimento rápido para PHP, permite um reaproveitamento de código muito bom usando técnicas MVC e outros helpers.
 
+<!-- TOC -->
+
+- [Laravel](#laravel)
+  - [Modelo MVC](#modelo-mvc)
+  - [Instalação](#instala%C3%A7%C3%A3o)
+  - [Novo projeto](#novo-projeto)
+    - [Configurações](#configura%C3%A7%C3%B5es)
+    - [Estrutura de pastas](#estrutura-de-pastas)
+    - [Artisan Serve](#artisan-serve)
+      - [Artisan Name](#artisan-name)
+    - [Rotas](#rotas)
+  - [Controllers](#controllers)
+  - [Conexões com banco de dados](#conex%C3%B5es-com-banco-de-dados)
+    - [Conectando com o banco de dados](#conectando-com-o-banco-de-dados)
+    - [Modo Debug](#modo-debug)
+  - [Views](#views)
+    - [Incluindo parâmetros com magic methods](#incluindo-par%C3%A2metros-com-magic-methods)
+    - [Passando um array de dados para a view](#passando-um-array-de-dados-para-a-view)
+    - [Métodos: exists e file](#m%C3%A9todos-exists-e-file)
+    - [Incluindo CSS](#incluindo-css)
+  - [QueryString](#querystring)
+    - [Request](#request)
+      - [Outros métodos da Request](#outros-m%C3%A9todos-da-request)
+  - [Recursos](#recursos)
+    - [Alguns cuidados necessários com recursos de rotas](#alguns-cuidados-necess%C3%A1rios-com-recursos-de-rotas)
+  - [Blade](#blade)
+    - [Templates](#templates)
+    - [Echo](#echo)
+    - [Loops](#loops)
+    - [Ternários condicionais](#tern%C3%A1rios-condicionais)
+    - [Condicionais completos](#condicionais-completos)
+
+<!-- /TOC -->
+
 ## Modelo MVC
 
 A grande ideia desse padrão arquitetural é que você separe suas regras de negócio em 3 camadas, cada uma com sua responsabilidade muito bem definida:
