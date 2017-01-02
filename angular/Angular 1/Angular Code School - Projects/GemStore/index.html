@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<!-- Executa o módulo "store" presente no app.js quando o documento carrega -->
+<html ng-app="store">
+<head>
+	<title>GemStore</title>
+	<link rel="stylesheet" type="text/css" href="assets/bootstrap/dist/css/bootstrap.min.css">
+	<style>
+		.ng-invalid.ng-dirty {
+			border-color: #FA787E;
+		}
+
+		.ng-valid.ng-dirty {
+			border-color: #78FA89;
+		}
+	</style>
+</head>
+<body ng-controller="StoreController as store">
+
+	<ul class="list-group">
+		<li class="list-group-item" ng-repeat="product in store.products">
+			<center><img ng-src="{{product.images[0].thumb}}" class="pull-left"></center>
+			<h3>
+				<product-title></product-title>
+			</h3>
+			<product-panels></product-panels>
+		</li>
+	</ul>
+ 
+
+	<!-- Scripts in the end -->
+	<script type="text/javascript" src="assets/jquery/dist/jquery.min.js"></script>
+	<script type="text/javascript" src="assets/angular/angular.min.js"></script>
+	<script type="text/javascript" src="assets/bootstrap/dist/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="app.js"></script>
+	<script type="text/javascript" src="products.js"></script>
+	<!-- Scripts in the End -->
+</body>
+</html>

@@ -1,0 +1,80 @@
+[
+	{
+		"name": "Rubi",
+		"price": 2,
+		"description": "A red gem, very very valuable",
+		"spec": "Specification goes here",
+		"reviews": [
+			{
+				"stars": 5,
+				"body": "Review Body",
+				"author": "john.doe@gmail.com"
+			},{
+				"stars": 4,
+				"body": "Review Body",
+				"author": "john.doe@gmail.com"
+			},{
+				"stars": 2,
+				"body": "Review Body",
+				"author": "john.doe@gmail.com"
+			},{
+				"stars": 1,
+				"body": "Review Body",
+				"author": "john.doe@gmail.com"
+			},{
+				"stars": 0,
+				"body": "Review Body",
+				"author": "john.doe@gmail.com"
+			}
+		],
+		"canPurchase": true,
+		"soldOut": false,
+		"images": [
+			{
+				"full": "http://placehold.it/300x300",
+				"thumb": "http://placehold.it/50x50"
+			},
+			{
+				"full": "http://placehold.it/300x300",
+				"thumb": "http://placehold.it/50x50"
+			}
+		]
+	},
+	{
+		"name": "Sapphire",
+		"price": 8.95,
+		"description": "A yellow gem, very very valuable",
+		"spec": "Specification goes here",
+		"reviews": [
+			{
+				"stars": 3,
+				"body": "Review Body",
+				"author": "john.doe@gmail.com"
+			},{
+				"stars": 2,
+				"body": "Review Body",
+				"author": "john.doe@gmail.com"
+			},{
+				"stars": 5,
+				"body": "Review Body",
+				"author": "john.doe@gmail.com"
+			},{
+				"stars": 1,
+				"body": "Review Body",
+				"author": "john.doe@gmail.com"
+			}
+		],
+		"canPurchase": false,
+		"soldOut": false,
+		"images": [
+			{
+				"full": "http://placehold.it/300x300",
+				"thumb": "http://placehold.it/50x50"
+			},
+			{
+				"full": "http://placehold.it/300x300",
+				"thumb": "http://placehold.it/50x50"
+			}
+		]
+	}
+]
