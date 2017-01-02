@@ -1,19 +1,28 @@
+<!-- public/index.html -->
 <!DOCTYPE html>
 <html lang="pt-br" ng-app="alurapic">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width">
-        <title>Alurapic</title>
-        <link rel="stylesheet" href="css/bootstrap.min.css">
-        <link rel="stylesheet" href="css/bootstrap-theme.min.css">
-        <script src="js/lib/angular.min.js"></script>
-        <script src="js/main.js"></script>
-        <script src="js/controllers/fotos-controller.js"></script>
-    </head>
-    <body ng-controller="FotosController">
-        <div class="container">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Alurapic</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/bootstrap-theme.min.css">
+    <script src="js/lib/angular.min.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/controllers/fotos-controller.js"></script>
+    <script src="js/directives/all-directives.js"></script>
+</head>
+
+<body ng-controller="FotosController">
+    <div class="container">
+        <div class="jumbotron">
             <h1 class="text-center">Alurapic</h1>
-            <img class="img-responsive center-block" ng-src="{{foto.url}}" alt="{{foto.titulo}}">
-        </div> <!-- fim container -->        
-    </body>
+        </div>
+        <painel-fotos ng-repeat="foto in fotos" titulo="{{foto.titulo}}">
+            <img class="img-responsive center-block" src="{{foto.url}}" alt="{{foto.titulo}}">
+        </painel-fotos>
+    </div>
+</body>
+
 </html>

@@ -1,1 +1,1 @@
-angular.module('alurapic', []);
+angular.module('alurapic', ['allDirectives']);
