@@ -1,0 +1,12 @@
+{
+    "require": {
+        "monolog/monolog": "^1.17",
+        "psr/cache-util":"dev-master",
+        "psr/http-message":"1.*@stable"
+    },
+    "autoload":{
+        "psr-4":{
+            "App\\":"src/App/"
+        }
+    }
+}
