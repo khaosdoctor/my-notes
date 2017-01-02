@@ -15,11 +15,13 @@ basicamente dizer ao aplicativo para ler todos os templates dentro daquela tag:
 É preciso incluir o arquivo de rotas do Angular, pois nas versões mais recentes ele não está mais incluso no core: https://code.angularjs.org/1.5.5/
 
 Depois disso é necessário incluir as rotas como dependência no seru arquivo `app.js` dessa forma:
+
 ```js
 angular.module('nome',['ngRoute']);
 ```
 
 Então criamos um arquivo `routes.js` com os conteúdos das rotas:
+
 ```js
 angular.module('nome')
   .config(function($routeProvider){});
@@ -34,6 +36,7 @@ Utilizando o `$routeProvider` (que é um serviço) poderemos adicionar novos com
 - `.otherwise(params)`: Define uma rota quando nenhuma outra é válida (Default)
 
 No arquivo `routes.js`:
+
 ```js
 angular.module('nome')
   .config(function($routeProvider) {
@@ -74,6 +77,7 @@ angular.module('Nome')
   .controller('NomeController', function() {});
 ```
 Em um arquivo separado, e depois chamar no nosso arquivo `routes.js` desta forma:
+
 ```js
 angular.module('Nome')
   .config(function($routeProvider) {
@@ -88,6 +92,7 @@ Não é necessário passar o nome do arquivo javascript pois ao realizar a requi
 
 ## Parâmetros de rotas
 É possível definir parâmetros de rotas através de `:nome`, por exemplo, `/notes/:id` seria a URL `http://.../notes/1` onde `1` seria o parâmetro `id`.
+
 ```js
 angular.module('Nome').config(function($routeProvider) {
   $routeProvider.when('/notes/:id', {
@@ -99,6 +104,7 @@ angular.module('Nome').config(function($routeProvider) {
 ```
 
 Para buscar esses parâmetros da query é possível usar o `$routeParams` no *controller*, então no arquivo referente ao `NomeController` fazemos o seguinte:
+
 ```js
 angular.module('Nome')
   .controller('NomeController', function($http, $routeParams) {
@@ -112,6 +118,7 @@ angular.module('Nome')
 
 # $scope
 Referencia o escopo atual do controller:
+
 ```js
 angular.module('Nome').controller('NomeController', function($scope) {
   $scope.prop = 'prop';
@@ -119,6 +126,7 @@ angular.module('Nome').controller('NomeController', function($scope) {
 ```
 
 Desta forma, sempre que precisarmos chamar um controller dentro de uma diretiva, digamos neste modelo:
+
 ```html
 <div class='b' ng-controller='NomeController as nomectrl'>
 <h3>{{nomectrl.prop}}</h3>
@@ -126,18 +134,22 @@ Desta forma, sempre que precisarmos chamar um controller dentro de uma diretiva,
 ```
 
 Podemos simplesmente usar:
+
 ```html
 <div class='b' ng-controller='NomeController'>
 <h3>{{prop}}</h3>
 </div>
 ```
+
 O `$scope` atua como uma variável global dentro do controller, ele referencia todo o escopo da função dentro de um determinado modelo.
 Com ele é possível remover os aliases de todos os controllers e também as variáveis do tipo `var controller = this`.
 
 ## Objetos de configuração
+
 Por padrão, escopos herdam os escopos pais, ou seja, se você criar uma diretiva de elemento, o escopo dessa diretiva vai herdar o escopo do elemento pai sobre este elemento.
 
 Para que cada elemento tenha seu escopo separado, precisamos definir um outro titulo na diretiva:
+
 ```js
 angular.module('Nome')
   .directive("nomeDirective", function() {
@@ -155,7 +167,9 @@ angular.module('Nome')
 Com o exemplo acima, teremos o print da propriedade com os valores sempre incrementais. Isto ocorre porque o escopo do elemento filho vai ter suas próprias variáveis e não vai mais herdar o escopo do pai.
 
 ### Diretiva com parâmetros
+
 Para passarmos parâmetros para uma diretiva, digamos `<ng-card ctitle="teste"></ng-card>`, de forma que o elemento saiba que existe um atributo `ctitle`, precisamos de uma configuração extra no `scope`:
+
 ```js
 angular.module('Nome')
   .directive("nomeDirective", function() {
@@ -172,7 +186,9 @@ angular.module('Nome')
 Quando usamos `=` não é necessário usar `{{nome}}` basta usar `nome`.
 
 # Link
+
 Toda diretiva tem uma função chamada Link, que relaciona eventos como click, hover e etc depois que ela já foi compilada e exibida. Desta forma não há como termos problemas de executar um js sem que o DOM esteja completo. É o melhor lugar para fazer uma manipulação de DOM ou lógica dentro de uma diretiva.
+
 ```js
 angular.module("Nome")
   .directive("nwCard", function nwCardDirective() {
@@ -185,6 +201,7 @@ angular.module("Nome")
   });
 ```
 Porém o problema é que estamos buscando todo o DOM com o `$("div.card")` e temos que buscar só um elemento. Podemos utilizar os parâmetros do link:
+
 ```js
 angular.module("Nome")
   .directive("nwCard", function nwCardDirective() {
@@ -199,6 +216,7 @@ angular.module("Nome")
 Desta forma sabemos o elemento que temos que buscar.
 
 O link também tem um terceiro parâmetro que é o `attrs`, que busca todos os atributos da diretiva em questão:
+
 ```js
 link: function(scope, element, attrs) { //attrs vai buscar todos os atributos da diretiva, então <nwCard header="header"> teria um attrs.header que seria igual a "header"
   element.on("click", function() { element("div.card p").toggleClass("hidden"); }); //jQuery
@@ -208,6 +226,7 @@ link: function(scope, element, attrs) { //attrs vai buscar todos os atributos da
 
 # $sce
 SCE é um serviço do Angular responsável por criar htmls confiáveis na página, ou seja, se for necessário a inserção de um html após a renderização das funções ele não vai escapar como string. Para isso digamos que tenhamos que colocar um texto em markdown para html. Desta forma podemos utilizar a diretiva `ng-bind-html` ao invés de inserir com `{{}}`, digamos:
+
 ```html
 <div class="card">
   <div class="card-hidden">
@@ -216,6 +235,7 @@ SCE é um serviço do Angular responsável por criar htmls confiáveis na págin
 </div>
 ```
 O texto que vier do `{{body}}` não vai ser renderizado como html mesmo que ele seja, pois isso traz problemas de segurança, então temos que usar a diretiva:
+
 ```html
 <div class="card">
   <div class="card-hidden">
@@ -224,6 +244,7 @@ O texto que vier do `{{body}}` não vai ser renderizado como html mesmo que ele 
 </div>
 ```
 E então na nossa diretiva realizar:
+
 ```js
 angular.module("Nome")
   .directive("nwCard", function($sce) {
@@ -238,9 +259,11 @@ angular.module("Nome")
 Desta forma o Angular vai saber que este HTML é seguro.
 
 # Serviços
+
 Um serviço é uma ferramenta para fazer conexões entre servidores remotos através de chamadas AJAX. No Angular é basicamente outro arquivo .js incluido dentro da aplicação.
 
 Serviços usam um total de 5 "recipes" que podem variar em complexidade e customização:
+
 - Value: A mais simples, usada para compartilhar apenas um valor, como uma global.
 - Factory: É a receita mais usada. Serve para compartilhar funções e objetos entre a aplicação
 - Service: Usado para compartilhar instancias de um método ou objeto ao invés do método estático
@@ -250,7 +273,9 @@ Serviços usam um total de 5 "recipes" que podem variar em complexidade e custom
 Os dois mais utilizados são `Factory` e `Provider`.
 
 ## Definindo uma Factory
+
 Para criar um serviço do tipo Factory, precisamos digitar em nosso arquivo javascript:
+
 ```js
 angular.module("Nome")
   .factory("NomeService", function NomeFactory() { //boa prática sempre utilizar <nome>Recipe como nome da função
@@ -261,6 +286,7 @@ angular.module("Nome")
 ```
 
 Por exemplo, vamos encapsular um método HTTP com um nome e um método GET dentro de uma função anonima.
+
 ```js
 angular.module("Nome")
   .factory("NomeService", function NomeFactory($http) { //boa prática sempre utilizar <nome>Recipe como nome da função
@@ -276,7 +302,9 @@ angular.module("Nome")
 ```
 
 ### Usando um serviço dentro do método
+
 Primeiro, precisamos injetar o serviço dentro da função que vamos utilizar no nosso controller.
+
 ```js
 angular.module("NomeModulo")
   .controller("NomeController", function($scope, NomeService) {
@@ -287,6 +315,7 @@ angular.module("NomeModulo")
 > Se o objeto só tiver uma unica função você não precisa retornar o objeto com a função dentro, basta retornar somente a função.
 
 No caso de o objeto ser apenas uma função, digamos:
+
 ```js
 angular.module("Nome")
   .factory("NomeService", function NomeFactory($http) { //boa prática sempre utilizar <nome>Recipe como nome da função
@@ -299,6 +328,7 @@ angular.module("Nome")
 ```
 
 Podemos fazer:
+
 ```js
 angular.module("Nome")
   .factory("NomeService", function NomeFactory($http) { //boa prática sempre utilizar <nome>Recipe como nome da função
@@ -309,6 +339,7 @@ angular.module("Nome")
 ```
 
 Então para chamarmos o método:
+
 ```js
 angular.module("NomeModulo")
   .controller("NomeController", function($scope, NomeService) {
@@ -317,9 +348,11 @@ angular.module("NomeModulo")
 ```
 
 ## Criando um provider
+
 O Provider, diferentemente dos outros serviços, permite que passamos configurações para ele, desta forma o serviço se torna configurável e mais genérico.
 
 Para passar uma configuração sempre utilizamos o serviço `this.$get` que pertence a todo Provider.
+
 ```js
 angular.module("Nome")
   .provider("Nome", function NomeProvider() {
@@ -328,6 +361,7 @@ angular.module("Nome")
 ```
 
 Contudo, providers são as primeiras coisas que são carregadas, então você só pode injetar outro provider em um nível mais alto:
+
 ```js
 angular.module("Nome")
   .provider("Nome", function NomeProvider(outroProvider) {
@@ -336,6 +370,7 @@ angular.module("Nome")
 ```
 
 Para este exemplo, vamos refatorar um serviço de busca de imagens do Gravatar, de um factory para um Provider:
+
 ```js
 angular.module('GravatarModule')
   .factory("Gravatar", function GravatarFactory() {
@@ -363,6 +398,7 @@ angular.module('GravatarModule')
 ```
 
 A chamada da função ainda continua a mesma:
+
 ```js
 angular.module("GrModule")
   .controller("IndexController", function($scope, Gravatar) {
@@ -373,6 +409,7 @@ angular.module("GrModule")
 ```
 
 Mas note que não temos as confitgurações, que é o objetivo de termos um provider para inicio de tudo.
+
 ```js
 angular.module('GravatarModule')
   .provider("Gravatar", function GravatarProvider() {
@@ -392,18 +429,22 @@ angular.module('GravatarModule')
 ```
 
 Agora podemos usar a parte configurável. Podemos fazer isso diretamente no `app.js` que vai rodar antes de qualquer coisa.
+
 ```js
 angular.module("Modulo", ["ngRoute"])
   .config(function (GravatarProvider) { GravatarProvider.setSize(100); });
 ```
 
 # $resource
+
 O ngResource é um serviço que contem os métodos CRUD do HTTP por padrão. Você pode baixar de http://code.angularjs.org e incluir com uma tag `<script>`, depois precisamos inserir eles dentro do modulo:
+
 ```js
 angular.module("Nome", ['ngResource'])
 ```
 
 Chamando como:
+
 ```js
 angular.module("Nome")
   .factory("NomeF", function NomeFFactory($resource) {
@@ -416,9 +457,11 @@ Então ao invés de utilizar a função get do $http, podemos usar `NomeF.get({p
 O $resource reduz o código.
 
 # Plugins de terceiros
+
 É uma boa prática induzir uma diretiva para plugins de terceiros pra eles não ficarem jogados no código.
 
 Primeiramente temos que buscar nossas bibliotecas e incluir no código. Neste exemplo, vamos usar o `tooltip.js` do Bootstrap. Substituindo o atributo `title` das divs
+
 ```js
 angular.module("Nome")
   .directive("title", function($timeout) {

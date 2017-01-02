@@ -1,5 +1,28 @@
 # Angular.js
-Framework front-end para criação de páginas dinâmmicas HTML, ajuda a organizar, manter e acelerar qualquer tipo de site.
+> Framework front-end para criação de páginas dinâmmicas HTML, ajuda a organizar, manter e acelerar qualquer tipo de site.
+
+<!-- TOC -->
+
+- [Angular.js](#angularjs)
+- [Diretrizes](#diretrizes)
+  - [Modulos](#modulos)
+    - [Expressões](#express%C3%B5es)
+- [Controllers](#controllers)
+- [Filtros](#filtros)
+- [Built-in directives](#built-in-directives)
+- [Validações](#valida%C3%A7%C3%B5es)
+- [Angular Templates](#angular-templates)
+  - [Diretrizes específicas](#diretrizes-espec%C3%ADficas)
+    - [Definição](#defini%C3%A7%C3%A3o)
+    - [Definição com controllers](#defini%C3%A7%C3%A3o-com-controllers)
+- [Dependências](#depend%C3%AAncias)
+- [Serviços](#servi%C3%A7os)
+    - [Chamadas HTTP](#chamadas-http)
+      - [Tratando erros de chamada](#tratando-erros-de-chamada)
+  - [Incluindo serviços](#incluindo-servi%C3%A7os)
+- [Referencias](#referencias)
+
+<!-- /TOC -->
 
 Angular acelera as requisições basicamente por buscar apenas informações necessárias nas requisições, e não requisitar toda a informação
 novamente.
@@ -33,6 +56,7 @@ Angular a um html pela diretriz `ng-app`
 "index.html"
 
 E depois no arquivo "app.js"
+
 ```js
 var app = angular.module('store', [ ]);
 ```
