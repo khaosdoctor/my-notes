@@ -20,6 +20,9 @@
       - [Pseudo-classes](#pseudo-classes)
   - [Views, rotas e partials](#views-rotas-e-partials)
     - [LocationProvider e modo HTML5](#locationprovider-e-modo-html5)
+  - [Formulários com AngularJS](#formul%C3%A1rios-com-angularjs)
+    - [Validação de Formulários](#valida%C3%A7%C3%A3o-de-formul%C3%A1rios)
+      - [Outras diretivas](#outras-diretivas)
 
 <!-- /TOC -->
 
@@ -553,3 +556,164 @@ angular.module("alurapic", ["minhasDiretivas", "ngAnimate", "ngRoute"])
 E no nosso HTML precisamos utilizar a tag `<base href="/">` no topo do head para que isso funcione.
 
 > Não se esqueça de que é importante que o back-end precisa estar configurado para isso.
+
+## Formulários com AngularJS
+
+Tendo um formulário, podemos usar as diretivas `ng-model` para poder atribuir uma variável no angular para cada input do formulário.
+
+Assim como também podemos usar diretivas de eventos do angular para ligar o evento submit do form para um método do angular.
+
+```html 
+<form action="" ng-submit="submeter()"></form>
+```
+
+E então no modelo do Angular fazemos:
+
+```js
+$scope.submeter = function() {
+
+}
+```
+
+E colocamos nosso código internamente.
+
+### Validação de Formulários
+
+Primeiramente temos de desativar todas as validações do HTML5 usando o atributo `novalidate` dentro da tag form:
+
+```html
+<form novalidate name="formulario" class="row" ng-submit="submeter()">
+    <div class="col-md-6">
+        <div class="form-group">
+            <label>Título</label>
+            <input name="titulo" class="form-control" ng-model="foto.titulo">    
+        </div>
+        <div class="form-group">
+            <label>URL</label>
+            <input name="url" class="form-control" ng-model="foto.url">
+        </div>
+        <div class="form-group">
+            <label>Descrição</label>
+            <textarea name="descricao" class="form-control" ng-model="foto.descricao"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            Salvar
+        </button>
+         <a href="/" class="btn btn-primary">Voltar</a>
+    </div>
+    <div class="col-md-6">
+        <minha-foto></minha-foto>
+    </div>
+</form>
+```
+
+Então vamos deixar os campos obrigatórios e definir mensagens de erro:
+
+```html
+<form novalidate name="formulario" class="row" ng-submit="submeter()">
+    <div class="col-md-6">
+        <div class="form-group">
+            <label>Título</label>
+            <input name="titulo" class="form-control" ng-model="foto.titulo" required>
+            <span class="form-control alert-danger">Título obrigatório</span>
+        </div>
+        <div class="form-group">
+            <label>URL</label>
+            <input name="url" class="form-control" ng-model="foto.url" required>
+            <span class="form-control alert-danger">URL obrigatória</span>
+        </div>
+        <div class="form-group">
+            <label>Descrição</label>
+            <textarea name="descricao" class="form-control" ng-model="foto.descricao"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            Salvar
+        </button>
+         <a href="/" class="btn btn-primary">Voltar</a>
+    </div>
+    <div class="col-md-6">
+        <minha-foto></minha-foto>
+    </div>
+</form>
+```
+
+Veja que utilizamos o atributo `required` do próprio HTML5, porém desta vez será tratada pelo angular.
+
+Para as mensagens de erro, criamos um span logo abaixo do campo, porém no momento ele fica sempre exibido. Vamos condicionar ele a exibir apenas quando o formulário estiver inválido. Para isto, primeiramente vamos utilizar a diretiva `ng-show`:
+
+```html
+<form novalidate name="formulario" class="row" ng-submit="submeter()">
+    <div class="col-md-6">
+        <div class="form-group">
+            <label>Título</label>
+            <input name="titulo" class="form-control" ng-model="foto.titulo" required>
+            <span class="form-control alert-danger" ng-show="formulario.$submitted && formulario.titulo.$error.required">Título obrigatório</span>
+        </div>
+        <div class="form-group">
+            <label>URL</label>
+            <input name="url" class="form-control" ng-model="foto.url" required>
+            <span class="form-control alert-danger" ng-show="formulario.$submitted && formulario.titulo.$error.required">URL obrigatória</span>
+        </div>
+        <div class="form-group">
+            <label>Descrição</label>
+            <textarea name="descricao" class="form-control" ng-model="foto.descricao"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            Salvar
+        </button>
+         <a href="/" class="btn btn-primary">Voltar</a>
+    </div>
+    <div class="col-md-6">
+        <minha-foto></minha-foto>
+    </div>
+</form>
+```
+
+Estamos utilizando uma validação interna do angular que identifica qual é o tipo de erro que obtivemos de acordo com o campo que precisamos. Também pedimos para que esta validação seja feita apenas quando o formulário for submetido.
+
+Podemos mudar o erro para limitar o tamanho de caracteres por exemplo.
+
+```html
+<form novalidate name="formulario" class="row" ng-submit="submeter()">
+    <div class="col-md-6">
+        <div class="form-group">
+            <label>Título</label>
+            <input name="titulo" class="form-control" ng-model="foto.titulo" required ng-maxlength="20">
+            <span class="form-control alert-danger" ng-show="formulario.$submitted && formulario.titulo.$error.required">Título obrigatório</span>
+            <span class="form-control alert-danger" ng-show="formulario.$submitted && formulario.titulo.$error.maxlength">O título só pode ter 20 letras</span>
+        </div>
+        <div class="form-group">
+            <label>URL</label>
+            <input name="url" class="form-control" ng-model="foto.url" required>
+            <span class="form-control alert-danger" ng-show="formulario.$submitted && formulario.titulo.$error.required">URL obrigatória</span>
+        </div>
+        <div class="form-group">
+            <label>Descrição</label>
+            <textarea name="descricao" class="form-control" ng-model="foto.descricao"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            Salvar
+        </button>
+         <a href="/" class="btn btn-primary">Voltar</a>
+    </div>
+    <div class="col-md-6">
+        <minha-foto></minha-foto>
+    </div>
+</form>
+```
+
+#### Outras diretivas
+
+Podemos usar a diretiva `ng-disabled` para definir quando um campo ou elemento estará desativado:
+
+```html
+<button type="submit" class="btn btn-primary" ng-disabled="formulario.$invalid">
+            Salvar
+</button>
+```
+
+Desta forma o botão salvar será apenas habilitado quando o formulário estiver válido
