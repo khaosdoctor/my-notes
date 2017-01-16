@@ -15,6 +15,11 @@
   - [$http](#http)
   - [Diretivas personalizadas](#diretivas-personalizadas)
     - [Templates externos](#templates-externos)
+  - [Filtrando dados](#filtrando-dados)
+    - [Utilizando Models](#utilizando-models)
+      - [Pseudo-classes](#pseudo-classes)
+  - [Views, rotas e partials](#views-rotas-e-partials)
+    - [LocationProvider e modo HTML5](#locationprovider-e-modo-html5)
 
 <!-- /TOC -->
 
@@ -374,3 +379,177 @@ Agora vamos trocar a propriedade `template` por `templateUrl`:
 ```
 
 E nela colocamos a url do template, sempre partindo da pasta raiz.
+
+## Filtrando dados
+
+Podemos fazer com que os usuários possam filtrar os dados de suas pesquisas, para isto vamos utilizar uma nova marcação para criar um formulário de envio:
+
+```html
+<div class="row">
+  <div class="col-md-12">
+    <form action="">
+      <input type="text" class="form-control" placeholder="filtrar">
+    </form>
+  </div>
+</div>
+```
+
+Assim temos uma nova linha com um formulário de filtro.
+
+### Utilizando Models
+
+Para filtrar estes dados, temos que ter a capacidade de utilizar uma string (capturada em tempo real) em uma variável JavaScript. Não podemos utilizar uma angular expression, porque as mesmas são apenas leitura, vamos utilizar então a diretiva `ng-model`.
+
+Primeiramente, criamos uma variável dentro do nosso controller chamada filtro com `$scope.filtro`, e utilizaremos a diretiva no nosso input:
+
+```html
+<div class="row">
+  <div class="col-md-12">
+    <form action="">
+      <input type="text" class="form-control" placeholder="filtrar" ng-model="filtro">
+    </form>
+  </div>
+</div>
+```
+
+Podemos filtrar uma lista dentro do `ng-repeat`, usamos especificamente uma diretiva do angular que podemos passar um valor e este valor ser reduzido em um array:
+
+```html
+<painel-fotos ng-repeat="foto in fotos | filter: filtro" titulo="{{foto.titulo}}">
+    <img class="img-responsive center-block" src="{{foto.url}}" alt="{{foto.titulo}}">
+</painel-fotos>
+```
+
+Utilizando o `| filter: <string>` estamos dizendo que o array deve possuir **em qualquer propriedade** a string passada. Desta forma podemos filtrar os arrays de acordo com um filtro built-in do angular.
+
+Para podermos filtrar uma propriedade especifica, podemos passar um objeto `{propriedade: valor}`
+
+Um dos problemas é que a atualização do `$scope` é instantanea, para podermos criar um _delay_ entre  a digitação e a atualização do dado, podemos utilizar uma diretiva chamada `ng-model-options` com o valor `debounce`
+
+```html
+<div class="row">
+  <div class="col-md-12">
+    <form action="">
+      <input type="text" class="form-control" placeholder="filtrar" ng-model="filtro" ng-model-options="{debounce: 500}">
+    </form>
+  </div>
+</div>
+```
+
+#### Pseudo-classes
+
+Quando utilizado em conjunto com o ngAnimate, o angular coloca algumas classes a medida que algumas ações são tomadas. Assim como o browser coloca classes como `:before`, `:first-line` e etc, também o angular tem a capacidade de incluir algumas classes no seu DOM.
+
+- `ng-leave`: É uma classe colocada pelo angular no `ng-repeat` quando um elemento deixa a lista
+- `ng-leave-active`: É uma classe do angular para o `ng-repeat` quando um elemento está para deixar a lista
+
+Para mais classes, veja na página de ajuda do ngAnimate.
+
+## Views, rotas e partials
+
+O modelo SPA não necessariamente significa que toda a aplicação vai ter apenas uma página, mas sim que ela vai ser carregada uma unica vez e nunca mais após disso.
+
+Para podermos criar outras views e ouras telas para nossas aplicações, podemos utilizar das views do próprio angular.
+
+Para definir um local de visualização, utilizamos a tag `<ng-view>` para definir que aquele local será o local aonde os conteúdos serão colocados.
+
+```html
+<html>
+  <head>
+  ...
+  </head>
+  <body>
+    <ng-view></ng-view>
+  </body>
+</html>
+```
+
+Para utilizarmos o modelo de rotas que iremos implementar, vamos utilizar o script `ngRoute` que o próprio angular provém. Primeiramente vamos importar e definir como uma dependencia no nosso `main.js`.
+
+O Router vai, por meio de requisições AJAX, iniciar o download dos recursos e importar seu conteúdo dentro do `ng-view`.
+
+> __Importante__: Temos que remover todas as referências aos controllers que utilizamos previamente, pois quando trocarmos de rota, esses controllers não estarão mais disponíveis, o próprio router do angular vai injetar essas dependencias no partial carregado.
+
+```js
+angular.module("alurapic", ["minhasDiretivas", "ngAnimate", "ngRoute"])
+  .config(function($routeProvider) {
+    $routeProvider.when("/fotos", {
+      templateUrl: "partials/principal.html",
+      controller: "FotosController"
+    });
+  });
+```
+
+No código acima estamos dizendo que quando o endereço for `/fotos`, então vamos carregar o partial `principa.html` e aplicar seu controller.
+
+> Note que a URL que o Router enxerga deve seguir o padrão `/#/<caminho>`, ou seja, neste caso acima seria `/#/fotos`
+
+Da mesma forma vamos cadastrar o nosso partial de fotos:
+
+```js
+angular.module("alurapic", ["minhasDiretivas", "ngAnimate", "ngRoute"])
+  .config(function($routeProvider) {
+
+    $routeProvider.when("/fotos", {
+      templateUrl: "partials/principal.html",
+      controller: "FotosController"
+    });
+
+    $routeProvider.when("/fotos/new", {
+      templateUrl: "partials/cadastro.html",
+      controller: "CadastroController"
+    });
+  });
+```
+
+Quando não temos nenhuma rota que bata com as rotas existentes, podemos definir uma rota padrão:
+
+```js
+angular.module("alurapic", ["minhasDiretivas", "ngAnimate", "ngRoute"])
+  .config(function($routeProvider) {
+
+    $routeProvider.when("/fotos", {
+      templateUrl: "partials/principal.html",
+      controller: "FotosController"
+    });
+
+    $routeProvider.when("/fotos/new", {
+      templateUrl: "partials/cadastro.html",
+      controller: "CadastroController"
+    });
+
+    $routeProvider.otherwise({ redirectTo: "/fotos" });
+  });
+```
+
+Desta forma o método `otherwise` diz que, se não pudermos encontrar a rota selecionada, vamos direcionar para uma rota padrão, neste caso `/#/fotos`.
+
+### LocationProvider e modo HTML5
+
+O angular possui uma capacidade de trabalhar com rotas sem a `#`, mas para isso tanto o front quando o back-end precisam estar preparados para aceitar este tipo de rotas.
+
+uma vez que ambos os lados estejam preparados para isto, podemos simplesmente injetar uma nova dependencia e configura-la de forma adequada.
+
+```js
+angular.module("alurapic", ["minhasDiretivas", "ngAnimate", "ngRoute"])
+  .config(function($routeProvider, $locationProvider) {
+
+    $locationProvider.html5Mode(true);
+
+    $routeProvider.when("/fotos", {
+      templateUrl: "partials/principal.html",
+      controller: "FotosController"
+    });
+
+    $routeProvider.when("/fotos/new", {
+      templateUrl: "partials/cadastro.html",
+      controller: "CadastroController"
+    });
+
+    $routeProvider.otherwise({ redirectTo: "/fotos" });
+  });
+```
+
+E no nosso HTML precisamos utilizar a tag `<base href="/">` no topo do head para que isso funcione.
+
+> Não se esqueça de que é importante que o back-end precisa estar configurado para isso.
