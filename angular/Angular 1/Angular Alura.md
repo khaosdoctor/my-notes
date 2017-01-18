@@ -5,8 +5,8 @@
 <!-- TOC -->
 
 - [Angular 1: Alura](#angular-1-alura)
-  - [Descrição](#descri%C3%A7%C3%A3o)
-  - [Módulos](#m%C3%B3dulos)
+  - [Descrição](#descrição)
+  - [Módulos](#módulos)
   - [Templates](#templates)
   - [Controllers](#controllers)
     - [Data-Binding](#data-binding)
@@ -20,8 +20,9 @@
       - [Pseudo-classes](#pseudo-classes)
   - [Views, rotas e partials](#views-rotas-e-partials)
     - [LocationProvider e modo HTML5](#locationprovider-e-modo-html5)
-  - [Formulários com AngularJS](#formul%C3%A1rios-com-angularjs)
-    - [Validação de Formulários](#valida%C3%A7%C3%A3o-de-formul%C3%A1rios)
+    - [Wildcards](#wildcards)
+  - [Formulários com AngularJS](#formulários-com-angularjs)
+    - [Validação de Formulários](#validação-de-formulários)
       - [Outras diretivas](#outras-diretivas)
 
 <!-- /TOC -->
@@ -557,6 +558,45 @@ E no nosso HTML precisamos utilizar a tag `<base href="/">` no topo do head para
 
 > Não se esqueça de que é importante que o back-end precisa estar configurado para isso.
 
+### Wildcards
+
+É possível definir wildcards ou parâmetros de rota para as rotas do angular da mesma forma que definimos em qualquer outro framework:
+
+```js
+angular.module("alurapic", ["minhasDiretivas", "ngAnimate", "ngRoute"])
+  .config(function($routeProvider, $locationProvider) {
+
+    $locationProvider.html5Mode(true);
+
+    $routeProvider.when("/fotos", {
+      templateUrl: "partials/principal.html",
+      controller: "FotosController"
+    });
+
+    $routeProvider.when("/fotos/new", {
+      templateUrl: "partials/cadastro.html",
+      controller: "CadastroController"
+    });
+
+    $routeProvider.when("/fotos/edit/:id", {
+      templateUrl: "partials/cadastro.html",
+      controller: "CadastroController"
+    });
+
+    $routeProvider.otherwise({ redirectTo: "/fotos" });
+  });
+```
+
+Tudo que segue após o `:<nome>` se transforma em um atributo do objeto `$routeParams`. Desta forma podemos acessar o id pelo controller através do seguinte código:
+
+```js
+angular.module('alurapic').controller('CadastroController', function ($scope, $http, $routeParams) {
+  console.log($routeParams.id);
+});
+```
+
+
+
 ## Formulários com AngularJS
 
 Tendo um formulário, podemos usar as diretivas `ng-model` para poder atribuir uma variável no angular para cada input do formulário.
@@ -716,4 +756,4 @@ Podemos usar a diretiva `ng-disabled` para definir quando um campo ou elemento e
 </button>
 ```
 
-Desta forma o botão salvar será apenas habilitado quando o formulário estiver válido
+Desta forma o botão salvar será apenas habilitado quando o formulário estiver válido.
