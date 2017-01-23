@@ -23,7 +23,13 @@
     - [Wildcards](#wildcards)
   - [Formulários com AngularJS](#formulários-com-angularjs)
     - [Validação de Formulários](#validação-de-formulários)
+      - [ng-options](#ng-options)
       - [Outras diretivas](#outras-diretivas)
+  - [ngResource](#ngresource)
+    - [GET](#get)
+    - [DELETE](#delete)
+    - [PUT](#put)
+  - [Serviços](#serviços)
 
 <!-- /TOC -->
 
@@ -312,6 +318,8 @@ O DDO contém algumas opções:
 
 > Note que a propriedade titulo está com um `@`, isso significa que o valor passado será literal, ou seja, uma string.
 
+> Para passar outros valores podemos utilizar, por exemplo, `&` que significa que vamos passar uma __expressão__ que será executada no escopo do controller
+
 > É importante notar que a diretiva precisa ser em camelCasing, mas quando virar uma tag HTML, a mesma se transforma em hífen. Logo, `painelFotos` viraria `painel-fotos`. Sendo chamado da seguinte maneira:
 
 ```html
@@ -595,8 +603,6 @@ angular.module('alurapic').controller('CadastroController', function ($scope, $h
 });
 ```
 
-
-
 ## Formulários com AngularJS
 
 Tendo um formulário, podemos usar as diretivas `ng-model` para poder atribuir uma variável no angular para cada input do formulário.
@@ -746,14 +752,133 @@ Podemos mudar o erro para limitar o tamanho de caracteres por exemplo.
 </form>
 ```
 
+#### ng-options
+
+`ng-options` é uma diretiva do angular que identifica uma opção para uma outra diretiva. Como no caso da exibição de uma tag `select` que identifica o value de forma diferente do nome. Podemos usar o `ng-options` como: `grupo._id as grupo.nome for grupo in grupos`. Desta forma o nome do select vai ser exibido e o ID será o valor.
+
+```html
+<!-- código anterior omitido -->
+
+        <div class="form-group">
+            <label>Grupo</label>
+            <select name="grupo" 
+                    ng-model="foto.grupo" class="form-control" required
+                    ng-controller="GruposController"
+                    ng-options="grupo._id as grupo.nome for grupo in grupos">
+                <option value="">Escolha um grupo</option>
+            </select>
+            <span ng-show="formulario.$submitted && formulario.grupo.$error.required" class="form-control alert-danger">
+                Grupo obrigatório
+            </span>
+        </div>
+
+<!-- código posterior omitido -->
+```
+
+a diretiva ng-options, que possui comportamento parecido com `ng-repeat`, porém a sintaxe `"grupo._id as grupo.nome"` indica que o valor do elemento será o ID do grupo e o que será exibido para seleção será seu nome. O restante `"for grupo in grupos"` percorrerá a lista de grupos disponibilizada no escopo do controller, construindo cada item de nossa lista.
+ 
 #### Outras diretivas
 
 Podemos usar a diretiva `ng-disabled` para definir quando um campo ou elemento estará desativado:
 
 ```html
-<button type="submit" class="btn btn-primary" ng-disabled="formulario.$invalid">
-            Salvar
-</button>
+<button type="submit" class="btn btn-primary" ng-disabled="formulario.$invalid">Salvar</button>
 ```
 
 Desta forma o botão salvar será apenas habilitado quando o formulário estiver válido.
+
+## ngResource
+
+> Se o back-end mudar, o que acontece?
+
+Temos que realizar todas as mudanças em todas as URL's que chamamos em nossos endpoints dentro do nosso código.
+
+Quando importamos o script `ngResource` dentro da nossa chamada de scripts e no módulo, temos acesso a uma classe chamada `$resource`.  Podemos então criar recursos com nossos endpoints.
+
+```js
+let recursoFoto = $resource('v1/fotos/:fotoId');
+```
+
+### GET
+
+E então podemos substituir nosso `$http.get` por:
+
+```js
+recursoFoto.query(
+  (fotos) => {
+  $scope.fotos = fotos;
+},
+  (erro) => {
+    console.log(erro);
+  });
+```
+
+### DELETE
+
+Isso resolve o nosso problema com o `$http.get`. Podemos agora alterar o nosso botão de remoção utilizando o verbo `delete` do HTTP através do resource:
+
+```js
+resucroFoto.delete({fotoId: foto._id}, 
+  () => {
+    //sucesso
+  }, 
+  (erro) => { 
+    //erro
+});
+```
+
+> Note que no `query`, não precisamos nos preocupar com o parâmetro `fotoId`, mas no `delete` temos o primeiro parâmetro que é justamente o parâmetro.
+
+### PUT
+
+Para usarmos o PUT, podemos simplesmente alterar a definição do nosso recurso. Passaremos um segundo parâmetro como `null`, que será a _query string_ da URL, enquanto o terceiro parâmetro será um objeto nomeado com a nossa função:
+
+```js
+let recursoFoto = $resource('v1/fotos/:fotoId', null, {
+  update: {
+    method: "PUT"
+  }
+});
+```
+
+O que estamos fazendo aqui é criar um método update, que vai fazer uma requisição para essa URL com o método PUT:
+
+```js
+recursoFoto.update({fotoId: $scope.foto._id}, $scope.foto, 
+() => {
+    //sucesso
+},
+(erro) => {
+    //erro
+});
+```
+
+> O primeiro parâmetro é o parâmetro da URL, enquanto o segundo é a body da request
+
+## Serviços
+
+Serviços são códigos que podem ser reutilizados ao longo de todo o app.
+
+Vamos criar um novo arquivo (podemos criar esse serviço dentro de um módulo separado)
+
+Existem vários modos de serviços, um deles é o `factory` que sempre retorna um objeto ou função:
+
+```js
+angular.module('meusServicos', ['ngResource'])
+  .factory('recursoFoto', ($resource) => {
+
+    return $resource('v1/fotos/:fotoId', null, {
+                        update: {
+                          method: "PUT"
+                        }
+                      });
+  });
+```
+
+Estamos retornando um objeto já configurado, o primeiro parâmetro é o nome do serviço. Agora podemos injetar este módulo como injetamos qualquer outro:
+
+```js
+angular.module('alurapic').controller('fotosController', ($scope, recursoFoto) ...)
+```
+
+E poderemos usar como uma variável normal
