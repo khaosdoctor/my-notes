@@ -14,7 +14,11 @@
     - [ng-repeat](#ng-repeat)
   - [$http](#http)
   - [Diretivas personalizadas](#diretivas-personalizadas)
+    - [Manipulação de DOM](#manipulação-de-dom)
+      - [$broadcast](#broadcast)
+    - [RootScope](#rootscope)
     - [Templates externos](#templates-externos)
+    - [Diretivas que buscam dados](#diretivas-que-buscam-dados)
   - [Filtrando dados](#filtrando-dados)
     - [Utilizando Models](#utilizando-models)
       - [Pseudo-classes](#pseudo-classes)
@@ -30,6 +34,8 @@
     - [DELETE](#delete)
     - [PUT](#put)
   - [Serviços](#serviços)
+    - [Utilizando promisses com serviços](#utilizando-promisses-com-serviços)
+  - [Blindagem de minificação](#blindagem-de-minificação)
 
 <!-- /TOC -->
 
@@ -320,6 +326,8 @@ O DDO contém algumas opções:
 
 > Para passar outros valores podemos utilizar, por exemplo, `&` que significa que vamos passar uma __expressão__ que será executada no escopo do controller
 
+> Para passar o valor _as-is_, ou seja, com o mesmo tipo de dados que está na diretiva, utilizamos o `=`
+
 > É importante notar que a diretiva precisa ser em camelCasing, mas quando virar uma tag HTML, a mesma se transforma em hífen. Logo, `painelFotos` viraria `painel-fotos`. Sendo chamado da seguinte maneira:
 
 ```html
@@ -355,8 +363,152 @@ Neste caso, os elementos filhos não serão mantidos, ou seja, a imagem não vai
 })()
 ```
 
-### Templates externos
+### Manipulação de DOM
 
+No mundo Angular, manipular o DOM utilizando uma biblioteca externa (como o jQuery) é uma grande heresia, porque quebramos as regras de que o controller deve ser completamente _agnóstico_ a todo o tipo de DOM da ferramenta. Para isto usamos as diretivas do angular.
+
+Vamos imaginar a seguinte situação: Temos um formulário que, ao ser submetido, deve passar o foco para um botão específico.
+
+Podemos criar uma diretiva chamada `focus` para tratar essa situação:
+
+```js
+angular.module('minhasDiretivas')
+  .directive('focus', () => {
+    let ddo = {};
+
+    ddo.restrict = "A";
+    ddo.scope = {
+      focado: '='
+    };
+
+    return ddo;
+  });
+```
+
+Então no nosso botão podemos utilizar assim:
+
+```html
+<button focus focado='focado'>Texto</button>
+```
+
+Veja que o atributo `focado` é um elemento de `$scope.focado` no controller, ou seja, a propriedade se transforma em um valor interno de uma propriedade do controller, para que possamos verificar e alterar esses valores.
+
+Porém ainda não temos acesso ao DOM e nem ao elemento do DOM que ele foi adicionado. Após a criação do DOM pelo angular, o mesmo retorna um _link_, o link é uma função que informa o escopo e o elemento de uma diretiva, e podemos utilizar ela na definição:
+
+```js
+angular.module('minhasDiretivas')
+  .directive('focus', () => {
+    let ddo = {};
+
+    ddo.restrict = "A";
+    ddo.scope = {
+      focado: '='
+    };
+    ddo.link = (scope, element) => {
+
+    };
+
+    return ddo;
+  });
+```
+
+Para podermos ter acesso à propriedade em tempo real e executar o two-way-databinding, utilizamos os _watchers_, que são responsáveis por adicionar listeners no elemento para um determinado atributo da diretiva:
+
+```js
+angular.module('minhasDiretivas')
+  .directive('focus', () => {
+    let ddo = {};
+
+    ddo.restrict = "A";
+    ddo.scope = {
+      focado: '='
+    };
+    ddo.link = (scope, element) => {
+      scope.$watch('focado', () => {
+        alert('mudou');
+      });
+    };
+
+    return ddo;
+  });
+```
+
+O que estamos realizando aqui é que __sempre__ que o valor de `focado` for alterado, será exibido um alert. Vamos agora executar agora o código de manipulação de DOM utilizando a biblioteca jQLite (que é padrão do angular).
+
+```js
+angular.module('minhasDiretivas')
+  .directive('focus', () => {
+    let ddo = {};
+
+    ddo.restrict = "A";
+    ddo.scope = {
+      focado: '='
+    };
+    ddo.link = (scope, element) => {
+      scope.$watch('focado', () => {
+        if(scope.focado) {
+          element[0].focus(); //Element é um objeto jQLite, portanto ele é um array com o elemento do DOM como temos apenas um elemento, o array só tem um valor e então podemos acessar a função focus() do vanilla mesmo para focar
+          scope.focado = false;
+        }
+      });
+    };
+
+    return ddo;
+  });
+```
+
+> Note que, o watch é um pouco caro para a SPA, porque o poder computacional está sendo gasto com o monitoramento do atributo.
+
+#### $broadcast
+
+O Angular também trabalha com o EventBus, que é similar ao EventEmitter do NodeJS. Este é o outro modo de criarmos watchers para eventos específicos.
+
+```js
+cadastroDeFotos.cadastrar(foto)
+  .then((retorno) => {
+    $scope.mensagem = retorno.mensagem;
+    if (retorno.inclusao) $scope.foto = {};
+    $scope.$broadcast('fotoCadastrada'); //Emitimos um evento
+  })
+  .catch((erro) => {
+    $scope.mensagem = erro;
+  });
+```
+
+E na nossa diretiva podemos utilizar o listener `on`, presente no angular:
+
+```js
+angular.module('minhasDiretivas')
+  .directive('focus', () => {
+    let ddo = {};
+
+    ddo.restrict = "A";
+    
+    ddo.link = (scope, element) => {
+      scope.$on('fotoCadastrada', () => { //Criamos um listener para o foto cadastrada
+        element[0].focus();
+      });
+    };
+    return ddo;
+  });
+```
+
+> Note que também removemos o atributo `focado` porque ele já não é mais necessário.
+
+### RootScope
+
+Podemos remover o evento fotoCadastrada do controller e levar diretamente ao serviço para que ele seja disparado sempre que o serviço executou a gravação ou a atualização. Mas não podemos realizar essa ação porque o `$scope` não é acessível dentro de um serviço.
+
+O RootScope é o escopo principal que todos os escopos herdam, então podemos emitir um evento global. Precisamos apenas injetar o `rootScope`, imaginamos o serviço:
+
+```js
+angular.module('meuModulo', ['ngResource'])
+  .factory('serviço', (recurso, $q, $rootScope) => {
+    $rootScope.$broadcast('fotoCadastrada');
+  });
+```
+
+### Templates externos
 
 Podemos remover aquela marcação de concatenação de strings na diretiva, vamos criar um novo arquivo com o template:
 
@@ -388,6 +540,85 @@ Agora vamos trocar a propriedade `template` por `templateUrl`:
 
     })
 })()
+```
+
+### Diretivas que buscam dados
+
+Vamos criar uma diretiva chamada meusTitulos. Essa diretiva buscará fotos do servidor e montará uma lista com apenas os títulos dessas fotos. Vamos alterar public/js/directives/minhas-diretivas.js:
+
+```js
+angular.module('minhasDiretivas', [])
+    // diretivas anteriores omitidas
+    .directive('meusTitulos', function() {
+        var ddo = {};
+        ddo.restrict = 'E';
+        ddo.template = '<ul><li ng-repeat="titulo in titulos">{{titulo}}</li></ul>';
+        return ddo;
+    });
+```
+
+Até aqui, nenhuma novidade. Precisamos agora elaborar o código que busca as fotos do servidor. Para isso, precisaremos de recursoFoto, mas como? Sabemos que ele é um artefato injetável em controllers em serviços, mas em diretivas? A solução mora na propriedade controller do nosso ddo:
+
+```js
+angular.module('minhasDiretivas', [])
+    // diretivas anteriores comentadas
+    .directive('meusTitulos', function() {
+        var ddo = {};
+        ddo.restrict = 'E';
+        ddo.template = '<ul><li ng-repeat="titulo in titulos">{{titulo}}</li></ul>';
+        ddo.controller = function($scope, recursoFoto) {
+        };
+        return ddo;
+    });
+```
+
+A propriedade controller permite passarmos uma função que permite termos acesso aos injetáveis do Angular, como `$scope` e `recursoFoto`. Há outros elementos exclusivos que não abordaremos aqui. Você deve estar se perguntando: ok, você me convenceu, mas como recursoFoto foi injetado se não temos o módulo meusServicos como dependência de minhasDiretivas? Resposta: nosso módulo principal da aplicação já carrega o módulo meusServicos, inclusive o módulo minhasDiretivas, por isso recursoFoto é injetável. Porém, fica mais bonito declarar explicitamente essa dependência em nosso módulo, sem efeito colateral algum.
+
+Agora, basta buscarmos nossas fotos e adicionarmos o resultado em $scope.titulos. Veja que acessamos esta propriedade através da diretiva ng-repeat do nosso template:
+
+```js
+// explicitei a dependência do módulo `meusServicos`
+angular.module('minhasDiretivas', ['meusServicos'])
+    // diretivas anteriores comentadas
+    .directive('meusTitulos', function() {
+        var ddo = {};
+        ddo.restrict = 'E';
+        ddo.template = '<ul><li ng-repeat="titulo in titulos">{{titulo}}</li></ul>';
+        ddo.controller = function($scope, recursoFoto) {
+            recursoFoto.query(function(fotos) {
+                $scope.titulos = fotos; // ainda não é isso que queremos!
+            });
+        };
+        return ddo;
+    });
+```
+
+Espere um pouco, `$scope.titulos` está recebendo a lista de fotos, não queremos isso! Queremos é uma lista de títulos. Que tal um pouquinho de JavaScript do "bem" para nos ajudar na tarefa de criar uma nova lista a partir de outra? Vamos usar a função .map:
+
+```js
+angular.module('minhasDiretivas', ['meusServicos'])
+    // diretivas anteriores comentadas
+    .directive('meusTitulos', function() {
+        var ddo = {};
+        ddo.restrict = 'E';
+        ddo.template = '<ul><li ng-repeat="titulo in titulos">{{titulo}}</li></ul>';
+        ddo.controller = function($scope, recursoFoto) {
+            recursoFoto.query(function(fotos) {
+                $scope.titulos = fotos.map(function(foto) {
+                    return foto.titulo;
+                });    
+            });
+        };
+        return ddo;
+    });
+```
+
+A função map itera sobre nossa lista fornecendo acesso ao elemento da iteração no seu parâmetro. Poderia ser qualquer nome, mas nada mais justo chamarmos de foto, já que estamos iterando sobre uma lista de fotos. Para cada foto retornamos seu titulo, isto é, no final da iteração teremos uma nova lista, mas de títulos apenas.
+
+Muito bem, agora é só utilizarmos nossa diretiva. Para não bagunçar nosso projeto, vamos adicioná-la como último elemento da parcial 'principal.html', assim:
+
+```html
+<meus-titulos></meus-titulos>
 ```
 
 E nela colocamos a url do template, sempre partindo da pasta raiz.
@@ -882,3 +1113,104 @@ angular.module('alurapic').controller('fotosController', ($scope, recursoFoto) .
 ```
 
 E poderemos usar como uma variável normal
+
+### Utilizando promisses com serviços
+
+Para utilizarmos promisses dentro dos nossos serviços do Angular, utilizamos um serviço injetável chamado `$queue` (ou `$q`). Este serviço leva dois parâmetros, um deles é o `resolve` e o outro é o `reject`:
+
+```js
+angular.module('meusServicos', ['ngResource'])
+  .factory('cadastroDeFotos', (recursoFoto, $q) => {
+    let servico = {};
+
+    servico.cadastrar = (foto) => {
+      return $q((resolve, reject) => {
+        //Implementação
+      });
+    };
+
+    return servico;
+  });
+```
+
+O `resolve` é uma função que devolve valores, assim como o `reject`, desta forma, dentro do `then` e do `catch` respectivamente.
+
+Podemos implementar da seguinte maneira:
+
+```js
+angular.module('meusServicos', ['ngResource'])
+  .factory('cadastroDeFotos', (recursoFoto, $q) => {
+    let servico = {};
+
+    servico.cadastrar = (foto) => {
+      return $q((resolve, reject) => {
+        if(foto._id) {
+          recursoFoto.update({fotoId: foto._id}, () => {
+            resolve({
+              mensagem: "Foto " + foto.titulo + " atualizada com sucesso",
+              inclusao: false
+            });
+          },
+          (erro) => {
+            console.log(erro);
+            reject("Não foi possível alterar a foto " + foto.titulo);
+          });
+        } else {
+          recursoFoto.save(foto, () => {
+            resolve({
+              mensagem: 'Foto ' + foto.titulo + ' incluida com sucesso',
+              inclusao: true
+            });
+          },
+          (erro) => {
+            console.log(erro);
+            reject('Não foi possível incluir a foto ' + foto.titulo);
+          });
+        }
+      });
+    };
+
+    return servico;
+  });
+```
+
+Assim todos os dados seriam utilizados da seguinte forma:
+
+```js
+cadastroDeFotos.cadastrar(foto)
+  .then((retorno) => {
+    $scope.mensagem = retorno.mensagem;
+    if retorno.inclusao
+  })
+  .catch((erro) => {
+    $scope.mensagem = erro;
+  });
+```
+
+## Blindagem de minificação
+
+É extremamente comum a minificação de scripts para reduzir o tamanho dos arquivos e por conseguinte diminuir o uso de banda por parte do cliente, ainda mais se ele estiver em uma rede móvel como a 3G.
+
+O problema é que o processo de minificação altera o nome dos parâmetros das funções (processo chamado de _mingle_). Não há problema algum nisso, contanto que o novo nome seja trocado em todos os lugares em que é usado, porém o sistema de injeção de dependências do Angular é baseado no nome dos parâmetros. A conclusão disso é que nada mais funcionará no Angular após a minificação, já que os parâmetros das funções serão trocados por outros nomes aleatórios e menores que não tem nada a ver.
+
+Para solucionar este problema, o Angular possui o annotation system, um sistema de anotação que permite dizer o que deve ser injetado para cada parâmetro do controller, mesmo que seu nome seja trocado. Veja a solução:
+
+Este controller :
+
+```js
+angular.module('alurapic')
+    .controller('FotoController', function($scope, recursoFoto, $routeParams, cadastroDeFotos) {
+            // código omitido
+    });
+```
+
+Vira:
+
+```js
+angular.module('alurapic')
+    .controller('FotoController', ['$scope', 'recursoFoto', '$routeParams', 'cadastroDeFotos', function($scope, recursoFoto, $routeParams, cadastroDeFotos) {
+            // código omitido
+    }]);
+```
+
+Veja que o segundo parâmetro do controller é um array que recebe primeiro todos os artefatos que o controller do Angular receberá e por último a função que define o controller. O processo de minificação jamais tocará nos dados do array e o Angular segue a convenção que o primeiro parâmetro do array será injetado como primeiro parâmetro da função do controller. Se o nome do parâmetro da função do controller muda, tudo continuará funcionando.
