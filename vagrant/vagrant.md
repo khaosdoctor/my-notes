@@ -1,5 +1,27 @@
 # Vagrant
 
+<!-- TOC -->
+
+- [Vagrant](#vagrant)
+  - [O que é Vagrant](#o-que-é-vagrant)
+  - [Provisionamento de VM's](#provisionamento-de-vms)
+  - [O que é o Vagrant?](#o-que-é-o-vagrant)
+  - [VagrantFile](#vagrantfile)
+    - [Definindo IP's](#definindo-ips)
+  - [Puppet](#puppet)
+    - [Executando o Puppet](#executando-o-puppet)
+    - [Pacotes](#pacotes)
+    - [Automatização](#automatização)
+  - [Instalando a aplicação](#instalando-a-aplicação)
+    - [Provisionando os arquivos](#provisionando-os-arquivos)
+  - [Instalação de bancos de dados](#instalação-de-bancos-de-dados)
+  - [Rodando puppet automaticamente](#rodando-puppet-automaticamente)
+  - [Utilizando no cloud](#utilizando-no-cloud)
+
+<!-- /TOC -->
+
+## O que é Vagrant
+
 Provisionamento DevOps é uma das áreas mais complexas do desenvolvimento de software, ainda mais quando temos relação com deploys rápidos e provisionamento instantâneo.
 
 A cada alteração no sistema e a cada deploy temos riscos de que todos os dados sejam perdidos ou desconfigurados.

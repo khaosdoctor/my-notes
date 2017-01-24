@@ -1,5 +1,18 @@
 # Prototypes
 
+<!-- TOC -->
+
+- [Prototypes](#prototypes)
+  - [Objetos](#objetos)
+    - [Subníveis](#subníveis)
+    - [Herança](#herança)
+  - [This](#this)
+  - [Classes e Objetos](#classes-e-objetos)
+    - [Reflexão](#reflexão)
+    - [Construtores](#construtores)
+
+<!-- /TOC -->
+
 ## Objetos
 
 Todos os objetos no Javascript são derivados de um outro objeto pai universal, chamado de `object`.

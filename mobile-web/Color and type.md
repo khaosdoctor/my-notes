@@ -1,4 +1,14 @@
 # Cor e tipografia
+
+<!-- TOC -->
+
+- [Cor e tipografia](#cor-e-tipografia)
+  - [Contrastes](#contrastes)
+    - [WCAG - Web Content Accessibility Guidelines](#wcag---web-content-accessibility-guidelines)
+  - [Cores e hierarquia](#cores-e-hierarquia)
+
+<!-- /TOC -->
+
 ## Contrastes
 Tipografia precisa ter um alto nível de contraste entre a letra e o fundo.
 

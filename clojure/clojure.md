@@ -1,5 +1,17 @@
 # Clojure
 
+<!-- TOC -->
+
+- [Clojure](#clojure)
+  - [Leiningen e Clojure](#leiningen-e-clojure)
+  - [Linguagens funcionais](#linguagens-funcionais)
+    - [Funções](#funções)
+    - [Variáveis](#variáveis)
+  - [Iniciando um projeto](#iniciando-um-projeto)
+    - [Métodos base](#métodos-base)
+
+<!-- /TOC -->
+
 Existem dois tipos de paradigmas de programação (na verdade existem vários), um deles é a _programação imperativa_ que é o mais comum, usando comando imperativos linha após linha, como é a maioria das linguagens, como C, C++, Java e etc.
 
 O paradigma funcional é um pouco diferente, usaremos o Clojure, mas ela não é a única, temos Lisp, Scheme, Scala, Elixir e etc.

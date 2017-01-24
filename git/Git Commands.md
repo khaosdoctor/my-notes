@@ -1,4 +1,30 @@
+<!-- TOC -->
+
+- [Comandos base](#comandos-base)
+- [Cherry pick](#cherry-pick)
+- [Stash](#stash)
+- [Tags](#tags)
+  - [Restaurando tags](#restaurando-tags)
+- [.gitignore](#gitignore)
+- [Rebase](#rebase)
+- [Revisando pull requests (Quando todos são colaboradores)](#revisando-pull-requests-quando-todos-são-colaboradores)
+- [Clone e Fork (Definições)](#clone-e-fork-definições)
+- [Upstream](#upstream)
+- [Config](#config)
+- [Corrigindo problemas com LF e CRLF](#corrigindo-problemas-com-lf-e-crlf)
+- [ReReRe](#rerere)
+- [Amend (APENAS LOCAL)](#amend-apenas-local)
+- [Alias](#alias)
+- [Chery Pick](#chery-pick)
+- [Submodules](#submodules)
+- [Tratando commits orfãos](#tratando-commits-orfãos)
+- [Reflogs](#reflogs)
+- [SITES DE AJUDA GIT](#sites-de-ajuda-git)
+
+<!-- /TOC -->
+
 # Comandos base
+
 * `git status`: Verifica status atual do repositório (opção -s mostra menos verbose)
 * `git rebase <branch>`: Roda o rebase no branch atual com base em `<branch>`
 * `git rebase [-i] <HEAD~N>`: Inicia o interactive rebase no branch local (Para ordenar commits) até HEAD-N commits 

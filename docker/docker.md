@@ -1,5 +1,34 @@
 # Docker
 
+<!-- TOC -->
+
+- [Docker](#docker)
+  - [Iniciando uma máquina](#iniciando-uma-máquina)
+  - [Baixando imagens](#baixando-imagens)
+    - [Listar todas as imagens](#listar-todas-as-imagens)
+    - [Listar containers em execução](#listar-containers-em-execução)
+  - [Criando containers nomeados](#criando-containers-nomeados)
+    - [Rodando em background](#rodando-em-background)
+    - [Variáveis de ambiente](#variáveis-de-ambiente)
+  - [Instalando o Wordpress](#instalando-o-wordpress)
+  - [Helpers](#helpers)
+    - [Teste de isolamento](#teste-de-isolamento)
+    - [Entrando em um container](#entrando-em-um-container)
+  - [Removendo containers](#removendo-containers)
+  - [Removendo imagens](#removendo-imagens)
+  - [Rodando comandos em tempo de execução](#rodando-comandos-em-tempo-de-execução)
+  - [Matando containers](#matando-containers)
+  - [Criando imagens](#criando-imagens)
+  - [Mapeamento de portas](#mapeamento-de-portas)
+  - [Dockerfile](#dockerfile)
+    - [Dockerfile: Adicionando arquivos](#dockerfile-adicionando-arquivos)
+  - [Docker Compose](#docker-compose)
+  - [IP fixos para containers](#ip-fixos-para-containers)
+  - [Criando volumes persistentes](#criando-volumes-persistentes)
+    - [Usando o comando `-v` no docker compose](#usando-o-comando--v-no-docker-compose)
+
+<!-- /TOC -->
+
 Docker é uma ferramenta de criação de container de forma que a execução de aplicações dentro destes containers de forma isolada e completamente separada de toda a infraestrutura do computador. Em outras palavras, o Docker cria pequenas "caixas" que permitem que uma aplicação encontre tudo que ela precisa para rodar.
 
 O docker serve para prepararmos ambientes de execução (ubuntu,mysql,wordpress) de forma rápida e prática, a grande vantagem disso é que em uma máquina física podemos simular diversos ambientes isolados que ficam isolados no que chamamos de containers, que compartilham o mesmo sistema operacional.

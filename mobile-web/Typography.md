@@ -1,4 +1,34 @@
-# Teoria
+# Tipografia
+
+<!-- TOC -->
+
+- [Tipografia](#tipografia)
+  - [Introdução](#introdução)
+- [Atributos que influenciam o design](#atributos-que-influenciam-o-design)
+- [Tipografia](#tipografia-1)
+  - [Guia de estilos](#guia-de-estilos)
+  - [Tipos de fonte](#tipos-de-fonte)
+    - [Serif](#serif)
+      - [Tipos](#tipos)
+    - [Sans Serif](#sans-serif)
+      - [Tipos](#tipos-1)
+    - [Script](#script)
+  - [Usos ideais](#usos-ideais)
+  - [**Regra simples**: "Mantenha o mesmo ou mude muito"](#regra-simples-mantenha-o-mesmo-ou-mude-muito)
+    - [Boas Combinações](#boas-combinações)
+- [Tamanhos de fontes](#tamanhos-de-fontes)
+  - [Hierarquia visual](#hierarquia-visual)
+    - [Começando a hierarquia](#começando-a-hierarquia)
+  - [Leading](#leading)
+  - [Uso de negritos e itálicos](#uso-de-negritos-e-itálicos)
+- [Largura da linha](#largura-da-linha)
+      - [CpL (Characters Per Line)](#cpl-characters-per-line)
+- [Sem Orfãos e Viúvas](#sem-orfãos-e-viúvas)
+
+<!-- /TOC -->
+
+## Introdução
+
 *"Content is king"*: O conteúdo que controla o que será criado pelo designer. Todo o site é baseado em o que ele quer passar
 
 # Atributos que influenciam o design

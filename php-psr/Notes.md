@@ -1,5 +1,17 @@
 # PHP PSR's
 
+<!-- TOC -->
+
+- [PHP PSR's](#php-psrs)
+  - [PSR-1: Organização de código](#psr-1-organização-de-código)
+  - [PSR-2: Complemento de Organização](#psr-2-complemento-de-organização)
+  - [PSR-3: Interfaces de Log](#psr-3-interfaces-de-log)
+  - [PSR-4: Autoload](#psr-4-autoload)
+  - [PSR-6: Cache](#psr-6-cache)
+  - [PSR-7: Interfaces HTTP](#psr-7-interfaces-http)
+
+<!-- /TOC -->
+
 Conjunto de especificações para buscar um desenvolvimento colaborativo padrão em aplicativos PHP ([Site](http://www.php-fig.org)):
 
 - PSR-4 / PSR-0: Autoload

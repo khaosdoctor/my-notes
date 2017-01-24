@@ -1,5 +1,41 @@
 # Node.js
 
+<!-- TOC -->
+
+- [Node.js](#nodejs)
+  - [O que é](#o-que-é)
+  - [O que não é](#o-que-não-é)
+  - [Blocking code e Non Blocking code](#blocking-code-e-non-blocking-code)
+- [Hello World](#hello-world)
+  - [Event Loop](#event-loop)
+- [Eventos](#eventos)
+  - [Emissores personalizados](#emissores-personalizados)
+- [Streams](#streams)
+  - [Lendo a Request](#lendo-a-request)
+  - [Lendo um arquivo](#lendo-um-arquivo)
+- [Módulos](#módulos)
+  - [Criando um módulo](#criando-um-módulo)
+    - [Exportando funções diretas](#exportando-funções-diretas)
+  - [Detalhes sobre módulos](#detalhes-sobre-módulos)
+- [Package.json](#packagejson)
+  - [Definições de versões no arquivo](#definições-de-versões-no-arquivo)
+- [Semantic Versioning](#semantic-versioning)
+- [Express](#express)
+  - [Iniciando](#iniciando)
+  - [Parâmetros](#parâmetros)
+  - [Templates](#templates)
+    - [Ejs](#ejs)
+- [Socket.io](#socketio)
+  - [Instalação](#instalação)
+  - [Utilização](#utilização)
+    - [Back-end](#back-end)
+    - [Front-end](#front-end)
+- [Persistencia de dados](#persistencia-de-dados)
+  - [Bancos de dados](#bancos-de-dados)
+    - [Mostrando usuários do chat](#mostrando-usuários-do-chat)
+
+<!-- /TOC -->
+
 ## O que é
 Permite construir aplicações escaláveis usando javascript no server-side. Usando um wrapper ao redor do runtime V8 do Chrome, escrito em C
 permite que seja um ambiente extremamente rápido e não blockante.

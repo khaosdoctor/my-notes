@@ -1,5 +1,47 @@
 # SASS - Syntatically Awesome Style Sheets
 
+<!-- TOC -->
+
+- [SASS - Syntatically Awesome Style Sheets](#sass---syntatically-awesome-style-sheets)
+  - [Introdução](#introdução)
+  - [Comentários](#comentários)
+  - [Partials](#partials)
+  - [Nesting selectors](#nesting-selectors)
+  - [Nested properties](#nested-properties)
+  - [Parent selector (&)](#parent-selector-)
+  - [Variáveis](#variáveis)
+  - [Tipos](#tipos)
+  - [Escopos](#escopos)
+  - [Interpolação](#interpolação)
+  - [Mixins](#mixins)
+  - [Parâmetros](#parâmetros)
+    - [Varargs](#varargs)
+  - [Extend](#extend)
+  - [Extend com multiplis escopos](#extend-com-multiplis-escopos)
+  - [Placeholder selectors](#placeholder-selectors)
+  - [Directives](#directives)
+  - [If](#if)
+    - [Operadores](#operadores)
+  - [Each](#each)
+  - [For](#for)
+  - [While](#while)
+  - [Matemática com cor](#matemática-com-cor)
+  - [String](#string)
+  - [Unidades](#unidades)
+  - [Funções matemáticas](#funções-matemáticas)
+  - [Cores](#cores)
+    - [Operações](#operações)
+    - [Conversão](#conversão)
+    - [Funções](#funções)
+  - [Responsividade](#responsividade)
+  - [Media queries](#media-queries)
+  - [Respond-to](#respond-to)
+    - [Notas sobre responsividade](#notas-sobre-responsividade)
+
+<!-- /TOC -->
+
+## Introdução
+
 Sass foi desenhado para ser uma extensão do CSS, adicionando novas funcionalidades e recursos. Sass é um prepocessador, ou seja, ele
 precisa passar por um compilador para finalmente chegar a um CSS válido.
 

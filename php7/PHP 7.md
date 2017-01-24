@@ -1,5 +1,23 @@
 # PHP 7
 
+<!-- TOC -->
+
+- [PHP 7](#php-7)
+  - [Instalação](#instalação)
+  - [Funções MySQL](#funções-mysql)
+    - [mysqli_connect](#mysqli_connect)
+    - [PDO](#pdo)
+    - [mysql_real_escape_string](#mysql_real_escape_string)
+    - [mysql_query](#mysql_query)
+  - [Melhorias do PHP7](#melhorias-do-php7)
+    - [Parâmetros tipados](#parâmetros-tipados)
+    - [Intdiv](#intdiv)
+    - [Retornos tipados](#retornos-tipados)
+    - [Namespaces gerais](#namespaces-gerais)
+    - [NullCoalesce Operator](#nullcoalesce-operator)
+
+<!-- /TOC -->
+
 > O que mudou, o que parou de funcionar e por que? Como refatorar seu código php5.6 para PHP7
 
 

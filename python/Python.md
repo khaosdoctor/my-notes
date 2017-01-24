@@ -1,4 +1,58 @@
 # Python
+
+<!-- TOC -->
+
+- [Python](#python)
+  - [Introdução](#introdução)
+  - [Math](#math)
+  - [Variáveis](#variáveis)
+  - [Módulos](#módulos)
+  - [Print](#print)
+- [Conversões](#conversões)
+- [Strings](#strings)
+  - [Funções de strings](#funções-de-strings)
+    - [Slices](#slices)
+- [Condicionais](#condicionais)
+  - [if](#if)
+    - [else](#else)
+    - [else if](#else-if)
+  - [Operadores booleanos](#operadores-booleanos)
+- [Input](#input)
+  - [raw_input](#raw_input)
+- [Lists e Dictionaries](#lists-e-dictionaries)
+  - [Sublistas](#sublistas)
+  - [Adicionando itens](#adicionando-itens)
+  - [Removendo os itens](#removendo-os-itens)
+  - [Comparação de listas](#comparação-de-listas)
+- [Dictionaries](#dictionaries)
+  - [Adicionando valores](#adicionando-valores)
+  - [Deletando valores](#deletando-valores)
+  - [Checando valores](#checando-valores)
+  - [Comparação de dictionaries](#comparação-de-dictionaries)
+- [Loops](#loops)
+  - [For](#for)
+    - [Loops em Dictionaries](#loops-em-dictionaries)
+  - [While](#while)
+- [Random](#random)
+- [Range](#range)
+- [Formatação númerica](#formatação-númerica)
+- [Funções](#funções)
+- [main()](#main)
+  - [Escopo](#escopo)
+- [Key,val pairs](#keyval-pairs)
+- [Trabalhando com arquivos](#trabalhando-com-arquivos)
+  - [Escrita](#escrita)
+  - [Leitura](#leitura)
+- [Try, catch](#try-catch)
+  - [Capturar a mensagem de erro](#capturar-a-mensagem-de-erro)
+- [Módulos](#módulos-1)
+  - [PIP](#pip)
+- [Criando um Módulo](#criando-um-módulo)
+
+<!-- /TOC -->
+
+## Introdução
+
 Linguagem de programação altamente utilizada pelos programadores em geral por ser:
 
 - Fácil de ler

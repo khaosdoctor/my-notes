@@ -1,3 +1,33 @@
+<!-- TOC -->
+
+- [Offline First](#offline-first)
+  - [App Cache](#app-cache)
+  - [Service Workers](#service-workers)
+  - [Armazenamento de informações](#armazenamento-de-informações)
+    - [Para Frameworks](#para-frameworks)
+    - [PouchDB](#pouchdb)
+  - [Offline-first](#offline-first)
+- [Tretas de streaming de vídeo](#tretas-de-streaming-de-vídeo)
+  - [A diferença de Video on demand para live Video](#a-diferença-de-video-on-demand-para-live-video)
+    - [Do lado Front](#do-lado-front)
+      - [WebRTC](#webrtc)
+    - [Do lado do back](#do-lado-do-back)
+    - [Plugin de vídeos](#plugin-de-vídeos)
+- [Ionic 2](#ionic-2)
+  - [Bases Ionic 1](#bases-ionic-1)
+  - [O novo Ionic 2](#o-novo-ionic-2)
+    - [Stack do Ionic](#stack-do-ionic)
+      - [TypeScript](#typescript)
+      - [Angular 2](#angular-2)
+    - [Ionic Native](#ionic-native)
+    - [Instalação e uso](#instalação-e-uso)
+- [Programação funcional e Reativa com JS](#programação-funcional-e-reativa-com-js)
+  - [Functors](#functors)
+  - [Monads](#monads)
+  - [Programação Reativa](#programação-reativa)
+
+<!-- /TOC -->
+
 # Offline First
 
 < Slides aqui >

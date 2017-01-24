@@ -1,4 +1,20 @@
 # Fontes responsivas
+
+<!-- TOC -->
+
+- [Fontes responsivas](#fontes-responsivas)
+  - [Introdução](#introdução)
+- [Layouts Fluidos](#layouts-fluidos)
+- [Adaptive Web Design](#adaptive-web-design)
+  - [Markup](#markup)
+  - [Breakpoints](#breakpoints)
+    - [Media Queries](#media-queries)
+- [Retina Screens](#retina-screens)
+
+<!-- /TOC -->
+
+## Introdução
+
 A maioria dos browsers fixa uma fonte em 16px, porém para faze-la responsiva ao design do site e do dispositivo que 
 vai abrir temos que usar o `em`.
 

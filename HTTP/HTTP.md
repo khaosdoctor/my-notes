@@ -1,5 +1,24 @@
 # HTTP
 
+<!-- TOC -->
+
+- [HTTP](#http)
+  - [Comunicação Client <=> Server](#comunicação-client--server)
+  - [Regras de comunicação](#regras-de-comunicação)
+    - [P2P](#p2p)
+  - [HTTPS](#https)
+    - [O Formato RSA](#o-formato-rsa)
+    - [Problemas de chaves assimétricas](#problemas-de-chaves-assimétricas)
+  - [Domínios](#domínios)
+    - [Recursos](#recursos)
+    - [Estrutura do HTTP](#estrutura-do-http)
+  - [Requisição e resposta](#requisição-e-resposta)
+  - [Cookies](#cookies)
+  - [Verbos HTTP](#verbos-http)
+  - [Cabeçalhos](#cabeçalhos)
+
+<!-- /TOC -->
+
 ## Comunicação Client <=> Server
 
 Todas as regras de comunicação da web são definidos no modelo Cliente <> Servidor, ou seja, existe uma comunicação entre o browser e o servidor para exibir o conteúdo.
