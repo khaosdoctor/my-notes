@@ -27,6 +27,21 @@
       - [Abstração de integração](#abstração-de-integração)
       - [Encapsulamento de negócio](#encapsulamento-de-negócio)
       - [Alto uso](#alto-uso)
+  - [Widgets I](#widgets-i)
+    - [Criando um widget](#criando-um-widget)
+    - [Widgets de exibição](#widgets-de-exibição)
+      - [Expression Widget](#expression-widget)
+      - [Text Widget](#text-widget)
+      - [Labels](#labels)
+    - [Widgets de input](#widgets-de-input)
+      - [Input](#input)
+    - [Widgets de Navegação](#widgets-de-navegação)
+    - [Widgets de construção](#widgets-de-construção)
+      - [Container](#container)
+      - [Table](#table)
+    - [Widgets de gravação](#widgets-de-gravação)
+      - [Form](#form)
+      - [Table Records](#table-records)
 
 <!-- /TOC -->
 
@@ -284,3 +299,113 @@ __Exemplo__: Agrupar tudo relativo a usuários em um módulo, Agrupar todas as f
 #### Alto uso
 
 Agrupar todas as funções que são muito utilizadas em uma "biblioteca" unica que expõe estas funcionalidades de forma concisa e única.
+
+## Widgets I
+
+Um widget é um bloco de visualização ou interação entre o usuário e a aplicação.
+
+> Todos os elementos visuais que compõe uma aplicação são chamados de widgets
+
+Um widget pode permitir input ou exibição de dados em diversos formatos, ele também permite que o usuário interaja com o mesmo de forma fluida.
+
+- Widgets básicos de exibição
+  - Static Text
+  - Dynamic Expressions
+  - Labels
+- Widgets básicos de input
+  - Inputs
+- Widgets básicos de navegação
+  - Botões
+  - Links
+
+### Criando um widget
+
+Para criar um widget temos que entrar na visualização de tela e arrasatar o widget da barra de ferramentas para a posição que queremos.
+
+![](https://i.imgur.com/5fGiRg8.png)
+
+### Widgets de exibição
+
+#### Expression Widget
+
+Usado para exibir dados calculados na tela. Se você especificar um exemplo, ele será usado para exibição no modo design
+
+![](https://i.imgur.com/pnnavee.png)
+
+#### Text Widget
+
+Exibição de um texto estático
+
+![](https://i.imgur.com/zE9UOw6.png)
+
+#### Labels
+
+Labels são apenas textos estáticos assim como os texts, porém podem ser atrelados a um dos widgets de input abaixo, desta forma se um input for obrigatório ou tiver um tipo de dado específico, a label possuirá uma indicação visual para tal
+
+![](https://i.imgur.com/8U1mVuU.png)
+
+Clicar em uma label associada a um input vai mover o cursor para o input associado.
+
+### Widgets de input
+
+#### Input
+
+O input é o modelo básico de inserção de dados pelo usuário, ele mostra uma caixa de texto para digitação simples.
+
+Todo o input está atrelado a uma variável que irá obter o valor que será digitado
+
+![](https://i.imgur.com/w7M8sUv.png)
+
+Podemos ditar qual é o tipo de dados que queremos receber neste widget, bem como podemos também configurar se é obrigatório ou não e também assinalar um _Null Value_, que será o valor que a variável vai obter se o input for nulo.
+
+O prompt também pode ser digitado e agirá como um placeholder
+
+### Widgets de Navegação
+
+Todos os widgets de navegação necessitam de um destino com uma tela para navegarem ou uma ação para ser executada.
+
+![](https://i.imgur.com/eOdpQI2.png)
+
+O método de navegação ou _submit_ é especificado na sessão _Method_.
+
+Links e botões funcionam basicamente da mesma forma, com a diferença de que os links são mais flexíveis a alterações, uma vez que você pode injetar icones e textos mais diversos que não são disponíveis em botões.
+
+### Widgets de construção
+
+#### Container
+
+Agrupa widgets e permite que você aplique um estilo comum a todos eles. É basicamente uma div.
+
+![](https://i.imgur.com/Uo8xwrZ.png)
+
+Todo conteúdo dentro do container vai receber o mesmo estilo.
+
+um dos exemplos é esconder todos os elementos dentro deste container através da propriedade _display_.
+
+#### Table
+
+A table é basicamente uma tabela, exibindo seus conteúdos de forma tabular, ou seja, o container de forma fixa com linhas e colunas.
+
+### Widgets de gravação
+
+Um widget de gravação opera sobre um unico registro, ou seja, eles estão ligados a um unico registro com vários widgets internamente.
+
+#### Form
+
+O Form permite que você mostre e edite um unico registro, pode conter widgets de input dentro e uma propriedade local para armazenar os dados inseridos.
+
+![](https://i.imgur.com/TLkTZWc.png)
+
+Ele é atrelado a um _source record_, que é um registro na tabela que define o tipo de dados das propriedades locais e também carrega a variável interna com os dados iniciais. O _source record_ é o ponteiro que vai definir qual registro o form está editando.
+
+Um form pode conter não só Inputs, mas pode também conter qualquer coisa, não existe restrição de layout, desta forma é possível incluir containers, labels ou qualquer outro tipo de widget
+
+#### Table Records
+
+O mesmo que o formulário, porém ao invés de estar ligado a um unico registro, ele exibe todos os dados de uma entidade de forma tabular, como um grid de relatório.
+
+![](https://i.imgur.com/lQaPAtx.png)
+
+Uma tabela está ligada a um _source record_ da mesma forma como o formulário, porém esta propriedade pode ser uma outra entidade publica que está sendo chamada.
+
+Cada linha da tabela será a iteração do _source record_ para cada linha. Você pode incluir qualquer tipo de widgets dentro de uma tabela. Assim como no formulário, você não é limitado a layouts, mas lembre-se que isto é traduzido para uma tabela HTML.
