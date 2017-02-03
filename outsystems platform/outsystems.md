@@ -436,6 +436,8 @@ Para implementar uma chave estrangeira no OutSystems, inserimos outra coluna na 
 
 ### Relações comuns
 
+> [Exercicios - Relações](Exercicios/Ex 3 - Relações.zip)
+
 #### 1 para 1
 
 Neste caso a tabela base compartilha o seu identificador com a outra e apenas isto.
