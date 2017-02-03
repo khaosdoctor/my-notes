@@ -237,7 +237,9 @@ Um exemplo, possuimos um _aggregate_ (que é uma query) e buscamos todos os usu�
 
 Veja que na variável de saída temos `GetCustomersNamedMichael.List.Current.Customer.LastName`, ou seja, estamos buscando o atributo `LastName` do valor atual contido na lista retornada por `GetCustomersNamedMichael`.
 
-## Noções básicas de arquitetura
+## Noções básicas de arquitetura 
+
+> [Exercicios](Exercicios/Ex 1 - Modelando Dados.zip)
 
 Uma boa arquitetura de sistemas vai melhorar a forma de desenvolvimento, permitindo que mudanças sejam aplicadas mais rápidas, melhoras na complexidade da aplicação e muitas outras vantagens.
 
@@ -300,7 +302,9 @@ __Exemplo__: Agrupar tudo relativo a usuários em um módulo, Agrupar todas as f
 
 Agrupar todas as funções que são muito utilizadas em uma "biblioteca" unica que expõe estas funcionalidades de forma concisa e única.
 
-## Widgets I
+## Widgets I 
+
+> [Exercício](Exercicios/Ex 2 - Widgets.zip)
 
 Um widget é um bloco de visualização ou interação entre o usuário e a aplicação.
 
