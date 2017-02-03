@@ -42,6 +42,14 @@
     - [Widgets de gravação](#widgets-de-gravação)
       - [Form](#form)
       - [Table Records](#table-records)
+  - [Modelando Relacionamentos](#modelando-relacionamentos)
+    - [Relações comuns](#relações-comuns)
+      - [1 para 1](#1-para-1)
+      - [1 para N](#1-para-n)
+      - [N para N](#n-para-n)
+    - [Integridade Referencial](#integridade-referencial)
+    - [Indices](#indices)
+    - [Diagrama de entidades](#diagrama-de-entidades)
 
 <!-- /TOC -->
 
@@ -239,7 +247,7 @@ Veja que na variável de saída temos `GetCustomersNamedMichael.List.Current.Cus
 
 ## Noções básicas de arquitetura 
 
-> [Exercicios](Exercicios/Ex 1 - Modelando Dados.zip)
+> [Exercicios - Modelagem](Exercicios/Ex 1 - Modelando Dados.zip)
 
 Uma boa arquitetura de sistemas vai melhorar a forma de desenvolvimento, permitindo que mudanças sejam aplicadas mais rápidas, melhoras na complexidade da aplicação e muitas outras vantagens.
 
@@ -304,7 +312,7 @@ Agrupar todas as funções que são muito utilizadas em uma "biblioteca" unica q
 
 ## Widgets I 
 
-> [Exercício](Exercicios/Ex 2 - Widgets.zip)
+> [Exercício - Widgets I](Exercicios/Ex 2 - Widgets.zip)
 
 Um widget é um bloco de visualização ou interação entre o usuário e a aplicação.
 
@@ -413,3 +421,64 @@ O mesmo que o formulário, porém ao invés de estar ligado a um unico registro,
 Uma tabela está ligada a um _source record_ da mesma forma como o formulário, porém esta propriedade pode ser uma outra entidade publica que está sendo chamada.
 
 Cada linha da tabela será a iteração do _source record_ para cada linha. Você pode incluir qualquer tipo de widgets dentro de uma tabela. Assim como no formulário, você não é limitado a layouts, mas lembre-se que isto é traduzido para uma tabela HTML.
+
+## Modelando Relacionamentos
+
+Relações entre dados é uma questão muito comum em sistemas integrados, o dado raramente está sozinho em uma tabela.
+
+Para fazer a ligação entre a chave primária e estrangeira basta que as duas chaves sejam ligadas entre as entidades.
+
+Uma tabela possui sempre um Id que é auto inserido ao criar, esse ID é um número auto gerado, mas é possível mudar para qualquer outro tipo.
+
+> Não existem chaves compostas no OutSystems
+
+Para implementar uma chave estrangeira no OutSystems, inserimos outra coluna na segunda tabela com o nome da primeira tabela + Id (como em `PersonId`) vai criar uma relação entre uma tabela e outra por este campo.
+
+### Relações comuns
+
+#### 1 para 1
+
+Neste caso a tabela base compartilha o seu identificador com a outra e apenas isto.
+
+
+![](https://i.imgur.com/Eb9iluf.png)
+
+Nestes casos a primeira tabela é dependencia da segunda, você não poderia ter uma biografia sem um autor, bem como não podemos ter mais de uma biografia por autor.
+
+#### 1 para N
+
+Quanto a entidade de detalhe referencia mais de uma vez a tabela mestre. Por exemplo, um livro e um publicador
+
+![](https://i.imgur.com/ZuURzlB.png)
+
+Enquanto um livro pode ser poblicado por um unico publicador, mas um publicador pode ter vários livros publicados.
+
+#### N para N
+
+O chamado caso de entidade de junção.
+
+Neste caso temos uma tabela no meio que junta outras duas tabelas.
+
+![](https://i.imgur.com/fqLRqFN.png)
+
+### Integridade Referencial
+
+Para forçar a integridade referencial nas relações podemos especificar uma regra de delete:
+
+![](https://i.imgur.com/i806CAM.png)
+
+- Protect: Não deixa que a instancia pai seja removida antes de remover o filho
+- Delete: Deleta em cascata, deletando o pai, todos os filhos são automaticamente removidos
+- Ignore: Não garanta integridade referencial
+
+### Indices
+
+É possível criar indices em atributos especificos da tabela. Todos os atributos de referencia automaticamente vão possuir um indice (uma chave primária ou estrangeira).
+
+### Diagrama de entidades
+
+É possível utilizar o _service studio_ para criar um MER que situa melhor o desenvolvedor.
+
+![](https://i.imgur.com/GqEvfSJ.png)
+
+
