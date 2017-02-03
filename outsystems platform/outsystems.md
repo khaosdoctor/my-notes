@@ -17,6 +17,16 @@
     - [Structure](#structure)
   - [Variáveis](#variáveis)
     - [Listas](#listas)
+  - [Noções básicas de arquitetura](#noções-básicas-de-arquitetura)
+    - [Programação Modular](#programação-modular)
+      - [O que pode se tornar publico em um módulo](#o-que-pode-se-tornar-publico-em-um-módulo)
+    - [Consumindo dependências](#consumindo-dependências)
+      - [Atualização de dependentes](#atualização-de-dependentes)
+    - [Padrões comuns](#padrões-comuns)
+      - [Agrupamento de telas](#agrupamento-de-telas)
+      - [Abstração de integração](#abstração-de-integração)
+      - [Encapsulamento de negócio](#encapsulamento-de-negócio)
+      - [Alto uso](#alto-uso)
 
 <!-- /TOC -->
 
@@ -212,8 +222,65 @@ Um exemplo, possuimos um _aggregate_ (que é uma query) e buscamos todos os usu�
 
 Veja que na variável de saída temos `GetCustomersNamedMichael.List.Current.Customer.LastName`, ou seja, estamos buscando o atributo `LastName` do valor atual contido na lista retornada por `GetCustomersNamedMichael`.
 
+## Noções básicas de arquitetura
 
+Uma boa arquitetura de sistemas vai melhorar a forma de desenvolvimento, permitindo que mudanças sejam aplicadas mais rápidas, melhoras na complexidade da aplicação e muitas outras vantagens.
 
+### Programação Modular
 
+Uma técnica de design que consiste em dividir a aplicação em módulos com uma __única responsabilidade__, permitindo que uma aplicação seja simples o suficiente para resolver o único problema que ele se propõe a resolver enquanto expõe dados pertinentes a aplicações externas, desta forma (através de encapsulamentos) é possível expor apenas o necessário para a aplicação externa.
 
+Uma aplicação completa no OutSystems é composta de vários módulos.
 
+> Um módulo pode compartilhar elementos com outros módulos. Estes elementos são chamados de __públicos__
+
+- Um módulo que compartilha uma funcionalidade com outro módulo é chamado de **_Producer_**
+- Um módulo que usa uma funcionalidade exposta por outro módulo é chamado de **_Consumer_**
+
+#### O que pode se tornar publico em um módulo
+
+Entre os tipos de dados mais comuns de publicação em um módulo temos:
+
+- Dados:
+  - Entities
+  - Structures
+- Lógico:
+  - Actions
+  - Roles
+- Interface
+  - Web Blocks
+  - Web Screens
+
+### Consumindo dependências
+
+Para podermos de fato acessar o que é exposto em um módulo vamos utilizar a tela de __Gerenciamento de dependências__ localizada neste menu:
+
+![](https://i.imgur.com/HE74w7w.png)
+
+Esta tela irá exibir as dependências publicas do sistema. Para consumir esta dependencia basta checar o box ao lado da mesma que ela vai ficar disponível em seu módulo como qualquer outro.
+
+#### Atualização de dependentes
+
+Quando uma atualização é feita em um producer, é necessário que outros consumers também sejam atualizados, desta forma quando um produtor é atualizado temos uma dependencia externa que precisa ser atualizada para que as novas mudanças entrem em vigor.
+
+> É extremamente importante lembrar que __referencias circulares__ devem ser evitadas, uma vez que uma aplicação é o _consumer_ de si mesmo geraria um loop eterno de dependencias
+
+### Padrões comuns
+
+#### Agrupamento de telas
+
+Agrupar todas as telas que preenchem um determinado processo de negócio em um unico local.
+
+#### Abstração de integração
+
+Abstrair todas as funções de uma integração externa e expor apenas a lógica básica, o conceito de encapsulamento e API se aplica em grande parte aqui, pois desta forma é possível esconder toda a complexidade e deixar a usabilidade simples.
+
+#### Encapsulamento de negócio
+
+Encapsular todos os dados e lógica pertinentes a modelos e regras de negócio próximas em um unico módulo ou objeto.
+
+__Exemplo__: Agrupar tudo relativo a usuários em um módulo, Agrupar todas as funções de ordens de compra em um unico módulo
+
+#### Alto uso
+
+Agrupar todas as funções que são muito utilizadas em uma "biblioteca" unica que expõe estas funcionalidades de forma concisa e única.
