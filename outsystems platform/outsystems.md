@@ -50,6 +50,20 @@
     - [Integridade Referencial](#integridade-referencial)
     - [Indices](#indices)
     - [Diagrama de entidades](#diagrama-de-entidades)
+      - [Criando um modelo MER](#criando-um-modelo-mer)
+  - [Interação de ciclo de vida](#interação-de-ciclo-de-vida)
+    - [Navegação no client-side](#navegação-no-client-side)
+    - [Navegação server-Side (submit)](#navegação-server-side-submit)
+    - [Screen actions](#screen-actions)
+      - [Criando Screen Actions](#criando-screen-actions)
+  - [Debugging e Monitoramento](#debugging-e-monitoramento)
+    - [Personal area](#personal-area)
+  - [Exception](#exception)
+  - [Monitoramento de logs](#monitoramento-de-logs)
+  - [Queries de dados](#queries-de-dados)
+    - [Resultados de saída](#resultados-de-saída)
+    - [Aggregates](#aggregates)
+      - [Joins](#joins)
 
 <!-- /TOC -->
 
@@ -247,7 +261,7 @@ Veja que na variável de saída temos `GetCustomersNamedMichael.List.Current.Cus
 
 ## Noções básicas de arquitetura 
 
-> [Exercicios - Modelagem](Exercicios/Ex 1 - Modelando Dados.zip)
+> [Exercicios - Modelagem](Exercicios/Ex_1_Modelando Dados.zip)
 
 Uma boa arquitetura de sistemas vai melhorar a forma de desenvolvimento, permitindo que mudanças sejam aplicadas mais rápidas, melhoras na complexidade da aplicação e muitas outras vantagens.
 
@@ -312,7 +326,7 @@ Agrupar todas as funções que são muito utilizadas em uma "biblioteca" unica q
 
 ## Widgets I 
 
-> [Exercício - Widgets I](Exercicios/Ex 2 - Widgets.zip)
+> [Exercício - Widgets I](Exercicios/Ex_2_Widgets.zip)
 
 Um widget é um bloco de visualização ou interação entre o usuário e a aplicação.
 
@@ -436,7 +450,7 @@ Para implementar uma chave estrangeira no OutSystems, inserimos outra coluna na 
 
 ### Relações comuns
 
-> [Exercicios - Relações](Exercicios/Ex 3 - Relações.zip)
+> [Exercicios - Relações](Exercicios/Ex_3_Relações.zip)
 
 #### 1 para 1
 
@@ -479,8 +493,208 @@ Para forçar a integridade referencial nas relações podemos especificar uma re
 
 ### Diagrama de entidades
 
+> [Exercicios - MER](Exercicios/Ex_4_MER.zip)
+
 É possível utilizar o _service studio_ para criar um MER que situa melhor o desenvolvedor.
 
 ![](https://i.imgur.com/GqEvfSJ.png)
 
+#### Criando um modelo MER
 
+Para realizar a criação de um modelo de entidades, basta abrir o módulo correspondente, ir na aba "Data" e clicar no icone _Entity Diagrams_ com o botão direito o mouse e selecionar _Add entity diagram_
+
+![](https://i.imgur.com/gzuIDcA.png)
+
+Após isto, arraste as tabelas para o centro do diagrama para criar sua representação visual.
+
+Ao arrastar uma entidade sobre outra entidade do diagrama, como por exemplo MovieGenre sobre Movie, automaticamente o sistema vai criar o relacionamento entre o Id da entidade que foi arrastada para cima (neste caso MovieGenre) com o campo correspondente ao _MovieGenre Identifier_ na tabela Movie:
+
+![](https://i.imgur.com/e1eB7Jo.png)
+
+Perceba que na tabela _Movie_, o campo _GenreId_ é do tipo _MovieGenre Identifier_, ou seja, é o identificador de Id da tabela MovieGenre
+
+![](https://i.imgur.com/pMSPzx4.png)
+
+> O Outsystems dá tipos automaticamente para a tabela dependendo do nome do campo utilizado, exemplo, Amount geralmente é traduzido para double ou Integer
+
+Ao criar entidades de relacionamento (para relacionamentos N para N) e adicionar no diagrama, automaticamente o sistema gera os relacionamentos para a entidade adicionada dependendo dos campos informados como Identifiers.
+
+![](https://i.imgur.com/0a3dmKl.png)
+
+## Interação de ciclo de vida
+
+> [Exercicios - MER](Exercicios/Ex_5_Lifecycle.zip)
+
+Na plataforma OutSystems, os usuários podem interagir com a aplicação em três maneiras:
+
+- Seguindo links (Navegação)
+- Completando campos (Inserção de dados)
+- Apertando botões (Submit)
+
+A cada interação descrita acima, o servidor vai enviar uma nova requisição.
+
+### Navegação no client-side
+
+Utilizando links e botões é possível criar navegações no lado do cliente, usando o browser, para navegar para outras URL's:
+
+![](https://i.imgur.com/ydRLCSg.png)
+
+Navegação via links utilizam o método GET, ou seja, todos os parâmetros que forem enviados serão mandados pela URL. Desta forma os dados preenchidos nos inputs de dados e campos de preenchimentos não serão enviados para a URL final.
+
+> O Link é mais indicado quando queremos criar um set de interações completamente novo em outra tela, ou seja, queremos limpar todos os dados das requisições anteriores
+
+### Navegação server-Side (submit)
+
+Diferentemente do Link, o botão submit leva com ele todos os dados que o usuário incluiu pelo método POST do HTTP, desta forma, ele é mais indicado para quando queremos iniciar uma ação ou executar alguma função ou método no servidor que não é possível executar via GET.
+
+> O método POST também não permite que o usuário veja os dados em texto plano na URL
+
+![](https://i.imgur.com/xXiG9rc.png)
+
+Desta forma do lado do servidor teremos uma ação que vai processar os dados enviados pelo usuário e, talvez, interagir com banco de dados ou então apenas retornar uma resposta.
+
+### Screen actions
+
+As screen actions são métodos pertencentes a uma aplicação, executando lógicas do lado do servidor.
+
+Uma _screen Action_ tem acesso a todo o input digitado pelo usuário na tela, bem como todos os parâmetros de entrada e variáveis locais. Uma _action_ também pode escrever saídas de dados para a ação original.
+
+Todo o fluxo de lógica de uma _action_ termina com um _End Node_ ![](https://i.imgur.com/dBb0QFA.png), que faz com que a navegação permaneça na mesma tela e reexecuta os scripts de preparação, reconstruindo a tela (refresh), mas todos os valores e variáveis de tela (incluindo widgets) são preservados.
+
+Quando uma ação é finalizada com um redirecionamento, todos os dados da tela anterior são removidos em preparação para a nova requisição
+
+![](https://i.imgur.com/a6JwZYG.png)
+
+#### Criando Screen Actions
+
+Criar uma screen action é bastante simples, basta adicionar um botão e usar o campo de destination para criar uma nova action:
+
+![](https://i.imgur.com/xJrC1pn.png)
+
+Ou então criar uma nova action clicando com o botão direito sobre a tela:
+
+![](https://i.imgur.com/PNWtFhg.png)
+
+A partir daí basta clica duas vezes sobre a ação para exibir a lógica:
+
+![](https://i.imgur.com/ssXXELC.png)
+
+## Debugging e Monitoramento
+
+Todo o código é sujeito a erros, lógicos, sintaxe e outras exceções. Também existem problemas de performance, segurança ou conexão.
+
+Utilizar o debug no OutSystems é bem simples, basta incluir um breakpoint em qualquer elemento que gera código durante a compilação (como actions, widgets e etc)
+
+![](https://i.imgur.com/8Wlb1HZ.png)
+
+Isso gerará uma marca visível:
+
+![](https://i.imgur.com/ipXxfEF.png)
+
+Por padrão, o debugger não vem ativado, é necessário inicializa-lo para que ele possa monitorar o que está acontecendo na aplicação.
+
+Você pode fazer isto pelo painel abaixo do service studio:
+
+![](https://i.imgur.com/AJto8bW.png)
+
+Ao lado, existem diversas ações que o debugger pode tomar:
+
+![](https://i.imgur.com/XPTTqn9.png)
+
+Uma vez iniciado, o debugger vai mostrar diversas informações quando parar:
+
+![](https://i.imgur.com/736W6r9.png)
+
+- __In Use__: Esta sessão mostra o que está sendo executado e usado no código que está em execução no momento, bem como os dados da última requisição
+- __Locals__: Todas as variáveis que são locais a tela
+- __Widgets__: Todas as variáveis relativas a widgets na tela
+- __Session e site__: Os valores globais de sessões e do site
+- __Watches__: Watches é aonde você pode selecionar as variáveis que irão aparecer aqui a fim de juntar variáveis de abas diferentes na mesma área
+
+### Personal area
+
+Por padrão a aplicação é compilada na área publica do servidor, alternativamente é possível compilar e debugar o código na área pessoal.
+
+- Não impacta na versão da aplicação principal
+- Republicação é mais rápida uma vez que é local
+
+![](https://i.imgur.com/H2VdGWn.png)
+
+A área pessoal é uma área por usuário que você pode usar para testar novas features sem impactar na aplicação principal.
+
+> __Nota:__ Se você fizer uma mudança no modelo de dados, é preciso primeiro republicar o modelo no servidor publico e depois no servidor pessoal, porque o DB é um recurso separado
+
+## Exception
+
+Quando algo acontece e aciona uma exceção, o código sai do fluxo normal e entra em um outro fluxo de dados chamado de _error handler_.
+
+É possível criar fluxos de dados para exceções específicas já pré definidas, bem como definir e lançar suas próprias exceções explicitamente, também é possível definir um handler geral para capturar todas as exceções.
+
+No tratamento de exceções a hierarquia vai do mais específico para o mais geral, então se uma exceção é compatível com um tratamento específico dela, isto será executado, caso contrário o caso geral é feito.
+
+![](https://i.imgur.com/avxIs7w.png)
+
+![](https://i.imgur.com/zDDaV9u.png)
+
+Um _error handler_ tem várias opeações e atributos que podem ser setados de acordo com as preferencias do usuário:
+
+- Abort transaction: Define se todas as transações no banco de dados devem sofrer rollback
+- Log error: Define se este erro deve gerar um log na plataforma
+
+## Monitoramento de logs
+
+O monitoramento de logs é uma prática comum para verificar se erros ocorrem ou padrões de performance precisam de melhorias.
+
+O monitoramento de logs é feito através do service center, na aba _monitoring_.
+
+![](https://i.imgur.com/ykDx2VG.png)
+
+## Queries de dados
+
+É possível extrair dados personalizados do banco através de dois componentes, os _Aggregates_ e as _SQL queries_.
+
+![](https://i.imgur.com/kplK6TE.png)
+
+- Aggregates
+  - Não é necessário utilizar SQL para trazer os dados
+  - Fácil de criar e manter
+  - Não depende de nenhum dialeto de SQL (Agnóstico a bancos)
+  - Automaticamente otimizado pela plataforma
+- SQL Queries
+  - Feito para rodar queries personalizadas
+  - Executa SQL puro
+  - Acesso a features do DBMS
+  - Operações em lote (INSERT, UPDATE, DELETE) possíveis
+
+### Resultados de saída
+
+Os resultados que tanto o _aggregate_ quanto a _SQL query_ retornam são similares:
+
+![](https://i.imgur.com/1XdhJav.png)
+
+- Output do Aggregate/SQL Query
+  - List: É a tabela resultante da consulta
+  - Count: Contagem total de linhas
+
+- _"List.Current"_ do Aggregate/SQL Query
+  - O tipo bate com a definição da query
+  - O valor aponta para a primeira linha por padrão, se move por todas as linhas enquanto itera
+  - Preenchido com valores padrões se nenhuma linha é retornada
+
+### Aggregates
+
+Permitem que você desenhe e teste suas queries antes de, de fato colocar em produção. Ele é todo baseado na interface e não necessita de nenhum SQL.
+
+#### Joins
+
+Temos 3 tipos de joins em aggregates.
+
+- Join only with: Equivalente ao `INNER JOIN`, só vai trazer valores que tem correspondentes nas duas tabelas
+- Join with or Without: Equivalente ao `LEFT JOIN`, vai trazer dados independente se os correspondentes existem
+- Join with: É o equivalente ao `FULL OUTER JOIN`, é o join mais aberto que existe, ele vai combinar as duas tabelas independente da relação existir ou não
+
+É possível adicionar atributos computados a partir de outros atributos, os chamados campos derivados, através da interface:
+
+![](https://i.imgur.com/2WcC5bl.png)
+
+É possível agrupar os dados através de expressões (como o group by faz)
