@@ -64,6 +64,27 @@
     - [Resultados de saída](#resultados-de-saída)
     - [Aggregates](#aggregates)
       - [Joins](#joins)
+        - [Ad Hoc Attributes](#ad-hoc-attributes)
+      - [Group by](#group-by)
+      - [Filtros](#filtros)
+        - [Test Values](#test-values)
+      - [Ordenação](#ordenação)
+        - [Ordenação dinâmica](#ordenação-dinâmica)
+    - [SQL Queries](#sql-queries)
+      - [Parâmetros](#parâmetros)
+      - [Outros usos](#outros-usos)
+    - [Registros de muitas entidades](#registros-de-muitas-entidades)
+  - [Widgets II](#widgets-ii)
+    - [If](#if)
+    - [Widgets de escolha](#widgets-de-escolha)
+      - [Checkbox](#checkbox)
+      - [Radio Buttons](#radio-buttons)
+      - [Combo Box](#combo-box)
+        - [Todo o conteúdo](#todo-o-conteúdo)
+        - [Uma query personalizada](#uma-query-personalizada)
+        - [Valores específicos](#valores-específicos)
+        - [Mesclas](#mesclas)
+    - [List records](#list-records)
 
 <!-- /TOC -->
 
@@ -693,8 +714,187 @@ Temos 3 tipos de joins em aggregates.
 - Join with or Without: Equivalente ao `LEFT JOIN`, vai trazer dados independente se os correspondentes existem
 - Join with: É o equivalente ao `FULL OUTER JOIN`, é o join mais aberto que existe, ele vai combinar as duas tabelas independente da relação existir ou não
 
+##### Ad Hoc Attributes
+
 É possível adicionar atributos computados a partir de outros atributos, os chamados campos derivados, através da interface:
 
 ![](https://i.imgur.com/2WcC5bl.png)
 
-É possível agrupar os dados através de expressões (como o group by faz)
+#### Group by
+
+É possível agrupar os dados através de expressões (como o group by faz) e utilizar as funções de agregação como sum, max, min e etc.
+
+![](https://i.imgur.com/Ms1dCPq.png)
+
+No exemplo acima temos a coluna Count que é uma agregação dos dados contidos na tabela, selecionada em azul.
+
+#### Filtros
+
+São efetivamente a clausula where do SQL:
+
+![](https://i.imgur.com/Xf2NXjY.png)
+
+Podemos usar qualquer variável ou atributo que esteja dentro do escopo dessa query.
+
+##### Test Values
+
+Por padrão todos os valores dos filtros aparecem na aba _test values_ a fim de que seja possível testar a query ao longo do desenvolvimento.
+
+![](https://i.imgur.com/FBIVdSs.png)
+
+#### Ordenação
+
+Existe uma aba de ordenação no aggregate que é bem auto explicativa
+
+![](https://i.imgur.com/nmmg3Ch.png)
+
+##### Ordenação dinâmica
+
+Se você precisa explicitamente de uma ordenação dinâmica, é possível adicionar uma expressão de texto no formato `{entity}.[attribute]`, por exemplo, `{client}.[id]` ou então o nome do atributo.
+
+![](https://i.imgur.com/5jc4wUA.png)
+
+Esta ordenação permite que uma variável com a coluna seja trazida.
+
+### SQL Queries
+
+É o modelo simples de query.
+
+![](https://i.imgur.com/14jWcui.png)
+
+O painel é bem simples e nele é possível fazer algumas coisas:
+
+- Especificar os parâmetros de entrada
+- Especificar os parâmetros de saída
+  - Estruturas
+  - Entidades
+- Escrever o SQL manualmente
+  - Atributos com nome dinâmico
+  - Syntax Check para o SQL
+  - Highlight
+
+Existem abas de valores de teste para que seja possível testar os dados colocados, bem como as saídas e o resultado final da query.
+
+![](https://i.imgur.com/jLnYDy5.png)
+
+![](https://i.imgur.com/rQtGCiV.png)
+
+![](https://i.imgur.com/FLLjmsT.png)
+
+
+#### Parâmetros
+
+A sintaxe de parâmetros das queries é bem específica, você deve escrever:
+
+- Nomes de entidades como `{Entidade}`
+- Nomes de atributos como `{Entidade}.[Atributo]`
+- Parâmetros como `@NomeDoParametro`
+
+![](https://i.imgur.com/kNrGf2o.png)
+
+> É importante dizer que as SQLQueries são como "caixas pretas", elas não tem acessos a nada fora delas
+
+#### Outros usos
+
+Um dos usos para a SQL Query é escrever queries que não retornam valores, como DELETE, UPDATE (e não quer usar uma ação do aggregate) e TRUNCATE.
+
+O código pode ser escrito normalmente como se fosse um código SQL normal, porém uma estrutura ainda tem que ser enviada como saída, ela pode ser uma estrutura "dummy"
+
+![](https://i.imgur.com/iLhA4xw.png)
+
+### Registros de muitas entidades
+
+Quando utilizamos joins ou colunas ad hoc o resultado será uma lista de entidades lado a lado, ou seja, o aggregate vai trazer todas as entidades relacionadas, bem como todos os registros de ambas que fizerem parte da regra:
+
+![](https://i.imgur.com/u318WKd.png)
+
+O ponto principal é que podemos criar tipos complexos a partir de variáveis para armazenar outros tipos de atributos além das nossas linhas retornadas, no exemplo abaixo criamos um novo atributo chamado `ExtraTextAttribute` dentro da estrutura que já contem a combinação das estruturas de `Cinema`, `Movie` e `MovieSession`.
+
+![](https://i.imgur.com/XsWT7co.png)
+
+## Widgets II
+
+Além dos widgets normais temos também os widgets que permitem escolhas como `ifs`, `RadioButtons` e etc.
+
+### If
+
+Mostra um conteúdo baseado em uma condição.
+
+Quando criamos um elemento na tela, como uma label, por exemplo, podemos criar um _enclosing if_. Este if vai ter três "bolinhas" de seleção, cada uma delas representa um caminho da lógica de escolha, uma para a condição, outra para o caminho verdadeiro e outra para o falso:
+
+![](https://i.imgur.com/5uoLEai.png)
+
+A condição pode obter o nome de qualquer parâmetro ou atributo que o escopo permite acesso.
+
+### Widgets de escolha
+
+#### Checkbox
+
+Todo checkbox é atrelado a uma variável que precisa, por definição, ser um boolean, já que é um tipo de resposta binário.
+
+![](https://i.imgur.com/5Zl20Jp.png)
+
+#### Radio Buttons
+
+Cada RadioButton te dá uma unica opção, cada RadioButton precisa estar atrelado a uma variável, e é essa variável que vai ditar quais RadioButtons que fazem ou não parte de um mesmo grupo:
+
+![](https://i.imgur.com/VtYimDj.png)
+
+Quando o RadioButton é selecionado, o valor que é escrito é o atributo valor que está associado a ele:
+
+![](https://i.imgur.com/PAw1oKu.png)
+
+#### Combo Box
+
+O ComboBox assim como o Radio, permite que o usuário escolha uma entre muitas alternativas. Ele possui vários modos de funcionamento.
+
+##### Todo o conteúdo
+
+O primeiro modo de funcionamento é mostrar todo o conteúdo de uma entidade.
+
+![](https://i.imgur.com/foB38RL.png)
+
+O _source attribute_ é o valor que será exibido na caixa para o usuário como display (este atributo é opcional).
+
+O combo box precisa ser atrelado a uma variável que vai obter o valor do ID do registro selecionado baseado na entidade selecionada.
+
+![](https://i.imgur.com/5DLUm61.png)
+
+
+##### Uma query personalizada
+
+Ocorre exatamente igual ao anterior, porém utilizando uma query personalizada, neste caso não teremos o atributo de _source entity_ mas sim o _source record list_ que vai obter a lista de registros que foram recebidos pela query.
+
+Neste modo o _source attribute_ não será preenchido automaticamente, mas precisará ser definido. Bem como o ID.
+
+![](https://i.imgur.com/ctCyXkc.png)
+
+Fora isso, o resto do funcionamento é igual
+
+##### Valores específicos
+
+Seria o equivalente ao lookup manual, no Outsystems chamado de SpecialList. Onde são valores definidos pelo próprio programador.
+
+![](https://i.imgur.com/Fo8Sh8A.png)
+
+Neste caso, a opção que estamos selecionando __não__ terá seu valor selecionado em uma variável mas sim em um outro atributo chamado _special variable_, ou seja, ao invés de mandar o valor para o lugar aonde os outros dois mandavam, ele será um pouco diferente.
+
+##### Mesclas
+
+É possível mesclar as duas opções, onde temos valores do banco de dados e preenchidos a mão pelo programador. Quando o SpecialList e outro modo são usados simultaneamente:
+
+- A _bound variable_ (a que é preenchida pelos outros dois modos) será setada para NullIdentifier
+- Quando a opção de RecordList é selecionada, a opção de SpecialVariable será setada para 0, "", ou false
+
+É possível selecionar para cada opção um tipo de comportamento.
+
+### List records
+
+Mostra múltiplos registros em um layout _free-form_. É uma propriedade local para armazenamento de dados.
+
+![](https://i.imgur.com/Fo8Sh8A.png)
+
+Durante a execução a ferramenta itera pela lista de registros, é possível definir o que vai separar uma row de outra row. O List Records é como se fosse um array, onde você pode definir um layout base e incluir este layout em um modelo de RecordList e depois iterar por eles.
+
+> Um exemplo seria separar valores separados por virgulas e etc
+
