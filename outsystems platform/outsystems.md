@@ -672,6 +672,8 @@ O monitoramento de logs é feito através do service center, na aba _monitoring_
 
 ## Queries de dados
 
+> [Exercicios - Dataqueries e Widgets II](Exercicios/Ex_6_Queries_e_Widgets.zip)
+
 É possível extrair dados personalizados do banco através de dois componentes, os _Aggregates_ e as _SQL queries_.
 
 ![](https://i.imgur.com/kplK6TE.png)
@@ -813,6 +815,8 @@ O ponto principal é que podemos criar tipos complexos a partir de variáveis pa
 ![](https://i.imgur.com/XsWT7co.png)
 
 ## Widgets II
+
+> [Exercicios - Dataqueries e Widgets II](Exercicios/Ex_6_Queries_e_Widgets.zip)
 
 Além dos widgets normais temos também os widgets que permitem escolhas como `ifs`, `RadioButtons` e etc.
 
