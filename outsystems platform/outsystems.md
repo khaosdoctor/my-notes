@@ -85,6 +85,14 @@
         - [Valores específicos](#valores-específicos)
         - [Mesclas](#mesclas)
     - [List records](#list-records)
+  - [Actions e reusabilidade de código](#actions-e-reusabilidade-de-código)
+    - [O que é uma action](#o-que-é-uma-action)
+    - [Assign Statement](#assign-statement)
+    - [If](#if-1)
+    - [Switch](#switch)
+    - [For Each](#for-each)
+    - [Loops](#loops)
+    - [Saídas](#saídas)
 
 <!-- /TOC -->
 
@@ -901,4 +909,69 @@ Mostra múltiplos registros em um layout _free-form_. É uma propriedade local p
 Durante a execução a ferramenta itera pela lista de registros, é possível definir o que vai separar uma row de outra row. O List Records é como se fosse um array, onde você pode definir um layout base e incluir este layout em um modelo de RecordList e depois iterar por eles.
 
 > Um exemplo seria separar valores separados por virgulas e etc
+
+## Actions e reusabilidade de código
+
+> [Exercicios - Actions](Exercicios/Ex_7_Actions.zip)
+
+A única maneira de criar um código reutilizável é através das _actions_.
+
+- __Screen actions__: Só podem ser ligadas a widgets na mesma tela (geralmente para fluxos específicos de uma tela)
+- __User actions__: Podem ser chamados em qualquer _workflow_ (para fluxos gerais que podem ser reutilizados)
+
+Uma action pode ter multiplos parâmetros de entrada e saída.
+
+Uma _user action_ pode ser marcada como uma função, neste caso algumas regras se aplicam:
+
+- Só poderá ter um parâmetro de saída
+- Poderá ser usada em expressões
+
+### O que é uma action
+
+Uma action é uma sequencia de código que é executado em uma ordem específica. Cada _Statement_ pode ser colocado após o seguinte formando um workflow de dados que será executado pela action.
+
+### Assign Statement
+
+O _assign_ permite que você atribua valores a uma ou mais variáveis de uma vez. Os valores são atribuidos do primeiro ao último em ordem e tem efeito imadiato.
+
+![](https://i.imgur.com/lKlbMos.png)
+
+A grande maioria dos tipos de dados são atribuidos por cópia/valor, isso significa que uma mudança na variável atribuida não vai alterar a original. Porém existem algumas estruturas que são atribuidas por referencia:
+
+- Qualquer lista
+- Dados binários
+- Objetos
+
+Neste caso uma alteração no objeto atribuido __será propagado para o original__.
+
+### If
+
+Um condicional que é rodado em tempo de execução, e separa o código em diversos branches.
+
+### Switch
+
+Utiliza o switch case para criar um if encadeado mais simples.
+
+![](https://i.imgur.com/Hn7JOr2.png)
+
+### For Each
+
+Permite a iteração por qualquer tipo de lista (aggregates, SQL queries). 
+
+1. O branch cycle é enviado para a action que será o registro atual
+2. Este branch deverá voltar para o `for each` trazendo os dados
+
+> O For each não é um loop como `for` ou `while`, a condição base é fixa
+
+### Loops
+
+Não existem actions especificas para loops genéricos como `for` e `while`, para realizar isto precisamos que haja um `if` este `if` será direcionado para uma ação, que por sua vez será direcionado novamente para o `if`.
+
+![](https://i.imgur.com/ISsjWmN.png)
+
+### Saídas
+
+Os outputs das actions anteriores e em branches diferentes não são visiveis em outro branch, ou seja, quando o branch se separar, os OutputParameters de um não serão visíveis ao outro.
+
+![](https://i.imgur.com/3SyWmeP.png)
 
