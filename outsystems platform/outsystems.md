@@ -103,6 +103,10 @@
   - [Interações AJAX](#interações-ajax)
     - [Recarregando dados](#recarregando-dados)
     - [Widgets Ajax](#widgets-ajax)
+  - [Web Blocks e Reusabilidade](#web-blocks-e-reusabilidade)
+    - [Como criar um novo web Block](#como-criar-um-novo-web-block)
+    - [Notificações](#notificações)
+    - [Placeholders](#placeholders)
 
 <!-- /TOC -->
 
@@ -1085,3 +1089,72 @@ Alguns widgets não possuem o Ajax Mode liberado. Outros widgets podem realizar 
 Outros widgets como inputs também podem emitir eventos ajax quando alterados
 
 ![](https://i.imgur.com/ZEnmaCz.png)
+
+## Web Blocks e Reusabilidade
+
+> [Exercicios - WebBlocks](Exercicios/Ex_10_WebBlocks.zip)
+
+Um web block permite que o desenvolvedor implemente um componente reutilizável tanto em sentido de visualização como também sua própria lógica.
+
+Vantagens:
+
+- O mesmo bloco pode ser reutilizado em diversas telas
+- Criado uma única vez e reutilizável
+- Encapsula e abstrai a própria lógica da tela
+- Reduz o número de dependencias
+
+### Como criar um novo web Block
+
+Um web block pode ser criado em um UI Flow assim como qualquer outra tela e utilizado como se fosse um outro widget normal. Eles podem ser colocados dentro de telas ou dentro de outros webblocks, mas não podem ser colocados dentro de si mesmos, ou dentro de outros blocos que contenham eles, por exemplo, um web block `A` que contem `B`, logo `B` não pode conter `A` também.
+
+> Um web block tem seu próprio escopo e não tem acesso implícito ao escopo do objeto pai ou da tela. O modo para buscar dados da tela ou do objeto pai seria através de parâmetros de entrada, como em qualquer outra tela
+
+Os web blocks podem ter
+
+- Input parameters (Parâmetros de entrada)
+- Local Variables
+- Preparation
+- Screen Action
+
+Assim como qualquer outra tela.
+
+> Recarregar um web block via ajax vai rodar a _preparation_ antes de reconstruir o seu conteúdo
+
+> Web Blocks __não__ podem ter parâmetros de saída
+
+### Notificações
+
+Como podemos fazer com que o pai ou a tela que contém o web block seja notificada do que está acontecendo com o elemento? Ou de qualquer interação do usuário com ele?
+
+Para isto, usamos a Server Action chamada _Notify_.
+
+Como Web Blocks não possuem modo de interagir com seus pais, é preciso executar uma ação de notificação, que pode mandar uma mensagem de volta para a tela que contém o web block.
+
+> Usar a ação notify vai criar automaticamente uma propriedade _On Notify_ que será responsável por tratar a resposta enviada do Web Block
+
+A propriedade _On Notify_ do web block é responsável por rodar um ou mais fluxos de dados na tela ou bloco pai quando a notificação for recebida.
+
+Abaixo será possível verificar um diagrama de uso do _Notify_:
+
+![](https://i.imgur.com/6DZ8pWU.png)
+
+1. Um web block sofre uma ação do usuário
+2. Esta ação executa uma lógica que dispara um bloco _Notify_
+3. Na tela pai, a propriedade _On Notify_ está setada para uma Server Action
+4. Esta Server Action será executada e rodará sua lógica após ser notificada
+
+Existe um outro caso de uso aonde a notificação é acompanhada de uma mensagem, este parâmetro _Message_ existente no _Notify_ tem a função de prover contexto para a tela pai, ou seja, é possível enviar um texto ou um valor para o controle que está sendo notificado, este valor pode ser recuperado utilizando a ação __*NotifyGetMessage*__
+
+![](https://i.imgur.com/HdR5i5B.png)
+
+> Notify só está disponível dentro do contexto de um web block
+
+### Placeholders
+
+Utilizando web blocks é possível ter acesso a um outro tipo de elemento, o Placeholder.
+
+O Placeholder permite que o desenvolvedor defina uma área que será desenhada depois, ou seja, é possível definir um espaço no web block para conteúdo específico de onde o controle será colocado.
+
+![](https://i.imgur.com/yBCJxM7.png)
+
+Desta forma o Placeholder cria um "furo" editável na tela que vira um container ao passar para a tela pai.
