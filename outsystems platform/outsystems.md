@@ -100,6 +100,9 @@
     - [Validação do tipo Server](#validação-do-tipo-server)
       - [Escrevendo validações personalizadas](#escrevendo-validações-personalizadas)
     - [Como exibir mensagens de validação para o usuário](#como-exibir-mensagens-de-validação-para-o-usuário)
+  - [Interações AJAX](#interações-ajax)
+    - [Recarregando dados](#recarregando-dados)
+    - [Widgets Ajax](#widgets-ajax)
 
 <!-- /TOC -->
 
@@ -1039,3 +1042,46 @@ Automaticamente a plataforma verifica a cada renderização de tela, se as propr
 
 ![](https://i.imgur.com/uvon2d7.png)
 
+## Interações AJAX
+
+> [Exercicios - AJAX](Exercicios/Ex_9_AJAX.zip)
+
+Para ativar as submissões AJAX basta setar o método de envio de um link ou botão para _Ajax Submit_
+
+![](https://i.imgur.com/7p87NzC.png)
+
+O que isto significa:
+
+- Quando o _End_ de uma screen action é alcançado
+  - A preparação __não é reexecutada__
+  - Apenas partes da tela que __foram explicitamente especificadas serão reconstruidas__
+
+> Mas como dizemos para a tela recarregar apenas uma parte do conteúdo?
+
+Para isto usamos o _Ajax Refresh Statement_, que é outro nó lógico na aba __Logic__:
+
+![](https://i.imgur.com/hqp0Hgh.png)
+
+> __Nota:__ Funciona apenas para widgets nomeados
+
+Ações de refresh multiplas em uma call serão executadas em sequencia.
+
+A resposta contém apenas o conteúdo do widget que será recarregado e o _statement_ será ignorado se o método não for Ajax Submit.
+
+### Recarregando dados
+
+As vezes apenas recarregar o widget não é suficiente, é necessário também recarregar os dados do widget. Para isto usamos o _Refresh Data Statement_ que deverá ser executado __antes__ de uma ajax refresh para que os dados fiquem atualizados.
+
+![](https://i.imgur.com/Q8qkJey.png)
+
+Se for necessário apenas recarregar uma linha de dados, é possível através da especificação do número da linha na propriedade RowNumber
+
+![](https://i.imgur.com/CMGUPYI.png)
+
+### Widgets Ajax
+
+Alguns widgets não possuem o Ajax Mode liberado. Outros widgets podem realizar ações ajax independentemente de enviar ou não dados. Por exemplo, um clique em um container pode emitir um evento ajax.
+
+Outros widgets como inputs também podem emitir eventos ajax quando alterados
+
+![](https://i.imgur.com/ZEnmaCz.png)
