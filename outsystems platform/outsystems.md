@@ -1,5 +1,7 @@
 # OutSystems
 
+> Plataforma low-code de desenvolvimento RAD com backend em ASP ou Java
+
 <!-- TOC -->
 
 - [OutSystems](#outsystems)
@@ -93,6 +95,11 @@
     - [For Each](#for-each)
     - [Loops](#loops)
     - [Saídas](#saídas)
+  - [Validação de Inputs](#validação-de-inputs)
+    - [Opções de validação](#opções-de-validação)
+    - [Validação do tipo Server](#validação-do-tipo-server)
+      - [Escrevendo validações personalizadas](#escrevendo-validações-personalizadas)
+    - [Como exibir mensagens de validação para o usuário](#como-exibir-mensagens-de-validação-para-o-usuário)
 
 <!-- /TOC -->
 
@@ -974,4 +981,61 @@ Não existem actions especificas para loops genéricos como `for` e `while`, par
 Os outputs das actions anteriores e em branches diferentes não são visiveis em outro branch, ou seja, quando o branch se separar, os OutputParameters de um não serão visíveis ao outro.
 
 ![](https://i.imgur.com/3SyWmeP.png)
+
+## Validação de Inputs
+
+> [Exercicios - Validations](Exercicios/Ex_8_Validations.zip)
+
+A plataforma provê dois tipos de validação diretamente do padrão.
+
+- O usuário __precisa__ preencher um input com a propriedade `mandatory` setada como `true`
+- O tipo de dados do input precisa ser o mesmo do tipo de dados do widget
+
+### Opções de validação
+
+Existem dois tipos de validação que um link ou botão podem ter (como são widgets de navegação, então não é necessário uma validação de _submit_):
+
+- __Client & Server__
+  1. Executa as validações do lado do cliente
+  2. Se válido, manda as informações para o servidor
+  3. Validações personalizadas são executadas no lado do servidor
+- __Server__
+  1. Inputs são submetidos para o servidor sem validação prévia no client-side
+  2. Validações padrão e personalizadas são executadas do lado do servidor
+- __None__
+  1. Nenhuma validação é executada
+
+> Em outras palavras, é possível desligar as validações do lado do cliente para forçar as validações apenas do lado do servidor usando ScreenActions
+
+### Validação do tipo Server
+
+Cada tipo de input possui duas propriedades nativas:
+
+- __Valid__: Propriedade _boolean_ que indica se o input está válido
+- __ValidationMessage__: Propriedade _text_ que mostra a mensagem de erro
+
+No modo de validação _server_, as validações _built-in_ são executadas __antes__ das Screen Actions rodarem, desta forma sempre que as validações personalizadas rodam, estes valores já estão setados.
+
+Se qualquer input estiver invalido, logo o formulário todo terá a propriedade _valid_ como `false`.
+
+#### Escrevendo validações personalizadas
+
+Validações extras são uma questão de escrever lógica de usuário do lado do servidor através de chamadas explicitas.
+
+Para que as validações sejam forçadas basta que criemos uma sequencia de checagens, estas checagens definirão a propriedade `Form.isValid` como `true` ou `false`, assim também setando a propriedade `ValidationMessage` com a _string_ apropriada.
+
+![](https://i.imgur.com/ZC46x5H.png)
+
+As propriedades de validação estão disponíveis para
+
+- Input
+- checkbox
+- Combobox
+- ListBox
+
+### Como exibir mensagens de validação para o usuário
+
+Automaticamente a plataforma verifica a cada renderização de tela, se as propriedades de cada input e widget (ou form) são validas ou não, caso a propriedade `isValid` seja falsa então a mensagem definida em `Validation Message é aplicada`
+
+![](https://i.imgur.com/uvon2d7.png)
 
