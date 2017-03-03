@@ -107,6 +107,16 @@
     - [Como criar um novo web Block](#como-criar-um-novo-web-block)
     - [Notificações](#notificações)
     - [Placeholders](#placeholders)
+  - [Segurança](#segurança)
+    - [Controle de acesso](#controle-de-acesso)
+    - [Usuários e grupos](#usuários-e-grupos)
+    - [Basicos de perfis](#basicos-de-perfis)
+      - [Checando permissões de perfil](#checando-permissões-de-perfil)
+  - [Sessões](#sessões)
+    - [Escopo de dados em sessão](#escopo-de-dados-em-sessão)
+    - [Ciclo de vida de uma sessão](#ciclo-de-vida-de-uma-sessão)
+    - [Criando variáveis de sessão](#criando-variáveis-de-sessão)
+    - [Criando Cros-Session Properties](#criando-cros-session-properties)
 
 <!-- /TOC -->
 
@@ -1158,3 +1168,150 @@ O Placeholder permite que o desenvolvedor defina uma área que será desenhada d
 ![](https://i.imgur.com/yBCJxM7.png)
 
 Desta forma o Placeholder cria um "furo" editável na tela que vira um container ao passar para a tela pai.
+
+## Segurança
+
+> [Exercicios - Security](Exercicios/Ex_11_Security.zip)
+
+A segurança é um ramo muito amplo e complexo, que é necessário em todas as aplicações. A plataforma do OutSystems já possui algumas ferramentas que cuidam de grande parte da segurança de uma aplicação, incluindo as seguintes proteções:
+
+- HTTPS e Autenticação Integrada
+- Previne injeção de código e SQL Injection
+- Provê configurações de deploy seletivas
+- Tratamento de exceções completo
+
+Porém não é possível determinar o controle de acesso utilizando a plataforma nativamente.
+
+### Controle de acesso
+
+Nativamente, a plataforma não pode determinar quais níveis de usuário cada pessoa tem dentro da aplicação, cabe a você explicitamente informar o sistema do que pode ser feito ou não.
+
+Estes controles de acesso comprimem duas diretivas importantes, a __autenticação__ e a __autorização__:
+
+__Autenticação__:
+
+- Identifica quem está acessando a aplicação
+- Valida credenciais de usuário
+
+__Autorização__:
+
+- Checa se um usuário (geralmente o atual) pode executar determinada tarefa
+- Valida se o usuário tem permissões para aquela tarefa específica
+
+Note que um é parte do outro, pois não é possível autorizar um usuário que ainda não foi autenticado.
+
+### Usuários e grupos
+
+Usuários e grupos são criados automaticamente pela aplicação _built-in_ chamada _Users_.
+
+As informações principais de um usuários são:
+
+- Username
+- Senha
+- Nome
+
+Grupos são conjuntos de usuários com o mesmo nível de autorização para certas aplicações, que são dadas individualmente aos usuários (ou grupos) através de __perfis__.
+
+### Basicos de perfis
+
+Todos os usuários logados na plataforma assumem o perfil de _Registered_, porém esta definição é muito ampla e deve ser melhor definida pelo desenvolvedor, criando novos perfis na guia _Logic_ na pasta _Roles_.
+
+![](https://i.imgur.com/EHHbs2K.png)
+
+Todo Role tem ações padrão: Check, Grant e Revoke. A autorização pode ser gerenciada programaticamente usando estas ações ou estaticamente na aplicação Users.
+
+#### Checando permissões de perfil
+
+O modo mais simples de impedir usuários de acessarem aplicações ou plataformas é através da própria tela de aplicação, na sessão Roles:
+
+![](https://i.imgur.com/Xc4o5W9.png)
+
+> Neste exemplo acima, um usuário anonimo será direcionado para a tela de login se acessar esta tela
+
+Para checar se um usuários está em um Role específico podemos usar a Action `Check<NomeDoRole>Role()`, por exemplo:
+
+- Em um bloco if, para mostrar conteúdo diferente dependendo do usuário que está logado
+- Em uma lógica if, para executar uma lógica ou um trecho específico de código dependendo do usuário que estiver logado.
+
+![](https://i.imgur.com/bsWJkTS.png)
+
+É importante dizer que os Roles podem ou não ser persistentes, um Role persistente será armazenado no banco de dados e será persistido através das sessões do usuário, enquanto um Role não persistente será descartado no final da sessão.
+
+## Sessões
+
+> [Exercicios - Sessoes](Exercicios/Ex_12_Sessoes.zip)
+
+O conceito de sessão surgiu quando a necessidade de gerenciar multiplos usuários se tornou evidente em servidores web. Para tal, o mesmo armazena um registro que possui um identificador, o qual representa o contexto do usuário no sistema.
+
+Como o WebServer não sabe do estado e nem do contexto de nenhuma sessão, é com o browser a tarefa de armazenar e restaurar sessões.
+
+### Escopo de dados em sessão
+
+O OutSystems possui dois escopos de dados:
+
+__Session Variables__:
+
+- Disponíveis para o usuário enquanto ele está usando a aplicação
+- Valores são armazenados por usuário e expiram de acordo com o timeout da sessão
+
+__Cross-Session(site) properties__:
+
+- Sempre disponíveis, para todos os usuários
+- Valores são compartilhados entre sessões e nunca expiram
+
+### Ciclo de vida de uma sessão
+
+Uma sessão inicia-se quando o usuário se loga na ferramenta:
+
+- Automaticamente: No primeiro acesso (sessão anonima) ou depois da página de login
+- Programaticamente: Na função `User_Login()` da aplicação Users
+
+E, consequentemente, uma sessão termina quando o usuário desloga:
+
+- Automaticamente: Timeout (geralmente 20 min)
+- Programaticamente: Função `User_Logout()` da aplicação Users
+
+A aplicação _Users_ usa os métodos de autenticação de baixo nível (presentes em _system_).
+
+### Criando variáveis de sessão
+
+Para criar uma variável de sessão basta que entremos na aba _Data_ e cliquemos sobre a pasta _Session Variables_.
+
+Uma variável de sessão pode possuir os seguintes tipos básicos:
+
+- Tipos primários
+- Identificadores de entidades
+- Todos os demais são permitidos, mas devem ser evitados devido a considerações de performance
+
+O valor de uma variável de sessão:
+
+- Pode ser alterado através do _Assign_ em qualquer ação
+- Persiste através de requisições
+- É resetado ao valor padrão quando a sessão inicia ou termina
+
+O OutSystems possui algumas variáveis de sessões que provém contexto para o sistema, como na imagem abaixo (marcados em cinza):
+
+![](https://i.imgur.com/rCBG6A9.png)
+
+### Criando Cros-Session Properties
+
+Da mesma forma, a criação de um site property está localizada na aba _Data_ abaixo de _Session Variables_. 
+
+Possuem tipos válidos:
+
+- Tipos primários
+- Identificadores de entidades
+
+O valor de uma site property:
+
+- Pode ser alterado pelo _assign_ em qualquer ação (mas note que, como são desenhados para serem usados como constantes de aplicação, a performance na hora da execução pode ser impactada se forem trocadas constantemente)
+- Pode ser alterada no Service Center
+- Persiste através de requisições e sessões
+- Nunca é resetada
+
+> No geral, site properties são melhor utilizadas como configurações de aplicação como um todo, e não como armazenamento de valores.
+
+O OutSystems já provê algumas variáveis de configuração (em cinza):
+
+![](https://i.imgur.com/6OjMJLL.png)
+
