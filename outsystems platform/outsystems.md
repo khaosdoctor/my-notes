@@ -117,6 +117,19 @@
     - [Ciclo de vida de uma sessão](#ciclo-de-vida-de-uma-sessão)
     - [Criando variáveis de sessão](#criando-variáveis-de-sessão)
     - [Criando Cros-Session Properties](#criando-cros-session-properties)
+  - [Web Services](#web-services)
+    - [SOAP](#soap)
+    - [REST](#rest)
+    - [Criando Web Services SOAP](#criando-web-services-soap)
+      - [Consumer](#consumer)
+      - [Producer](#producer)
+    - [Criando serviços ReST](#criando-serviços-rest)
+      - [Consumidor](#consumidor)
+      - [Expondo API's ReST](#expondo-apis-rest)
+  - [Temas e estilos](#temas-e-estilos)
+    - [Escrevendo CSS](#escrevendo-css)
+    - [Templates](#templates)
+    - [O Web Block do Menu](#o-web-block-do-menu)
 
 <!-- /TOC -->
 
@@ -1314,4 +1327,152 @@ O valor de uma site property:
 O OutSystems já provê algumas variáveis de configuração (em cinza):
 
 ![](https://i.imgur.com/6OjMJLL.png)
+
+## Web Services
+
+> [Exercicios - WebServices](Exercicios/Ex_13_WebServices.zip)
+
+O uso de webservices é muito comum para integrações de sistemas não relacionados, uma vez que é um modo de realizar chamadas remotas que são completamente agnósticas de linguagem. Desta forma sistemas que podem estar em dois lados do mundo e serem de tecnologias completamente diferentes podem se comunicar através de chamadas de funções.
+
+A plataforma OutSystems suporta SOAP e REST como os principais modelos de webservices.
+
+### SOAP
+
+SOAP significa _Simple Object Access Protocol_ e é um método de disponibilização de webservice chamado de contratual, pois os dois lados do sistema possuem um contrato formalizado de API que dita quais são os layouts e modelos que serão enviados e recebidos através de uma _Web Services Description Language (WSDL)_.
+
+- Todos os parâmetros de entrada e tipos de retorno são descritos completa e explicitamente
+- O consumidor e o provedor podem validar as requisições e respostas para encontrar erros
+- A maioria dos serviços SOAP possuem um contrato detalhado para as API's
+
+> Usa XML para transportar dados
+
+### REST
+
+ReST significa _Representational State Transfer_, é uma alternativa mais moderna e mais leve do que o SOAP.
+
+- Não existem contratos de API (Nenhum WSDL)
+- A maioria dos serviços ReST possuem um manual comum de leitura humana que explica o serviço ao invés do contrato
+- Os métodos HTTP e headers são usados para clarificar a semântica da operação
+
+> O JSON é o modo mais comum de transferências de dados em ReST, mas o XML ou qualquer outro tipo também pode ser aceito.
+
+### Criando Web Services SOAP
+
+#### Consumer
+
+Para criarmos um serviço consumidor de webservice, vamos entrar na aba _Logic_ e clicar em _Consume SOAP Web Service_:
+
+![](https://i.imgur.com/TaYYS8b.png)
+
+Após isto basta especificar o endereço do WSDL e o Service Studio vai automaticamente criar a estrutura do mesmo.
+
+![](https://i.imgur.com/vu0mvq4.png)
+
+![](https://i.imgur.com/oZd4wct.png)
+
+Uma vez analizado, o WSDL irá gerar uma série de ações que podem ser usadas normalmente na aplicação:
+
+![](https://i.imgur.com/VTkfJLA.png)
+
+Basta arrastar uma nova ação:
+
+![](https://i.imgur.com/Frbf0dq.png)
+
+#### Producer
+
+Para fazermos o contrário é similar, basta clicarmos em _Expose Web Service_ e depois adicionarmos um a um os métodos que queremos
+
+![](https://i.imgur.com/Zp2wJ0P.png)
+
+E então basta que criemos as ações escrevendo as lógicas como faríamos em qualquer outra ação.
+
+Note que não temos que gerenciar o WSL de forma alguma, as URL's e endpoints de um WSDL podem ser encontradas no Service Center, dentro da aba Module's Integration.
+
+### Criando serviços ReST
+
+#### Consumidor
+
+Para consumirmos um serviço ReST o processo é um pouco mais complicado devido a sua natureza. Porém podemos seguir similarmente como no processo anterior.
+
+Clicamos em _Consume ReST API_, adicionamos um unico método na tela seguinte.
+
+Então será necessário dizer a URL de chamada daquele método específico, bem como o método HTTP que será utilizado.
+
+Como não existe nenhum tipo de contrato que permita à plataforma inferir o tipo de chamada, é necessário que o desenvolvedor coloque um modelo de resposta
+
+![](https://i.imgur.com/IrOCB0O.png)
+
+Uma vez que o consumidor estiver criado, é fácil utilizá-lo na plataforma como se fossem outros métodos ou estruturas lógicas comuns.
+
+Uma vantagem do ReST sobre o SOAP na plataforma é que é possível escrever funções de callback utilizando eventos específicos _OnBeforeRequest_ e _OnAfterResponse_ que são, respectivamente, executados antes de o webservice ser chamado e depois que o mesmo recebbe a resposta.
+
+Também é possível detectar erros através das chamadas de status do HTTP e atribuir estes erros a tratamentos de exceções do sistema.
+
+![](https://i.imgur.com/iwRZpmB.png)
+
+#### Expondo API's ReST
+
+Diferentemente da criação das api's ReST, a exposição do serviço é muito mais simples, na verdade, é extamente igual ao SOAP.
+
+![](https://i.imgur.com/qstSIcZ.png)
+
+## Temas e estilos
+
+> [Exercicios - Themes](Exercicios/Ex_14_Themes.zip)
+
+Um tema provê as folhas de estilo para todas as telas que o usam. O tema:
+
+- Pode ser compartilhado entre módulos
+- Diferentes telas podem ter diferentes temas no mesmo módulo
+- Define layouts comuns de tela
+- Tipo de grid: Fixo, Fluido ou nenhum
+
+Somente os módulos com telas podem usar temas, mas eles podem ser definidos em qualquer outro módulo.
+
+### Escrevendo CSS
+
+O Service Studio possui um editor próprio de CSS com highlighting e também auto-complete. Enquanto você edita seus estilos mudanças são vistas em tempo real.
+
+![](https://i.imgur.com/1oD4qDX.png)
+
+O editor possui diversas abas, uma para cada folha de estilos que é apresentada. Como o próprio nome diz, as folhas de estilos são em cascata, de forma que a aba mais a esquerda é a mais específica e, portanto, a que terá mais precedencia sobre todas as demais. Enquanto a aba mais a direita é a mais genérica e com menor prioridade.
+
+Como cada componente tem sua própria folha de estilos, os componentes que são carregados primeiro terão seus estilos sobrescritos pelas telas que são carregadas em seguida:
+
+![](https://i.imgur.com/0GNJZqI.png)
+
+Para utilizar as classes que foram criadas nos editores de CSS, é possível utilizar as propriedades específicas deste componente. Caso sejam aplicados mais de um estilo, eles podem ser separados por espaço.
+
+![](https://i.imgur.com/0jQHSPb.png)
+
+É possível também definir estilos dinamicos que se baseiam em variáveis através das _Extended Properties_ e expressões.
+
+Abaixo está um guia de quais objetos são traduzidos para HTML quando a aplicação é compilada e, desta forma, é possível aplicar o estilo correto:
+
+![](https://i.imgur.com/9vemkcR.png)
+
+### Templates
+
+Também é possível definir um layout base para que todos os novos componentes sigam no momento que são criados. Estes templates são chamados de _Theme's web blocks_, e seguem similar a um Web block normal.
+
+![](https://i.imgur.com/6unOpJX.png)
+
+Definição de todos os web blocks:
+
+- __Layout__: Usado para todas as novas telas
+- __Info Balloon e Pop-up Editor__: Definem estruturas para popups
+- __Email__: Define o padrão para os emails
+- __Header, Menu e Footer__: Define os placeholders no web block layout, aqui é possível definir quais serão os web blocks que serão colocados nos placeholders de nome correspondente no layout padrão.
+
+> Os accelerators usam estas propriedades para criar rapidamente as novas atividades
+
+> Note que, estamos falando de web blocks, ou seja, não podemos apenas definir estilos nos temas, mas também a própria estrutura padrão das novas telas
+
+![](https://i.imgur.com/iJcT0yC.png)
+
+### O Web Block do Menu
+
+O Menu é um web block separado que é incluso por padrão em todas as aplicações, ele já possui toda uma estrutura preparada para criar uma estrutura de até 2 níveis de menu automaticamente utilizando accelerators e já informando quais serão as telas que estão cadastradas na aplicação.
+
+![](https://i.imgur.com/EqvVIQI.png)
 
