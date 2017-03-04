@@ -7,6 +7,8 @@
   - [Primeiro problema: Lista de números](#primeiro-problema-lista-de-números)
   - [Definição do Jasmine](#definição-do-jasmine)
   - [Primeiro teste](#primeiro-teste)
+  - [Classes de equivalência](#classes-de-equivalência)
+  - [Códigos de teste legíveis](#códigos-de-teste-legíveis)
 
 <!-- /TOC -->
 
@@ -133,3 +135,149 @@ describe('Maior e menor', function() {
 - O `expect` compara o resultado do algoritmo com um valor
 
 Vamos incluir agora no SpecRunner o nosso arquivo da pasta `src` e também o da pasta `spec` e executar.
+
+## Classes de equivalência
+
+Vamos realizar um novo teste, desta vez vamos imaginar que temos uma clinica e vamos testar as classes de pacientes.
+
+Primeiramente vamos criar as classes importantes.
+
+```js
+function Paciente(nome, idade, peso, altura) {
+  var clazz = {
+    imprime : function() {
+      alert(nome + "tem " + idade + " anos");
+    },
+    batimentos : function() {
+      return idade * 365 * 24 * 60 * 60;
+    },
+    imc : function() {
+      return peso / (altura * altura);
+    }
+  };
+
+  return clazz;
+}
+```
+
+Agora temos a nossa classe paciente, vamos criar o teste para ela. Como já temos a nossa pasta `spec`, vamos criar o `PacienteSpec.js`:
+
+```js
+describe("Paciente", function() {
+  it("deve calcular o IMC", function() {
+    var guilherme = new Paciente("Guilherme", 28, 72, 1.82);
+
+    var imc = guilherme.imc();
+
+    expect(imc).toEqual(72 / (1.82 * 1.82));
+  });
+
+  it("deve calcular o numero de batimentos", function() {
+    var guilherme = new Paciente("Guilherme", 28, 72, 1.82);
+    var batimentos = guilherme.batimentos();
+
+    expect(batimentos).toEqual(28 *365 * 24 * 60 * 60);
+  });
+});
+```
+
+Depois disso vamos ao nosso `specRunner.html` e incluimos o script do spec juntamente com o script do maior e menor. 
+
+```html
+<script type="text/javascript" src="spec/PacienteSpec.js"><script>
+```
+
+Se rodarmos o teste, veremos que ele funciona para estes dados enviados, mas temos que ter certeza de que ele funciona para todos os outros dados que podem ser digitados.
+
+Como teríamos que testar todas as combinações possíveis entre pesos e alturas, isso seria um pouco oneroso, talvez até impossível. E também teríamos o problema de que, na verdade, ambos os testes descrevem a mesma coisa, pois do ponto de vista do SpecRunner a função sempre retorna o mesmo cálculo, logo se um deles falhar implicaria que o outro também falha.
+
+De nada adianta termos dois testes que passam e falham juntos, isto só mostra que estamos, em geral, testanto a mesma coisa. Para isto usamos o que é chamado de __classe de equivalência__.
+
+![](http://s3.amazonaws.com/caelum-online-public/PM-71/ClassesdeEquivalencia.png)
+
+Classes de equivalência é o nome que damos para quando temos testes "parecidos", que exercitam o mesmo caminho no código de produção.
+
+
+Idealmente devemos ter apenas um único teste por classe de equivalência. Afinal, se dois testes exercitam o mesmo trecho de código, então ambos passarão e falharão no mesmo momento, tornando um deles desnecessário.
+
+Quando temos uma classe de equivalência, o ideal é que teríamos que ter apenas um teste por classe de equivalencia.
+
+Vamos continuar nosso exemplo da clinica, agora vamos criar a classe consulta:
+
+```js
+function Consulta(paciente, procedimentos, particular, retorno) {
+  var clazz = {
+    preco : function() {
+      if (retorno) { return 0; }
+
+      var precoFinal = 0;
+
+      procedimentos.forEach(function(procedimento) {
+        if("raio-x" == procedimento) { precoFinal += 55; }
+        else if("gesso" == procedimento) { precoFinal += 32; }
+        else { precoFinal += 25; }
+      });
+
+      if(particular) { precoFinal *= 2; }
+
+      return precoFinal;
+    },
+  };
+
+  return clazz;
+}
+```
+
+Temos a nossa classe de contulta, vamos criar o `ConsultaSpec.js` dentro da pasta `spec` novamente e adicionar ao nosso specRunner como tinhamos feito anteriormente. O nosso teste será:
+
+```js
+describe("Consulta", function() {
+
+  //Testa os retornos
+  it("não deve cobrar nada se for um retorno", function() {
+    var paciente = new Paciente("Guilherme", 28, 72, 1.80);
+    var consulta = new Consulta(paciente, [], true, true);
+
+    expect(consulta.preco).toEqual(0);
+  });
+
+  //Verifica o preço para procedimentos comuns
+  it("deve cobrar 25 por cada procedimento comum", function() {
+    var paciente = new Paciente("Guilherme", 28, 72, 1.80);
+    var consulta = new Consulta(paciente, ["proc1","proc2"], false, false);
+
+    expect(consulta.preco).toEqual(50);
+  });
+
+  //Olha os preços dos procedimentos padrões
+  it("deve cobrar preco especifico dependendo do procedimento", function(){
+    var paciente = new Paciente("Guilherme", 28, 72, 1.80);
+    var consulta = new Consulta(paciente, ["Procedimento-comum", "raio-x", "Procedimento-comum", "gesso"], false, false);
+
+    expect(consulta.preco).toEqual(25+55+25+32);
+  });
+
+  //Verifica o preço para procedimentos comuns em consulta particular
+  it("deve cobrar 25 por cada procedimento comum em consulta particular", function() {
+    var paciente = new Paciente("Guilherme", 28, 72, 1.80);
+    var consulta = new Consulta(paciente, ["proc1","proc2"], true, false);
+
+    expect(consulta.preco).toEqual(100);
+  });
+
+  //Olha os preços dos procedimentos padrões
+  it("deve cobrar preco especifico dependendo do procedimento", function(){
+    var paciente = new Paciente("Guilherme", 28, 72, 1.80);
+    var consulta = new Consulta(paciente, ["raio-x", "gesso"], true, false);
+
+    expect(consulta.preco).toEqual((55+32)*2);
+  });
+
+});
+```
+
+Vamos verificar que neste teste, a classe de equivalencia é o número de procedimentos, podemos criar N procedimentos que os valores finais não vão se alterar, logo, procedimentos é uma classe de equivalência.
+
+
+## Códigos de teste legíveis
+
