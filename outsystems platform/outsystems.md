@@ -130,6 +130,17 @@
     - [Escrevendo CSS](#escrevendo-css)
     - [Templates](#templates)
     - [O Web Block do Menu](#o-web-block-do-menu)
+  - [Scaffolding e RichWidgets](#scaffolding-e-richwidgets)
+    - [Scaffolding](#scaffolding)
+      - [Scaffolds disponíveis](#scaffolds-disponíveis)
+        - [Telas de listagem](#telas-de-listagem)
+        - [Telas de detalhamento](#telas-de-detalhamento)
+    - [RichWidgets](#richwidgets)
+      - [Popup Editor](#popup-editor)
+      - [List Navigation](#list-navigation)
+      - [List Sort Column](#list-sort-column)
+  - [Silk UI](#silk-ui)
+    - [Instalando o SilkUI](#instalando-o-silkui)
 
 <!-- /TOC -->
 
@@ -1476,3 +1487,126 @@ O Menu é um web block separado que é incluso por padrão em todas as aplicaç�
 
 ![](https://i.imgur.com/EqvVIQI.png)
 
+## Scaffolding e RichWidgets
+
+> [Exercicios - RichWidgets](Exercicios/Ex_15_RichWidgets.zip)
+
+### Scaffolding
+
+O service studio possui uma gama de automações que visam aumentar a produtividade do desenvolvedor enquanto cria a aplicação web. Isto é chamado de scaffolding, a criação de padrões de desenvolvimento pré prontos permitem que as telas, lógicas e funcionalidades sejam criadas muito mais rápido pois já constroem uma base para todo o desenvolvimento.
+
+#### Scaffolds disponíveis
+
+É possível criar telas de listagem e detalhamento inteiras baseado apenas nas entidades.
+
+Listas de detalhes dentro de uma tela mestre
+
+Popups de dialogos e balões de contexto, bem como inputs com auto-complete.
+
+##### Telas de listagem
+
+Se, por exemplo, temos uma entidade chamada "Cinema" e clicarmos e arrastarmos esta tela para o fluxo principal, criaremos uma outra tela com a listagem de cinemas.
+
+![](https://i.imgur.com/v3zOV2q.png)
+
+Ou seja, sempre que jogarmos uma entidade no fluxo, ela criará uma lista de sua origem.
+
+##### Telas de detalhamento
+
+Se jogarmos novamente a entidade cinema dentro do fluxo, ele nos criará uma tela de detalhamento de cinemas.
+
+![](https://i.imgur.com/PiJ9H8G.png)
+
+Assim teremos o scaffolding completo com links e todas as conexões:
+
+![](https://i.imgur.com/gY70BuX.png)
+
+### RichWidgets
+
+Se tivermos uma outra entidade chamada "MovieSessions" com uma chave estrangeira para a entidade de cinemas, ao arrastarmos a entidade para dentro da ela em uma posição qualquer, ela gerará um formulário "mestre-detalhe" como na foto abaixo
+
+![](https://i.imgur.com/g3rz66A.png)
+
+Este formulário aninhado possui o que são chamados RichWidgets. Como os listados abaixo:
+
+![](https://i.imgur.com/VuJ8s2J.png)
+
+- Temos o popup
+- Temos a lista de navegação
+- Temos a ordenação de colunas
+
+Apesar de termos usado o scaffolding para criar estes widgets, também é possível utilizar o drag n' drop para colocá-los na tela que está sendo criada.
+
+Temos vários outros RichWidgets, como:
+
+- Popup_Editor
+- List_Navigation
+- List_SortColumn
+- Feedback_Message
+- Input_AutoComplete
+
+![](https://i.imgur.com/cWMn0Qs.png)
+
+#### Popup Editor
+
+Permite que uma outra tela seja mostrada sobre a tela original como se fosse um popup modal, permitindo edições e etc
+
+![](https://i.imgur.com/TlBq57c.png)
+
+Para fazer a criação de um pop editor, basta criarmos um link do tipo `navigate` na tela de origem apontando para a tela de destino que queremos, depois identificar o widget que vai enviar a ação para exibir o pop-up.
+
+> É importante dizer que para um pop up, talvez seja melhor um layout mais simplista, sem headers ou footers.
+
+Quando adicionamos um pop up, note que temos também as actions de notificação, estas actions servem para notificar a tela original (source screen) sobre eventos que ocorrem no pop up, assim como nas chamadas AJAX.
+
+#### List Navigation
+
+Implementa uma paginação em um widget do tipo Table Records.
+
+Para fazer a criação, basta usar o drag and drop no rich widget logo abaixo da Table Records correspondente. Após isto, basta associar a lista com o ID do widget que será utilizado, setando não só o nome mas também a contagem de registros na linha e a contagem total.
+
+![](https://i.imgur.com/acjyIkc.png)
+
+A página que está sendo exibida fica armazenada na sessão
+
+A ação OnNotify corresponde à seleção de uma nova página na lista, ela basicamente recarrega o data source e a lista.
+
+Porém as configurações são de mão dupla, ou seja, também temos que configurar a lista para obedecer ao navegador. Setando a propriedade `Start Index` da lista de registros para `List_Navigation_GetStartIndex(ID, true)` estamos dizendo para que a lista exiba o primeiro indice da página selecionada.
+
+> Pense que um offset de indices vai percorrendo a tabela, esse offset é uma janela de exibição que, a cada página, se move N registros para frente
+
+![](https://i.imgur.com/aCLj2QX.png)
+
+#### List Sort Column
+
+Adiciona um ordenador de coluna na lista de registros do tipo Table Records.
+
+Para fazer a criação de uma list sort column basta arrastar o rich widget para cima do cabeçalho da coluna que você quer ordenar. Depois selecione a propriedade `Column` do List Sort Column e defina com o nome da coluna que você quer ordenar `{Tabela}.[coluna]`.
+
+A ação OnNotify deve receber uma Screen Action que vai recarregar o dataSource e depois recarregar o widget.
+
+![](https://i.imgur.com/nOBdhYI.png)
+
+Do mesmo modo, o Aggregate que está sendo ordenado precisa obedecer à ordenação do widget, para isto, abra o editor de aggregates e selecione na opção `Sorting` o `Add Dynamic Sort` e defina a expressão para `List_SortColumn_GetOrderBy(<Nome do Table Records>.coluna, DefaultOrder: "{entidade}.[atributo])"`
+
+## Silk UI
+
+> [Exercicios - Silk UI](Exercicios/Ex_16_SilkUI.zip)
+
+Silk UI é um framework de desenvolvimento de estilos para o OutSystems, diferentemente de outros paradigmas, é necessário que o desenvolvedor aprenda a trabalhar com um modelo orientado a estilos ao invés de orientado a resultados em tela.
+
+Os princípios desse paradigma começam com a definição de um __guia de estilos__:
+
+- Regras da empresa sobre como a marca se comunica
+- Um conjunto de padrões para escrever o design de documentos
+
+Isto evolui para um documento visual, que possui toda a identidade da empresa e de suas aplicações, seguido por uma criação centralizada de padrões de UI.
+
+### Instalando o SilkUI
+
+Para iniciar, é necessário que no seu servidor de aplicação existe o tema base do SilkUI e um ou mais temas instalados para que seja necessário continuar.
+
+Cada tema do silkUI é basicamente composto de dois componentes: Um tema e um template
+
+- Os módulos chamados `Template_<algo>` (com uma descrição e icone), vão automaticamente aparecer para a seleção quando criando um novo módulo
+- Novos módulos vão clinar este template para produzir o tema inicial do módulo.
