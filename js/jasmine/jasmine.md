@@ -536,4 +536,6 @@ Para começarmos no TDD podemos seguir os seguintes passos:
 6. Refatoramos o nosso código para tirar as más práticas, como repetições de código e qualquer outro valor fixo, mas ainda precisamos manter o código passando e sendo funcional
 7. Repita o processo para cada melhoria
 
+![](http://s3.amazonaws.com/caelum-online-public/PM-71/TDD.png)
+
 Este é o chamado ciclo `Red -> Green -> Refactor`, onde fazemos primeiro o teste falhar, depois implementamos uma solução simples para o teste passar e ai refinamos nossa solução e repetimos o processo até termos convicção de que o nosso código está bem testado.
