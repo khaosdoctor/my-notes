@@ -216,7 +216,6 @@ VocÃª pode usar um `git reset --hard <sha>|<headPOS>` para voltar para uma posiÃ
 
 # SITES DE AJUDA GIT
 * http://git-scm.com
-* http://github <- Help do github
 * http://gitimmersion.com
 * http://gitready.com
 * http://ndpsoftware.com/git-cheatsheet.html
