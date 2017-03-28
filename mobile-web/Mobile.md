@@ -158,4 +158,4 @@ Dessa forma nós podemos otimizar o site para imagens retina, todas as imagens r
 
 Temos que usar a propriedade `background-size`, se tivermos uma imagem setada de background de uma div por exemplo, para que a imagem seja diminuida para metade do tamanho, mas com o `background-image` do tamanho original, ou seja, o dobro da densidade. Então se tivermos uma imagem 400x400, ao dobrarmos para 800x800, teremos o background-size de 400px para que ela tenha o tamanho original.
 
-Porém, o tamanho de uma imagem retina é muito grande para um site normal, para resolver esse problema podemos usar a ferramenta http://scottjehl.com/picturefill 
+Porém, o tamanho de uma imagem retina é muito grande para um site normal.
