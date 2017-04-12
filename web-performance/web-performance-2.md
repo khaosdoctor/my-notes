@@ -9,6 +9,10 @@
     - [Arquivos blockantes](#arquivos-blockantes)
     - [Critical Rendering Path](#critical-rendering-path)
     - [O que fazer?](#o-que-fazer)
+  - [O problema do javascript](#o-problema-do-javascript)
+    - [Async Scripts](#async-scripts)
+  - [Threads](#threads)
+    - [Timeout](#timeout)
 
 <!-- /TOC -->
 
@@ -92,3 +96,38 @@ Após isto, temos que entender que os scripts também bloquearão a carga do DOM
 > Uma outra vantagem de ter o script na parte de baixo da página, é que não temos mais que esperar o `onload` da página pois ele já está no final do htmle temos certeza de que a página já foi totalmente carregada.
 
 ![](https://s3.amazonaws.com/caelum-online-public/performance+2/performaceII_1_10+mostrando+como+fica+com+o+function.png)
+
+## O problema do javascript
+
+O grande problema de um javascript é que ele tem capacidade de alterar qualquer parte de um site, como HTML, CSS ou até baixar novos elementos.
+
+Uma característica complicada do script é que, mesmo eles sendo possíveis de serem baixados em paralelo, um script só pode ser executado um após o outro, porque ele pode ter dependencias com os scripts anteriores.
+
+### Async Scripts
+
+O HTML5 incluiu a tag `async`, esta tag serve para que possamos indicar quando o script pode ser ___baixado e executado___ de forma assíncrona. Então o browser não irá mais respeitar a ordem e nem as dependencias dos scripts.
+
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/2_1+mostrando+o+async.png)
+
+Não iremos utilizar nenhum atributo async se precisamor ter scripts dependentes, porque a ordem não vai ser respeitada.
+
+Desta forma, podemos colocar nossos scripts de volta no head e utilizar a ordem do html para priorizar melhor ainda as ordens dos scripts.
+
+`<script async src='script-source'></script>`
+
+## Threads
+
+Por característica, o Javascript é executado em uma única thread, isto porque seriam gerados muitos problemas de concorrência durante a execução e o donwload de um site.
+
+O Javascript é o exemplo mais simples, mas todo o navegador é um elemento _single threaded_. O processamento em uma única thread, apesar de resolver vários problemas que existiriam se houvessem muitas threads, ele também é um gargalo.
+
+Mesmo com o async, temos que otimizar o site para que scripts sejam executados na ordem que queremos, ou melhor, executados com mais ou menos atraso.
+
+### Timeout
+
+Para resolver o problema da execução concorrente com os usuários e todas as interações desses usuários, podemos usar o `setTimeout` para atrasar a execução da função. Podemos, por exemplo, ter um script que será executado e atualizará o footer da página, este footer só está no final do site e não será visto de primeira quando o usuário entrar na página.
+
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/2/2_3+mostrando+o+set+timeOut.png)
+
+A ideia é remover scripts menos importantes para que estes sejam executados apenas depois de determinados eventos.
+
