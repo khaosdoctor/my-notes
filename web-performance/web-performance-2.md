@@ -13,6 +13,12 @@
     - [Async Scripts](#async-scripts)
   - [Threads](#threads)
     - [Timeout](#timeout)
+    - [Lazy Loading](#lazy-loading)
+      - [O atributo src](#o-atributo-src)
+      - [O problema do onScroll](#o-problema-do-onscroll)
+  - [Redes](#redes)
+    - [Largura de banda e Latência (RTT)](#largura-de-banda-e-latência-rtt)
+    - [Os sites por baixo dos panos](#os-sites-por-baixo-dos-panos)
 
 <!-- /TOC -->
 
@@ -131,3 +137,108 @@ Para resolver o problema da execução concorrente com os usuários e todas as i
 
 A ideia é remover scripts menos importantes para que estes sejam executados apenas depois de determinados eventos.
 
+### Lazy Loading
+
+O Lazy Loading é uma técnica que permite adiar a execução ou a carga de um recurso de mídia, isso é muito utilizado em iframes e imagens.
+
+O conceito de Lazy Loading é, basicamente, incluir elementos de mídia dentro de uma página, por exemplo, no caso do iframe, seria criar o elemento iFrame após um determinado tempo.
+
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/3/3_2+mostrando+o+editor.png)
+
+Outros modelos de carregamento seriam também através de interações do usuário, ou seja, o usuário precisaria, por exemplo, clicar no botão play de um vídeo para que o mesmo fosse baixado.
+
+O modelo mais comum de Lazy Loading é carregar imagens e elementos de mídia a medida que o scroll vai chegando próximo do elemento.
+
+Utilizando um exemplo simples, vamos carregar uma série de imagens como lazy loading.
+
+#### O atributo src
+
+Para imagens, o atributo src é o principal elemento da tag. O Browser inicia o carregamento e o download das imagens e de todos os elementos de mídia existentes na página no momento que ele encontra um atributo src. (Por isso que colocar um `display: none`) não é suficiente.
+
+Primeiramente vamos trocar tudo que temos de `<img src="">` por `<img data-src="">`, ou seja, removeremos o atributo `src` para o browser não carregar nada de inicio.
+
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/3/3_4+substituindo+o+src+por+data+src.png)
+
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/3/3_5+mostrando+as+imagens+sem+imagens.png)
+
+Depois, vamos criar um arquivo `lazyload.js`, e vamos trabalhar com o scroll do usuário:
+
+```js
+window.onscroll = function() {
+  var imgs = document.querySelectorAll('img[data-src]'); //Selecionamos todas as imagens que tem o atributo que colocamos
+
+  for(var i=0; i < imgs.length; i++) {
+    if(imgs[i].getBoundingClientRect().top < window.innerHeight) { //Isto fará com que obtenhamos a distancia das imagens em relação ao topo e compara com o tamanho da janela interna do browser
+      imgs[i].src = imgs[i].getAttribute('data-src'); //Troca o atributo data-src por src
+    }
+  }
+}
+```
+
+- `window.getBoundingClientRect`: Retorna um objeto com 4 propriedades, uma para cada lado de um retangulo imaginário traçado ao redor do elemento selecionado. O valor de cada propriedade é a distancia do respectivo lado do elemento em relação ao respectivo lado da janela
+- `window.innerHeight`: Obtém a altura interna da janela do browser (Removendo o menu)
+
+#### O problema do onScroll
+
+Um dos problemas mais famosos do `onscroll` é que ele é chamado muitas vezes.
+
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/3/3_6+mostrando+quantas+vezes+%C3%A9+disparado+o+scroll.png)
+
+Se um código dentro do scroll for pesado, então provavelmente a página ficará lenta.
+
+A técnica para remover este comportamento, é filtrar os números de vezes que as funções são executadas.
+
+```js
+var ran = false;
+
+window.onscroll = function() {
+
+  if(ran) return;
+  ran = true;
+  setTimeout(function() {ran = false;}, 150);
+  
+  var imgs = document.querySelectorAll('img[data-src]'); //Selecionamos todas as imagens que tem o atributo que colocamos
+
+  for(var i=0; i < imgs.length; i++) {
+    if(imgs[i].getBoundingClientRect().top < window.innerHeight) { //Isto fará com que obtenhamos a distancia das imagens em relação ao topo e compara com o tamanho da janela interna do browser
+      imgs[i].src = imgs[i].getAttribute('data-src'); //Troca o atributo data-src por src
+    }
+  }
+}
+```
+
+Essa técnica é chamada de _throttle_, o que fazemos basicamente é:
+
+- Criar uma variável global que controla se o código foi ou não executado
+- Criar uma verificação de "se a variável for true" então retorna a função vazia
+- Se não, a variável é setada como true, ou seja, o código não será mais rodado
+- Criamos um timeout que limita a execução destas funções a cada X milissegundos, fazendo com que a variável global assuma novamente o valor de false
+
+## Redes
+
+Como podemos entender os conceitos de redes e como eles podem melhorar nossa performance.
+
+### Largura de banda e Latência (RTT)
+
+Vamos imaginar uma situação para ficar mais simples o entendimento. Digamos que tenhamos um cano de água, e queremos enviar água para diversas partes do Brasil.
+
+A largura do cano vai determinar quanta água pode passar por este cano ao mesmo tempo. Isto é o que chamamos, em redes, de __largura de banda do canal__, a quantidade de dados simultâneos que podem trafegar por ali.
+
+A latência é uma medida relativa a distância, tanto em redes quanto no nosso exemplo. Para enviarmos agua de SP para o Amazonas, independente da nossa largura de cano, vai demorar um certo tempo pois a distância é longa. Isto é a __Latência__ do canal, também chamado de _Round Trip Time_, que é o tempo que um pacote TCP leva para chegar ao servidor e voltar.
+
+O RTT é geralmente medido em bytes, essencialmente o _Time to First Byte_ que é o tempo para um único byte ir até o servidor e voltar.
+
+### Os sites por baixo dos panos
+
+Entre o usuário dar um _Enter_ no navegador e ver a pagina, existem MUITAS coisas que acontecem por detrás das cortinas.
+
+O caminho básico seria `Lookup DNS -> HandShake TCP -> HandShake TLS -> Request HTTP`, ou seja, são 4 RTT's que temos antes de sequer podermos ver as páginas.
+
+- O DNS é o primeiro ponto da conexão, é necessário fazer uma checagem do DNS para transformar o domínio em um IP
+- O TCP é a conexão com o servidor de destino (que sabemos os IP's)
+- O TLS é um passo opcional, mas é necessário realizar a conexão segura do SSL/TLS antes do HTTP
+- Por fim temos a request HTTP, com a resposta do servidor
+
+> Veja que pagamos a latência 4 vezes no mínimo, por isso é tão importante falar de latência
+
+A largura da banda é importante, porém apenas quando temos que trafegar muitos dados ou fazer downloads, por exemplo, streamming de vídeo, downloads em geral. Em páginas da web (que trafegam apenas algumas centenas de kbytes) não fazem a menor diferença em redes com banda de mais de 5mb/s, ou seja, a largura de banda não importa para nenhum tipo de rede acima de 5Mb/s quando falamos de sites e browsers.
