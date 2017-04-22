@@ -30,6 +30,7 @@
   - [1 RTT Render](#1-rtt-render)
     - [Aplicação da técnica](#aplicação-da-técnica)
       - [Polyfill](#polyfill)
+  - [HTTP/2](#http2)
 
 <!-- /TOC -->
 
@@ -343,6 +344,10 @@ O flush é uma ferramenta de dados que faz um envio total dos dados atuais já p
 
 O [HTTP Archive](http://httparchive.org) é um site de buscas para métricas da internet que mostra a indexação do top 1 milhão de sites pelo ranking da Alexa a cada dois meses e fazem uma média de várias informações úteis, como tamnaho médio dos recursos e outras informações bastante pertinentes a performance.
 
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/5/5_1+mostrando+gr%C3%A1ficos+de+render+time.png)
+
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/5/5_2+mostrando+gr%C3%A1ficos.png)
+
 Estas informações podem ser uteis para que possamos ter uma média de tamanhos e de otimizações que devemos fazer em relação aos melhores sites da web (ou pelo menos aos mais acessados).
 
 ## 1 RTT Render
@@ -507,8 +512,14 @@ O polyfill é uma técnica que força a implementação de um recurso não exist
 </html>
 ```
 
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/5/5_8+mostrando+os+c%C3%B3digos+finais.png)
+
 Uma das vantagens é que, se o html já possuir o preload, o script não será executado, conforme a descrição:
 
 ![](http://i.imgur.com/enVXCr6.png)
 
+> Uma ideia é utilizar um plugin de automação para extração desse CSS que é o [Critical CSS](https://github.com/addyosmani/critical)
 
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/5/5_19+mostrando+o+site.png)
+
+## HTTP/2
