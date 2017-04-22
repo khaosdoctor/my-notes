@@ -19,6 +19,17 @@
   - [Redes](#redes)
     - [Largura de banda e Latência (RTT)](#largura-de-banda-e-latência-rtt)
     - [Os sites por baixo dos panos](#os-sites-por-baixo-dos-panos)
+  - [Bateria](#bateria)
+  - [Redes móveis](#redes-móveis)
+  - [Técnicas de otimização para redes móveis](#técnicas-de-otimização-para-redes-móveis)
+  - [TCP](#tcp)
+    - [Slow Start](#slow-start)
+    - [KeepAlive](#keepalive)
+    - [Flush](#flush)
+  - [HTTP Archive](#http-archive)
+  - [1 RTT Render](#1-rtt-render)
+    - [Aplicação da técnica](#aplicação-da-técnica)
+      - [Polyfill](#polyfill)
 
 <!-- /TOC -->
 
@@ -234,6 +245,8 @@ Entre o usuário dar um _Enter_ no navegador e ver a pagina, existem MUITAS cois
 
 O caminho básico seria `Lookup DNS -> HandShake TCP -> HandShake TLS -> Request HTTP`, ou seja, são 4 RTT's que temos antes de sequer podermos ver as páginas.
 
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/4/4_2+mostrando+os+4+RTT.png)
+
 - O DNS é o primeiro ponto da conexão, é necessário fazer uma checagem do DNS para transformar o domínio em um IP
 - O TCP é a conexão com o servidor de destino (que sabemos os IP's)
 - O TLS é um passo opcional, mas é necessário realizar a conexão segura do SSL/TLS antes do HTTP
@@ -241,4 +254,261 @@ O caminho básico seria `Lookup DNS -> HandShake TCP -> HandShake TLS -> Request
 
 > Veja que pagamos a latência 4 vezes no mínimo, por isso é tão importante falar de latência
 
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/4/4_3+mostrando+a+compara%C3%A7a%C3%B5.png)
+
 A largura da banda é importante, porém apenas quando temos que trafegar muitos dados ou fazer downloads, por exemplo, streamming de vídeo, downloads em geral. Em páginas da web (que trafegam apenas algumas centenas de kbytes) não fazem a menor diferença em redes com banda de mais de 5mb/s, ou seja, a largura de banda não importa para nenhum tipo de rede acima de 5Mb/s quando falamos de sites e browsers.
+
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/4/4_5+comparando+miles+segundos.png)
+
+## Bateria
+
+Quando falamos de bateria, estamos falando apenas em dispositivos mobile. A rede é, depois da tela, o compoente que mais gasta bateria em um celular.
+
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/4/4_2_1+mostrando+a+bateria.png)
+
+> Em comparação, a conexão Wi-Fi gasta cerca de 10x menos energia do que uma rede 3G em um caso médio.
+
+O que isto significa? O celular não pode deixar a conexão aberta 100% do tempo, porque a bateria acabaria muito rápido. Ai entramos no caso do RRC (_Radio resource controller_), o RRC permite que o celular fique em um estado "dormente" em relação ao 3/4G, o celular fica 100% do tempo conectado __à antena da operadora__ mas não sempre à internet, então quando o celular precisa acessar a internet, ele precisa pedir uma permissão ao núcleo da operadora para que seja necessário acessar a internet.
+
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/4/4_2_3+mostrando+o+idle+connected.png)
+
+> Para redes mais lentas como 3G ou 2G o RRC fica localizado no núcleo da operadora (o que adiciona uma latência a mais), em redes mais rapidas como o 3.5G e 4G, este RRc já fica localizado direto na antena, reduzindo assim a latência final.
+
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/4/4_2_4+mostrando+rtt.png))
+
+Isto significa que sempre que mantivermos o celular muito tempo sem conectar na internet e precisarmos realizar uma conexão, é necessário um _handshake_ entre o celular e o RRC. Este mecanismo funciona para os dois lados, ou seja, se ficarmos um determinado tempo sem acessar a internet (o timeout padrão é de 10s), o RRC desliga a rede.
+
+## Redes móveis
+
+Atualmente existem 4 modelos de redes móveis no Brasil:
+
+- 4G - LTE
+- 3.5G - HSPA+
+- 3G - UMTS, HSPA
+- 2G - EDGE, GPRS
+
+O celular automaticamente faz um fallback para redes mais lentas dependendo do status atual do sinal. Se formos verificar as especificações de cada rede, temos limites de velocidade:
+
+- 4G: 300Mb/s
+- 3.5G: 168Mb/s
+- 3G: 14Mb/s
+- 2G: 384kb/s
+
+Isto sendo o limite teórico da tecnologia, porém dependendo do plano de dados a operadora pode liberar menos de 1/10 disto.
+
+Como já foi falado anteriormente, bandas acima ou iguais a 5Mb/s não interferem muito na performance dos dados, então o problema real é de fato a latência.
+
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/4/4_2_8+mostarndo+ms.png)
+
+## Técnicas de otimização para redes móveis
+
+- Diminuir número de requests
+  - Concatenação de JS
+  - Concatenação de CSS
+  - Concatenação de imagens com sprites
+  - Concatenação de HTML (minificação)
+  - Sprites SVG
+- Diminuir a distância geográfica entre o servidor e o cliente (isso se aplica muito se houver audiências localizadas)
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/4/4_3_1+mostrando+a+distancia.png)
+  - Se o seu site é global, então uma ideia é utilizar CDN's
+- Remover redirects, não gastar requests com redirecionamentos desnecessários
+
+## TCP
+
+Algumas configurações TCP ou de rede afetam diretamente a performance do site.
+
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/4/4_4_1+mostrando+o+browser+e+o+server.png)
+
+Pela especificação do TCP, ao receber a primeira chamada do HTTP, o servidor pode enviar, de uma só vez, 4 segmentos (que totalizam mais ou menos 5.8kb), ou seja, essas primeiras conversas são essenciais para que o site possa ser rápido.
+
+### Slow Start
+
+O TCP por padrão é chamado de _Slow Start_, isto é feito para estabelecer um ponto de equilíbrio entre os dois servidores. Sendo assim, a primeira chamada de envio é de 4 segmentos, depois 8 segmentos, então 16 e assim por diante até que o cliente começe a ter perda de pacotes, então o servidor volta um estágio para um ponto final aonde ambos conseguem trafegar informações a uma velocidade aceitável. Isto é chamado de _Slow Start_.
+
+> Existem movimentos em comunidades de redes para que o número de segmentos seja aumentado para 10 (totalizando 14kb)
+
+Para minimizar o efeito do slow start, podemos fazer algumas modificações como o _keepalive_.
+
+### KeepAlive
+
+O _keepalive_ é um cabeçalho de conexão que informa ao servidor para manter a conexão TCP atual aberta, desta forma não é necessário passar novamente por todos os SYN e ACK da primeira comunicação, mantendo o mesmo recurso para as requests subsequentes.
+
+Por padrão o browser já suporta o keepalive configurado.
+
+### Flush
+
+O flush é uma ferramenta de dados que faz um envio total dos dados atuais já prontos do website mesmo antes de todos os dados serem buscados do back-end. Isso é muito específico da linguagem, mas todas possuem.
+
+## HTTP Archive
+
+O [HTTP Archive](http://httparchive.org) é um site de buscas para métricas da internet que mostra a indexação do top 1 milhão de sites pelo ranking da Alexa a cada dois meses e fazem uma média de várias informações úteis, como tamnaho médio dos recursos e outras informações bastante pertinentes a performance.
+
+Estas informações podem ser uteis para que possamos ter uma média de tamanhos e de otimizações que devemos fazer em relação aos melhores sites da web (ou pelo menos aos mais acessados).
+
+## 1 RTT Render
+
+Por padrão, o CSS é blocante, pois não faz sentido renderizarmos um HTML sem nenhum tipo de estilo. Então ao paint final de todo o site seria travado pelo próprio CSS.
+
+O segredo para esse tipo de destravamento totalmente é o que é chamado de __1 RTT Render__, ou seja, com um RTT possamos ter uma renderização útil para o usuário, por útil dizemos algo que o usuário possa interagir, geralmente o topo do site.
+
+> É importante dizer que por _carregamento significativo_ não estamos dizendo para carregar todo o site, apenas uma parte específica do site, ou apenas uma pequena parte do site enquanto o resto do site é carregado em background.
+
+Quando estamos dizendo "1 RTT", em prática, esse RTT é o request que nos traz o HTML base, ou seja, não podemos trazer outras coisas a não ser HTML... Então temos que utilizar algumas práticas como:
+
+- Inline do CSS inicial
+  - Descobrir qual é o CSS necessário para renderizar a primeira parte do site
+- Inline de imagens (como o logo)
+- Em um mundo ideal, não precisaríamos de JS para nada, mas se precisarmos, então precisaríamos do Inline do mesmo JS
+- Tudo isso tem de caber em 14kb
+- Flush do HTML inicial no back-end
+- Todo o resto é feito Async
+
+> É importante definirmos que, quando fizermos inline de recursos (como css e js). Estamos fazendo uma troca do cache que temos (porque vamos ter que baixar a mesma coisa várias vezes, por exemplo, um header que é baixado sempre) por um tempo de carregamento inicial.
+
+### Aplicação da técnica
+
+Imagine que temos um arquivo HTML comum:
+
+```html
+<html>
+  <head>
+  </head>
+  <body>
+  </body>
+</html>
+```
+
+Vamos inicialmente quebrar o CSS em duas partes, o primeiro arquivo seria o CSS inicial (carregado inline) e o outro seria o CSS do resto do site:
+
+```html
+<html>
+  <head>
+    <link rel="stylesheet" href="caminho/resto.css">
+    <style>/* estilo do css inicial inline */</style>
+  </head>
+
+  <body>
+  </body>
+
+</html>
+```
+
+Agora temos que fazer com que nosso CSS seja assíncrono. Mas isso não é tão simples para fazer no CSS, não temos como colocar um atributo `async` pois não existe para o `<link>`, e também não podemos colocar no final da página pois a maioria dos browsers reordena para o header. Então como fazemos?
+
+__Método 1: Scripts JS__
+
+---
+
+Neste caso, temos como utilizar um framework bem pequeno chamado LoadCSS que pode ser carregado no final da página e irá carregar o resto do nosso css assíncronamente:
+
+```html
+<html>
+  <head>
+    <style>/* estilo do css inicial inline */</style>
+  </head>
+
+  <body>
+
+    <script src="loadcss.js"></script>
+    <script type="text/javascript">loadCSS("resto.css");</script>
+  </body>
+
+</html>
+```
+
+Veja que tiramos o link, mas essa é uma solução baseada em javascript, o que não é muito elegante... É possível utilizar isso de forma nativa no browser? Sim, através do `rel`.
+
+__Método 2: Rel preload__
+
+---
+
+Podemos utilizar a mesma tag `<link>` porém utilizando um outro valor no atributo `rel`, o `preload`. O grande problema desta técnica é que ela ainda não é aceita em todos os browsers...
+
+![](http://i.imgur.com/wyc6rMl.png)
+
+Desconsiderando a utilização:
+
+```html
+<html>
+  <head>
+    <link rel="preload" as="style" href="caminho/resto.css">
+
+    <style>/* estilo do css inicial inline */</style>
+  </head>
+
+  <body>
+  </body>
+
+</html>
+```
+
+O preload basicamente faz o download do arquivo sem executar o arquivo, fazendo o download de maneira assíncrona mas colocando o mesmo no cache. O atributo `as` define que a prioridade do arquivo será a mesma de uma CSS.
+
+Mas não faz sentido baixarmos um arquivo CSS e não executarmos certo? Para isso vamos utilizar uma outra técnica que é basicamente utilizar o atributo `onload` do html para renderizar o stylesheet quando estiver pronto:
+
+```html
+<html>
+  <head>
+    <link rel="preload" as="style" href="caminho/resto.css" onload="this.rel='stylesheet'">
+
+    <style>/* estilo do css inicial inline */</style>
+  </head>
+
+  <body>
+  </body>
+
+</html>
+```
+
+Veja que o `onload` só será executado quando o arquivo for completamente baixado.
+
+É uma boa prática adicionar um fallback de `<noscript>` para os casos aonde o JS esteja desabilitado
+
+```html
+<html>
+  <head>
+    <link rel="preload" as="style" href="caminho/resto.css" onload="this.rel='stylesheet'">
+
+    <noscript><link rel="stylesheet" href="resto.css"></noscript>
+
+    <style>/* estilo do css inicial inline */</style>
+  </head>
+
+  <body>
+  </body>
+
+</html>
+```
+
+> Mas como faremos para os browsers que não suportam `preload`?
+
+Neste caso vamos utilizar um _polyfill_.
+
+#### Polyfill
+
+O polyfill é uma técnica que força a implementação de um recurso não existente em um browser através de um javascript. Neste caso vamos utilizar o polyfill `cssrelpreload.js` presente no framework [LoadCSS](https://github.com/filamentgroup/loadCSS):
+
+```html
+<html>
+  <head>
+  
+    <script src="loadcss.js" async></script>
+    <script src="cssrelpreload.js" async></script>
+
+    <link rel="preload" as="style" href="caminho/resto.css" onload="this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="resto.css"></noscript>
+
+    <style>/* estilo do css inicial inline */</style>
+  </head>
+
+  <body>
+  </body>
+
+</html>
+```
+
+Uma das vantagens é que, se o html já possuir o preload, o script não será executado, conforme a descrição:
+
+![](http://i.imgur.com/enVXCr6.png)
+
+
