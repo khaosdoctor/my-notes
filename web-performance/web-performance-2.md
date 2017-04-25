@@ -30,7 +30,22 @@
   - [1 RTT Render](#1-rtt-render)
     - [Aplicação da técnica](#aplicação-da-técnica)
       - [Polyfill](#polyfill)
-  - [HTTP/2](#http2)
+  - [O novo HTTP](#o-novo-http)
+    - [HTTP 1.0/1.1](#http-1011)
+    - [HTTP/2](#http2)
+      - [Compressão de Cabeçalhos e Segurança](#compressão-de-cabeçalhos-e-segurança)
+        - [HTTP/1](#http1)
+        - [HTTP/2](#http2-1)
+      - [Cache de Headers](#cache-de-headers)
+        - [HTTP/1](#http1-1)
+        - [HTTP/2](#http2-2)
+      - [Multiplexação de conexões](#multiplexação-de-conexões)
+        - [HTTP/1](#http1-2)
+        - [HTTP/2](#http2-3)
+      - [Priorizar conteúdo](#priorizar-conteúdo)
+      - [Antecipação de recursos (Server Push)](#antecipação-de-recursos-server-push)
+        - [Implementação do Server Push](#implementação-do-server-push)
+    - [Implementação do protocolo](#implementação-do-protocolo)
 
 <!-- /TOC -->
 
@@ -522,4 +537,171 @@ Uma das vantagens é que, se o html já possuir o preload, o script não será e
 
 ![](https://s3.amazonaws.com/caelum-online-public/performance+2/5/5_19+mostrando+o+site.png)
 
-## HTTP/2
+## O novo HTTP
+
+O HTTP é o protocolo que tem mais impacto durante as performances web e como elas funcionam.
+
+### HTTP 1.0/1.1
+
+Vamos começar com uma leve review do protocolo na sua versão original.
+
+- O protocolo HTTP é baseado em texto
+- Baseado em requisição e respostas
+- Entre cada requisição e resposta existe uma espera
+- Baseado na ideia de métodos e URLs, cada requisição possui um código de status
+- Toda chamada possui um cabeçalho, que informam metadados da request
+
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/6/6_1+mostrando+o+http+1.png)
+
+No HTTP clássico (1.0) cada requisição era uma conexão TCP diferente, com o advento do HTTP1.1, isto foi alterado para que a mesma conexão possa ser utilizada para várias requests, mas ainda sim cada request precisa esperar que o anterior seja respondida para que a próxima seja feita, por isso cada navegador abre 6 conexões paralelas para que possamos executar 6 requests paralelamente.
+
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/6/6_4+mostarndo+conex%C3%B5es.png)
+
+Baseado nisso, para o HTTP1.x é importante na otimização alguns pontos:
+
+- Diminuir o número de requests (juntar JS, Css, Sprites, Inline de recursos)
+- Diminuir o tráfego (Minificação, GZIP, Domínios sem cookies)
+- Paralelizar requests (Multiplos hostnames, CDNs)
+
+### HTTP/2
+
+O protocolo continua com o mesmo uso, ou seja, a transição de um protocolo para outro deve ser transparente e não deve ser sentida nem pelo usuário e nem pelo programador. Algumas alterações foram feitas por baixo dos panos para que o HTTP pudesse funcionar de forma mais eficiente do que o HTTP/1.
+
+#### Compressão de Cabeçalhos e Segurança
+
+##### HTTP/1
+
+No HTTP/1 temos o gzip dos dados que podemos usar para comprimir a resposta, ou seja, vamos economizar uma grande quantidade de banda e de dados na hora de enviar a resposta em si, mas os headers sempre são enviados em texto puro não comprimido, o que é um grande problema porque temos uma grande parcela da resposta que é enviada sempre da mesma forma.
+
+> Esse é um dos motivos pelo qual o uso de cookies é removido como sistema de performance no HTTP/1, porque os Cookies são headers, e eles não podem ser comprimidos
+
+##### HTTP/2
+
+No HTTP/2 há um recurso novo, que é, em essência, a compressão de headers utilizando o algoritmo `HPACK`, que é mais seguro e mais leve que o `GZIP` em si.
+
+Além disto o HTTP/2 obrigatóriamente necessita do uso de TLS, em prática o protocolo em si não obriga o usuário a atualizar para um modelo TLS, mas a internet necessita que todos os passos entre meio o servidor e o cliente sigam o mesmo modelo, ou seja, a implementação na prática do HTTP/2 necessita que todos os dados sejam transferidos via TLS.
+
+Por fim, a compactação `GZIP` se tornou obrigatória no uso. Sendo utilizada em todas as requests. O protocolo deixa de ser texto e se torna binário.
+
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/6/6_7+mostrando+o+que+mudou.png)
+
+#### Cache de Headers
+
+##### HTTP/1
+
+Precisamos sempre enviar todos os headers para cada requisição feita. Independente se os headers sofreram ou não alterações
+
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/6/6_6+mostrando+diferen%C3%A7as.png)
+
+##### HTTP/2
+
+O novo modelo do protocolo permite trabalharmos apenas com os diffs dos headers, ou seja, o cliente manda apenas o que é alterado entre uma requisição e outra.
+
+Este é um novo conceito chamado de _header tables_, aonde são criadas tabelas de cabeçalhos que são comuns ao protocolo e evitam que os mesmos dados sejam enviados, desta forma o protocolo se torna __stateful__.
+
+>__Nota:__ O protocolo HTTP em si, ainda continua stateless. Então chamadas REsT ainda serão agnósticas de estado e independentes, de forma que a alteração está no estabelecimento da conexão, e não na transferencia dos dados.
+
+#### Multiplexação de conexões
+
+O grande problema do HTTP em qualquer caso é o número de conexões abertas e a quantidade de tempo que temos de esperar para que cada request seja recebida e enviada para o servidor.
+
+##### HTTP/1
+
+No HTTP/1, além de abrirmos várias conexões simultâneas, também temos o que é chamado de _http pipelining_, que permite que uma request envie mais de um pedido para o servidor ao mesmo tempo, e o servidor vai respondendo as requisições após todas serem enviadas.
+
+Isto é uma ajuda mas cria um problema. Uma vez que todas as requests precisam estar em ordem para que as respostas possam ser enviadas, o que gera o chamado _head-of-line blocking_, que diz que se o primeiro da fila demorar, os demais serão travados por ele, pois é necessário que ele termine antes dos demais serem enviados.
+
+> Nenhum protocolo suporta o pipelining porque ele cria mais problemas do que soluções...
+
+##### HTTP/2
+
+No HTTP/2 existe o que é chamado de _multiplexing. Neste modelo as requisições e respostas se misturam, sendo enviadas e respondidas simultâneamente. Uma parte importante é que elas não precisam estar na mesma ordem, isto torna o protocolo totalmente assíncrono em __uma única conexão TCP__ assíncrona.
+
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/6/6_8+mostrando+o+cliente+e+o+serviros.png)
+
+Isto diminui o uso de dados, uso de bateria, o tamanho do congestionamento TCP e várias vantagens.
+
+Portanto, não é mais importante fazer a concatenação de todo o arquivo JS e CSS em um único para diminuir a quantidade de requests, nem utilizar multiplos hostnames (o que é considerada uma má prática no novo protocolo).
+
+> Mas ainda sim é necessário utilizar o inline de recursos para poder priorizar o que vai ser carregado na página
+
+#### Priorizar conteúdo
+
+No HTTP/2 é possível comunicar ao servidor quais são as prioridades de conteúdo via protocolo, ou seja, é possível enviar um peso para cada requisição de dados, quanto maior o peso, mais rápido o servidor deve enviar este arquivo.
+
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/7/7_3+mostrando+pesos+distintos.png)
+
+> O servidor pode ignorar essas informações e utilizar o próprio conhecimento interno dele para enviar essas requisições, isto funciona como uma anotação, as chamadas _resource hints_
+
+Em suma, você pode enviar uma nota informando as prioridades, mas o servidor vai sobrepor essa nota com a lógica interna.
+
+#### Antecipação de recursos (Server Push)
+
+A antecipação de recursos é possível no HTML/2, ou seja, o servidor tem a capacidade de enviar informações e arquivos pelo servidor (por isso chama de push) sem que o cliente tenha sequer pedido, desta forma o inline de recursos se torna não importante, pois basicamente o server push é o uso do inline.
+
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/7/7_4+mostrando+o+server+push.png)
+
+Este push pode ser cancelado pelo navegador (a requisição pode ser cancelada no meio) se o mesmo possuir o mesmo arquivo em cache, desta forma não é necessário que o servidor envie mais bytes para o cliente.
+
+##### Implementação do Server Push
+
+O server push não faz parte da implementação do protocolo, estando nas mãos de cada servidor.
+
+O server push em si é um header chamado `Link`, por exemplo:
+
+```http
+Link: <assets/img/imagemdefundo.svg>; rel=preload; as=image
+```
+
+O cabeçalho acima está lendo uma imagem no caminho especificado e dizendo ao servidor para envia-lo na próxima resposta.
+
+Cada implementação do server push varia de acordo com o back-end da página, por exemplo, se você estiver utilizando um back-end em PHP, basta adicionar:
+
+```php
+<?php
+header("Link: <assets/img/imagemdefundo.svg>; rel=preload; as=image");
+?>
+```
+
+Para que o servidor envie essa resposta juntamente com o arquivo especificado.
+
+No caso de plataformas pré prontas, como o Google App Engine, basta a edição do arquivo `app.yaml` e a adição de:
+
+```yaml
+runtime: php55
+api_version: 1
+version: web
+application: performance-2
+
+handlers:
+  - url: /
+    static_files: index.html
+    upload: index.html
+    expiration: 0s
+    http_headers:
+      Link: <assets/img/imagemdefundo.svg>; rel=preload; as=image # Server Push
+
+# Demais handlers
+```
+
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/7/7_7+mostrando+o+http+e+headers.png)
+
+> Pesquise outras formas de enviar um server push utilizando outras tecnologias.
+
+Se quisermos realizar o server push de mais de um recurso, basta separar cada um com vírgula:
+
+```http
+Link: <assets/img/imagemdefundo.svg>; rel=preload; as=image, <assets/img/outraimagem.svg>; rel=preload; as=image
+```
+
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/7/7_10+mostrando+a+separa%C3%A7%C3%A3o+usando+virgula.png)
+
+O que vier antes será enviado antes pelo servidor.
+
+### Implementação do protocolo
+
+Para verificar se o protocolo utilizado é o 2 ou o 1, basta entrar no devtools do chrome e adicionar a coluna "protocol" na aba _networks_, todas as requisições que virem como `h2` estão utilizando o novo protocolo.
+
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/6/6_11+mostrando+o+h2.png)
+
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/6/6_12+mostrando+o+app+engine.png)
