@@ -46,6 +46,13 @@
       - [Antecipação de recursos (Server Push)](#antecipação-de-recursos-server-push)
         - [Implementação do Server Push](#implementação-do-server-push)
     - [Implementação do protocolo](#implementação-do-protocolo)
+  - [Resource Hints](#resource-hints)
+    - [DNS PREFETCH](#dns-prefetch)
+    - [PRECONNECT](#preconnect)
+    - [PREFETCH](#prefetch)
+    - [PRELOAD](#preload)
+    - [PRERENDER](#prerender)
+  - [Performance Budget](#performance-budget)
 
 <!-- /TOC -->
 
@@ -705,3 +712,144 @@ Para verificar se o protocolo utilizado é o 2 ou o 1, basta entrar no devtools 
 ![](https://s3.amazonaws.com/caelum-online-public/performance+2/6/6_11+mostrando+o+h2.png)
 
 ![](https://s3.amazonaws.com/caelum-online-public/performance+2/6/6_12+mostrando+o+app+engine.png)
+
+## Resource Hints
+
+Resource Hints são dicas para o navegador de como ele pode conectar, baixar ou fazer qualquer coisa em relação aos recursos de redes.
+
+Alguns resource hints:
+
+### DNS PREFETCH
+
+Durante cada requisição de rede, o browser precisa fazer o lookup do DNS para conectar no servidor de destino para só então começar a baixar os dados requisitados. O que o Prefetch faz é instruir o browser a fazer estes lookups logo de inicio, pois estas verificações podem tomar algum tempo para conexão, inclusive, levando diversos milissegundos.
+
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/8/8_2+mostrando+o+gr%C3%A1fico+sem+otimiza%C3%A7%C3%A3o.png)
+
+Uso:
+
+```html
+<link rel="dns-prefetch" href="//dominioparalookup.com" />
+```
+
+Esta resolução de DNS é bem incorporada em todos os browsers pois é um dos primeiros resource hints que foram criados. Porém ele pode ser totalmente substituido pelo `preconnect`.
+
+### PRECONNECT
+
+Este resource hint antecipa tudo que pode ser feito após o lookup de DNS, ou seja, ele realiza a conexão TCP e já deixa cacheado os dados para essas conexões, poupando além do tempo de lookup, mas também o tempo de conexão e _handshaking_.
+
+```html
+<link rel="preconnect" href="//dominioparaconectar.com" />
+```
+
+A ideia é que o preconnect já inclui também o `PREFETCH`, se o site for servido em HTTPS então já é também feita a resolução do SSL e a negociação das chaves.
+
+### PREFETCH
+
+O prefetch indica ao navegador que ele pode fazer o download de algum recurso antes de ele ser de fato necessário, ou seja, um script ou css, um vídeo ou qualquer outro tipo de recurso que pode vir a ser futuramente utilizado.
+
+```html
+<link rel="prefetch" href="recurso.css" />
+```
+
+> Uma coisa importante para se notar no prefetch é que ele __possui a prioridade mais baixa de todas as requisições__, de forma que somente quando o browser estiver de fato ocioso é que ele será executado.
+
+Por conta desta citação acima é que o `prefetch` é utilizado para carregar recursos de páginas seguintes, com grandes chances de serem executadas. Por exemplo, um usuário que loga em uma página inicial de um sistema tem grandes chances de fazer o login no futuro, portanto um prefetch dos recursos desta página de login pode ser uma boa ideia.
+
+> Note que o abuso de uso deste resource hint pode criar um overhead desnecessário de banda, ou seja, pode ser que você baixe um dado sem que na verdade o usuário chegue a utilizá-lo
+
+### PRELOAD
+
+O preload já foi utilizado antes para baixar conteúdos que estão na nossa própria página, o que este resource hint diz é exatamente a mesma coisa do `prefetch` porém é mais indicado para uso na página atual, uma vez que ele vai ter a prioridade mais alta nas requisições do navegador.
+
+```html
+<link rel="preload" href="recurso.css" />
+```
+
+Quado temos diversos recursos que podem ser baixados com o preload, usamos o atributo `as` para indicar a prioridade, então podemos ter algo assim:
+
+```html
+<link rel="preload" href="recurso.css" as="stylesheet" />
+<link rel="preload" href="recurso.js" as="script" />
+<link rel="preload" href="recurso.jpg" as="image" />
+<link rel="preload" href="recurso.ttf" as="font" />
+```
+
+Dando a cada recurso uma prioridade maior ou menor na lista de recursos que serão baixados com o preload.
+
+Um outro bom uso do preload é para fazer o download de fontes. A fonte em si é um recurso que é tardiamente descoberto porque ele é declarado no CSS e precisa haver pelo menos um nó no html que use tal fonte para que o browser possa de fato baixar o recurso. 
+
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/8/8_5+fontes+no+c%C3%B3digo.png)
+
+Isto cria um tempo de espera muito desnecessário, então uma boa prática é incluir no `preload` todas as fontes que serão utilizadas na mesma página utilizando:
+
+```html
+<link rel="preload" href="recurso.ttf" as="font" />
+```
+
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/8/8_4+mostrando+a+fonte.png)
+
+Mas perceba que temos diversos tipos de fonte (que são ou não suportadas por diversos navegadores), por exemplo, `ttf - True Type`, `woff`, `woff2`, `otf` e etc. Se o browser não suportar uma fonte no formato `otf`, como fazemos? Basta adicionar o atributo `type` no `link`, informando o MIME Type do recurso, que desta forma o browser sabera quando baixar ou não:
+
+```html
+<link rel="preload" href="fonte.woff2" as="font" type="font/woff2"/>
+```
+
+Para verificar os MIME Types disponíveis, a MDN tem [uma lista completa com todos os tipos usados no HTTP](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Complete_list_of_MIME_types).
+
+### PRERENDER
+
+Este tipo de resource hint é mais interessante ainda, porque é possível pré renderizar completamente uma página web em html, incluindo seus recursos como css, js e todos os demais.
+
+```html
+<link rel="prerender" href="pagina.html" />
+```
+
+O `prerender` é muito utilizado quando queremos prever um comportamento do usuário, ou seja, quando sabemos que a chance de o usuário clicar naquele link e renderizar uma outra página é extremamente alta. Portanto, ao invés de utilizar o `prefetch` para apenas baixar os recursos em cache, vamos um passo além e vamos renderizar diretamente as páginas necessárias para isto acontecer.
+
+> No Chrome, ao entrar em Ferramentas->Mais Ferramentas->Gerenciador de tarefas, é possível visualizar uma aba oculta chamada `PreRender: Sua página`, este é o modo que o Chrome tem de pré carregar a página e deixa-la aguardando alguma ação do usuário.
+
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/8/8_6+mostrando+a+task.png)
+
+Exemplos disso podem ser vários:
+
+- Quando estamos em uma página de notícias, na qual a noticia em si possui várias páginas, então se o usuário está lendo a página 1, é muito provável que ele vá ler a página 2
+- Quando estamos em uma tela de login de um sistema, sabemos que o usuário ao fazer login será redirecionado para uma página interna do dashboard do sistema, então podemos pré carrega-la na memória
+- Um exemplo real, o Google pre renderiza o primeiro resultado de cada busca pois ele sabe que a chance de você clicar lá é bastante alta
+
+Além disso, quando temos um fluxo de tabalho definido, é muito importante pré renderizarmos as páginas que queremos, um grande exemplo disso é um input de newsletter. 
+
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/8/8_8+mostrando+a+p%C3%A1gina+obrigado.png)
+
+Sabemos que quando o usuário digitar o email e clicar em "ok" ele será direcionado a uma página de agradecimentos, então podemos incluir esta página no `prerender`, mas note que nem sempre o usuário vai clicar nesse botão. De forma que teríamos um carregamento desnecessário, então vamos criar um script javascript que irá inserir o prerender na página quando o usuário der foco no input.
+
+```js
+meuinput.onfocus = function() {
+  var prerender = document.createElement('link');
+  prerender.rel = 'prerender';
+  prerender.href = 'paginadeagradecimento.html';
+  document.head.appendChild(prerender);
+}
+```
+
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/8/8_7+mostrando+como+preencher+o+campo.png)
+
+Veja que agora só iremos iniciar o prerender da página quando ele clicar no campo de texto.
+
+![](https://s3.amazonaws.com/caelum-online-public/performance+2/8/8_13+mostrando+o+pre+render.png)
+
+## Performance Budget
+
+O performance budget é definir um limite para o quanto de recursos você pode gastar, ou seja, é definir um tamanho máximo para o quanto sua página deve demorar para poder carregar.
+
+A definição dessas métricas podem ser de acordo com o desenvolvedor, algumas boas métricas são:
+
+- Tempo até o primeiro render
+- Nota no PageSpeed Insights
+- Quantidade de requisições
+- Tamanho máximo do arquivo
+- Tempo do SpeedIndex
+- Bytes trafegados
+
+Este budget define uma boa ideia para uma equipe poder desevolver um site com várias otimizações. Um site que ajuda a iniciar este modelo é o [performancebudget.io](http://performancebudget.io) que te faz algumas perguntas inicialmente e depois define um tamanho máximo para que seu site carregue em diversos tipos de conexões.
+
+Uma ideia é poder utilizar estes testes de budget utilizando pacotes do NPM para colocar no seu servidor de integração contínua, de forma que um commit só é publicado em produção se ele estiver dentro do budget.
