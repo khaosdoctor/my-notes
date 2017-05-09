@@ -2,4 +2,4 @@ language: ruby
 rvm: 2.2
 before_script: gem install awesome_bot
 script:
- - awesome_bot **/*.md --allow-ssl --allow-dupe --allow-redirect --allow 403 -w localhost,127.0.0.1,0.0.0.0
+ - awesome_bot **/*.md --allow-ssl --allow-dupe --allow-redirect --allow 403 -w localhost,127.0.0.1,0.0.0.0,api.github.com
