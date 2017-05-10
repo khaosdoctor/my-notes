@@ -17,6 +17,9 @@
   - [Consumindo a API do GitHub Usando Axios](#consumindo-a-api-do-github-usando-axios)
   - [Comunicação entre componentes](#comunicação-entre-componentes)
   - [Stateless Components](#stateless-components)
+  - [PropTypes](#proptypes)
+  - [Loops](#loops)
+  - [Component LifeCycle](#component-lifecycle)
 
 <!-- /TOC -->
 
@@ -623,7 +626,7 @@ GitHubUserService.getUserByName(this.refs.username.value)
 
 GitHubUserService.getReposByUser(this.refs.username.value)
   .then(function (response) {
-    this.props.updateRepo(response);
+    this.props.updateRepo(response.data);
   }
   .bind(this) //Utilizamos o bind pois, dentro do then, o this tem outro escopo (que é o escopo da promise) então temos que passar o this de fora para dentro
   );
@@ -800,3 +803,328 @@ module.exports = userInfo;
 ```
 
 Desta forma criamos componentes mais simples e fáceis de trabalhar, e também podemos abstrair as props, porque agora não será mais `this.props`, e sim um parâmetro da função que será passado para a mesma e o React vai se encarregar desta parte para nós, bastando que chamemos como `props`
+
+## PropTypes
+
+Como o React trabalha muito com o conceito de components e suas propriedades, uma das coisas que acontece muito em aplicações grandes é que as propriedades mudam e os componentes acabam quebrando sem sabermos o por quê.
+
+Um exemplo é o componente `searchUser`, este componente __precisa__ das props `updateUser` e `updateRepo` para funcionar da forma esperada, se não o mesmo não irá ter o comportamento que queremos.
+
+Para isso existem as `propTypes` que definem o funcionamento das props em um componente.
+
+```js
+var React = require('react');
+var GitHubUserService = require('../services/gitHubUser.js');
+
+var searchUser = React.createClass({
+  handleSubmit: function (e) {
+    e.preventDefault();
+    GitHubUserService.getUserByName(this.refs.username.value)
+      .then(function (response) {
+        console.log(response);
+      }); //Request 1
+      
+    GitHubUserService.getReposByUser(this.refs.username.value)
+      .then(function (response) {
+        console.log(response);
+      }); //Request 2
+  },
+  render: function () {
+    return (
+      <div className="jumbotron">
+        <h1>GitHub Info</h1>
+        <div className="row">
+          <form className="form" onSubmit={this.handleSubmit}>
+            <div className="form-group">
+              <label htmlFor="username">Username:</label>
+              <input name="username" type="text" placeholder="Ex: khaosdoctor" className="form-control" ref="username"/>
+            </div>
+            <button type="submit" className="btn btn-primary">Buscar</button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+});
+
+//PropTypes
+searchUser.propTypes = {
+  updateUser: React.PropTypes.func.isRequired,
+  updateRepo: React.PropTypes.func.isRequired
+};
+
+module.exports = searchUser;
+```
+
+O que fazemos aqui é que estamos definindo que as duas props do `searchUser` __precisa__ ser uma função e __precisa__ ser passada, ou seja, é obrigatória.
+
+Podemos fazer o mesmo no nosso outro módulo `userInfo`:
+
+```js
+userInfo.propTypes = {
+  user: React.PropTypes.object,
+  repos: React.PropTypes.array
+}
+```
+
+## Loops
+
+Veja que dentro do nosso componente `userInfo`, recebemos os repositórios, mas não fazemos nada com eles. Isto porque vamos fazer a iteração e os loops de repositórios dentro deste próprio componente.
+
+> Note também que podemos ter um outro componente dentro deste mesmo componente, porque temos duas partes, o perfil e os repositórios, que são coisas separadas.
+
+Vamos primeiramente adicionar ao `userInfo` o componente que iremos criar:
+
+```js
+var React = require('react');
+
+function userInfo(props) {
+   var userInfo = (props.user) ? (
+      <div className="row">
+        <div className="col-lg-4">
+          <img src={props.user.data.avatar_url} alt="avatar" className="img-circle" width="140" height="140" />
+          <h2>{props.user.data.login}</h2>
+          <p>{props.user.data.name}</p>
+          <p>Followers: {props.user.data.followers} / Following: {props.user.data.following}</p>
+          <p>
+            <a href={props.user.data.html_url} className="btn btn-default" role="button">View Details</a>
+          </p>
+        </div>
+        <div className="col-lg-8">
+         <UserRepos repos={props.repos}/>
+       </div>
+      </div>
+    ) : null;
+
+    return userInfo;
+}
+
+userInfo.propTypes = {
+  user: React.PropTypes.object,
+  repos: React.PropTypes.array
+}
+
+module.exports = userInfo;
+```
+
+Adicionamos o, ainda não criado, componente `userRepos`. Vamos criá-lo
+
+```js
+var React = require('react');
+
+var UserRepos = React.createClass({
+  render: function () {
+    return (
+      <div className="thumbnail">
+        <div className="caption">
+          <h3>{repo.name}
+            <span className="badge">{repo.stargazers_count} Stars</span>
+          </h3>
+          <p>{repo.description}</p>
+          <p>
+            <a href={repo.html_url} role="button" className="btn btn-primary">Repository</a>
+            <a href={repo.html_url+'/issues'} role="button" className="btn btn-default">Issues ({repo.open_issues})</a>
+          </p>
+        </div>
+      </div>
+    );
+  }
+});
+
+module.exports = userRepos;
+```
+
+Mas perceba que estamos buscando informações de apenas __um__ repositório. Precisamos iterar por todos os repositórios.
+
+Vamos utilizar o método `map` para pegar o array atual e transformar em um novo array:
+
+```js
+var React = require('react');
+
+var UserRepos = React.createClass({
+  render: function () {
+    var repos = this.props.repos.map(function(repo, key) {
+      return (
+        <div key={key} className="thumbnail">
+          <div className="caption">
+            <h3>{repo.name}
+              <span className="badge">{repo.stargazers_count} Stars</span>
+            </h3>
+            <p>{repo.description}</p>
+            <p>
+              <span>
+                <a href={repo.html_url} role="button" className="btn btn-primary">Repository</a>
+              </span>
+              <span>
+                <a href={repo.html_url+'/issues'} role="button" className="btn btn-default">Issues ({repo.open_issues})</a>
+             </span>
+            </p>
+          </div>
+       </div>
+      );
+    });
+
+    return (
+      <div>
+        {repos}
+      </div>
+    );
+
+  }
+});
+
+module.exports = UserRepos;
+```
+
+Basta realizarmos a iteração por puro JS.
+
+## Component LifeCycle
+
+Imagine que queremos trazer agora o total de repositórios pelo html simples, como o github só traz 30 repositórios por vez, vamos fixar isto:
+
+```js
+var React = require('react');
+
+var UserRepos = React.createClass({
+  render: function () {
+    var repos = this.props.repos.map(function(repo, key) {
+      return (
+        <div key={key} className="thumbnail">
+          <div className="caption">
+            <h3>{repo.name}
+              <span className="badge">{repo.stargazers_count} Stars</span>
+            </h3>
+            <p>{repo.description}</p>
+            <p>
+              <span>
+                <a target="_blank" href={repo.html_url} role="button" className="btn btn-primary">Repository</a>
+              </span>
+              <span>
+                <a target="_blank" href={repo.html_url+'/issues'} role="button" className="btn btn-default">Issues ({repo.open_issues})</a>
+             </span>
+            </p>
+          </div>
+       </div>
+      );
+    }); 
+
+    return (
+      <div>
+        <h1>30 repositories</h1>
+        {repos}
+      </div>
+    );
+
+  }
+});
+
+module.exports = UserRepos;
+```
+
+Uma das formas é inicializar um initialState como antes:
+
+```js
+var React = require('react');
+
+var UserRepos = React.createClass({
+  getInitialState: function() {
+    return {
+      reposCount: 0
+    };
+  },
+  render: function () {
+    var repos = this.props.repos.map(function(repo, key) {
+      return (
+        <div key={key} className="thumbnail">
+          <div className="caption">
+            <h3>{repo.name}
+              <span className="badge">{repo.stargazers_count} Stars</span>
+            </h3>
+            <p>{repo.description}</p>
+            <p>
+              <span>
+                <a target="_blank" href={repo.html_url} role="button" className="btn btn-primary">Repository</a>
+              </span>
+              <span>
+                <a target="_blank" href={repo.html_url+'/issues'} role="button" className="btn btn-default">Issues ({repo.open_issues})</a>
+             </span>
+            </p>
+          </div>
+       </div>
+      );
+    }); 
+
+    return (
+      <div>
+        <h1>{this.state.reposCount} repositories</h1>
+        {repos}
+      </div>
+    );
+
+  }
+});
+
+module.exports = UserRepos;
+```
+
+Agora temos fixo "0 repositories", como podemos buscar estes repositórios e atualizar o state?
+
+Podemos utilizar o [lifeCycle](https://facebook.github.io/react/docs/react-component.html) do react, temos diversos tipos de ciclos e diversas fases da vida de um componente. Para este componente em específico vamos utilizar o `componentWillReceiveProps`, que será executado quando o componente receber novas props, basta criar um novo item no objeto:
+
+```js
+  componentWillReceiveProps: function(props) {
+    this.setState({reposCount: props.repos.length});
+  },
+```
+
+Ficando assim:
+
+```js
+var React = require('react');
+
+var UserRepos = React.createClass({
+  getInitialState: function() {
+    return {
+      reposCount: 0
+    };
+  },
+  componentWillReceiveProps: function(props) {
+    this.setState({reposCount: props.repos.length});
+  },
+  render: function () {
+    var repos = this.props.repos.map(function(repo, key) {
+      return (
+        <div key={key} className="thumbnail">
+          <div className="caption">
+            <h3>{repo.name}
+              <span className="badge">{repo.stargazers_count} Stars</span>
+            </h3>
+            <p>{repo.description}</p>
+            <p>
+              <span>
+                <a target="_blank" href={repo.html_url} role="button" className="btn btn-primary">Repository</a>
+              </span>
+              <span>
+                <a target="_blank" href={repo.html_url+'/issues'} role="button" className="btn btn-default">Issues ({repo.open_issues})</a>
+             </span>
+            </p>
+          </div>
+       </div>
+      );
+    }); 
+
+    return (
+      <div>
+        <h1>{this.state.reposCount} repositories</h1>
+        {repos}
+      </div>
+    );
+
+  }
+});
+
+module.exports = UserRepos;
+```
+
+Veja outras explicações sobre lifeCycle [aqui](http://javascript.tutorialhorizon.com/2014/09/13/execution-sequence-of-a-react-components-lifecycle-methods/)
+
