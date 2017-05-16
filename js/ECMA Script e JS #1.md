@@ -11,7 +11,8 @@
     - [Boas práticas](#boas-práticas)
   - [Variáveis e operadores](#variáveis-e-operadores)
   - [Validações](#validações)
-  - [Arrays, Loops e estilos](#arrays-loops-e-estilos)
+  - [Arrays e Loops](#arrays-e-loops)
+  - [Estilos](#estilos)
 
 <!-- /TOC -->
 
@@ -101,7 +102,7 @@ Podemos validar o IMC para saber se as nossas variáveis estão corretas. Por ex
 
 ```js
 var altura = document.querySelector('#primeiro-paciente>.info-altura').textContent
-var peso = document.querySelecto('#primeiro-paciente>.info-peso').textContent
+var peso = document.querySelector('#primeiro-paciente>.info-peso').textContent
 
 if(peso <= 0 || peso > 1000) {
   console.log("Peso Inválido")
@@ -116,5 +117,174 @@ if(peso <= 0 || peso > 1000) {
 console.log(imc)
 ```
 
-## Arrays, Loops e estilos
+## Arrays e Loops
+
+Podemos fazer isto para todos os pacientes, mas é muito mais fácil fazer isso em um loop. Para fazer isso vamos ter que mudar nosso seletor de queries para pegar todas as linhas da nossa tabela.
+
+```js
+var pacientes = document.querySelector(".paciente")
+
+var tdPeso = paciente.querySelector(".info-peso")
+var peso = tdPeso.textContent
+
+var tdAltura = paciente.querySelector(".info-altura")
+var altura = tdAltura.textContent
+
+tdImc = paciente.querySelector(".info-imc")
+
+if(peso <= 0 || peso > 1000) {
+  console.log("Peso Inválido")
+} else if(altura < 0 || altura > 3.00) {
+  console.log("Altura inválida")
+} else {
+  var imc = peso / (Math.pow(altura,2))
+  tdImc.textContent = imc
+}
+```
+
+Neste caso vamos apenas trazer a primeira linha de todos os pacientes, para podermos trazer todas as tags `tr` vamos ter que ter uma outra função próxima do `querySelector` que é a `querySelectorAll`:
+
+```js
+var pacientes = document.querySelectorAll(".paciente")
+
+var tdPeso = paciente.querySelector(".info-peso")
+var peso = tdPeso.textContent
+
+var tdAltura = paciente.querySelector(".info-altura")
+var altura = tdAltura.textContent
+
+tdImc = paciente.querySelector(".info-imc")
+
+if(peso <= 0 || peso > 1000) {
+  console.log("Peso Inválido")
+} else if(altura < 0 || altura > 3.00) {
+  console.log("Altura inválida")
+} else {
+  var imc = peso / (Math.pow(altura,2))
+  tdImc.textContent = imc
+}
+```
+
+Agora vamos fazer a iteração:
+
+```js
+var pacientes = document.querySelectorAll(".paciente") //Array de pacientes
+
+for(var i = 0; i < pacientes.length; i++) {
+
+  var paciente = pacientes[i]
+
+  var tdPeso = paciente.querySelector(".info-peso")
+  var peso = tdPeso.textContent
+
+  var tdAltura = paciente.querySelector(".info-altura")
+  var altura = tdAltura.textContent
+
+  tdImc = paciente.querySelector(".info-imc")
+
+  if(peso <= 0 || peso > 1000) {
+    console.log("Peso Inválido")
+  } else if(altura < 0 || altura > 3.00) {
+    console.log("Altura inválida")
+  } else {
+    var imc = peso / (Math.pow(altura,2))
+    tdImc.textContent = imc
+  }
+}
+```
+
+Podemos utilizar também o `forEach`:
+
+```js
+var pacientes = document.querySelectorAll(".paciente") //Array de pacientes
+
+pacientes.forEach(function(paciente) {
+
+  var tdPeso = paciente.querySelector(".info-peso")
+  var peso = tdPeso.textContent
+
+  var tdAltura = paciente.querySelector(".info-altura")
+  var altura = tdAltura.textContent
+
+  tdImc = paciente.querySelector(".info-imc")
+
+  if(peso <= 0 || peso > 1000) {
+    console.log("Peso Inválido")
+  } else if(altura < 0 || altura > 3.00) {
+    console.log("Altura inválida")
+  } else {
+    var imc = peso / (Math.pow(altura,2)
+    tdImc.textContent = imc.toFixed(2) //Fixa apenas em 2 casas decimais
+  }
+  
+})
+```
+
+## Estilos
+
+Vamos dizer que queremos mudar o estilo das linhas com erro para vermelho, vamos usar a propriedade `style`, que é o CSS aplicado nesta tag:
+
+```js
+var pacientes = document.querySelectorAll(".paciente") //Array de pacientes
+
+pacientes.forEach(function(paciente) {
+
+  var tdPeso = paciente.querySelector(".info-peso")
+  var peso = tdPeso.textContent
+
+  var tdAltura = paciente.querySelector(".info-altura")
+  var altura = tdAltura.textContent
+
+  tdImc = paciente.querySelector(".info-imc")
+
+  if(peso <= 0 || peso > 1000) {
+    console.log("Peso Inválido")
+    paciente.style.color = 'red'
+    
+  } else if(altura < 0 || altura > 3.00) {
+    console.log("Altura inválida")
+    paciente.style.color = 'red'
+
+  } else {
+    var imc = peso / (Math.pow(altura,2)
+    tdImc.textContent = imc.toFixed(2) //Fixa apenas em 2 casas decimais
+  }
+  
+})
+```
+
+Estilos compostos (com duas palavras e um hífen, como `background-color`) devem ser transformadas em camelCase, ou seja, `background-color` viraria `backgroundColor`.
+
+> Note que isso não é uma boa prática, ao invés de alterarmos o estilo direto, vamos definir uma classe nova no nosso CSS e manipular __apenas esta classe__.
+
+Para podermos adicionar uma nova classe ao paciente, vamos utilizar o método `classList`, digamos que tenho um css que possui uma classe chamada `.erro` e ela deve ser adicionada:
+
+```js
+var pacientes = document.querySelectorAll(".paciente") //Array de pacientes
+
+pacientes.forEach(function(paciente) {
+
+  var tdPeso = paciente.querySelector(".info-peso")
+  var peso = tdPeso.textContent
+
+  var tdAltura = paciente.querySelector(".info-altura")
+  var altura = tdAltura.textContent
+
+  tdImc = paciente.querySelector(".info-imc")
+
+  if(peso <= 0 || peso > 1000) {
+    console.log("Peso Inválido")
+    paciente.classList.add('erro')
+    
+  } else if(altura < 0 || altura > 3.00) {
+    console.log("Altura inválida")
+    paciente.classList.add('erro') //Adicionando uma classe
+
+  } else {
+    var imc = peso / (Math.pow(altura,2)
+    tdImc.textContent = imc.toFixed(2)
+  }
+  
+})
+```
 
