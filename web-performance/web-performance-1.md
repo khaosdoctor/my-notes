@@ -3,15 +3,15 @@
 <!-- TOC -->
 
 - [Web Performance 1](#web-performance-1)
-  - [Motivos para otimização](#motivos-para-otimiza%C3%A7%C3%A3o)
+  - [Motivos para otimização](#motivos-para-otimização)
   - [Tamanho dos arquivos](#tamanho-dos-arquivos)
-    - [Minificação](#minifica%C3%A7%C3%A3o)
+    - [Minificação](#minificação)
     - [GZIP](#gzip)
     - [Imagens](#imagens)
       - [Tamanho](#tamanho)
       - [Metadados](#metadados)
       - [SVG](#svg)
-      - [Ferramentas de otimização de imagens](#ferramentas-de-otimiza%C3%A7%C3%A3o-de-imagens)
+      - [Ferramentas de otimização de imagens](#ferramentas-de-otimização-de-imagens)
   - [Custo de requests](#custo-de-requests)
     - [Apendice: Google App Engine](#apendice-google-app-engine)
       - [Parte 1: Baixando o SDK](#parte-1-baixando-o-sdk)
@@ -19,13 +19,13 @@
       - [Parte 3: Adicionando o projeto](#parte-3-adicionando-o-projeto)
       - [Parte 4: Incluindo no cloud platform](#parte-4-incluindo-no-cloud-platform)
       - [Parte 5: Iniciando o aplicativo](#parte-5-iniciando-o-aplicativo)
-    - [Ferramentas de análise](#ferramentas-de-an%C3%A1lise)
-    - [Concatenação de CSS](#concatena%C3%A7%C3%A3o-de-css)
+    - [Ferramentas de análise](#ferramentas-de-análise)
+    - [Concatenação de CSS](#concatenação-de-css)
     - [Sprites](#sprites)
       - [Sprites SVG](#sprites-svg)
   - [Inline de recursos](#inline-de-recursos)
-    - [Automatização de recursos inline](#automatiza%C3%A7%C3%A3o-de-recursos-inline)
-    - [Até onde vale a pena?](#at%C3%A9-onde-vale-a-pena)
+    - [Automatização de recursos inline](#automatização-de-recursos-inline)
+    - [Até onde vale a pena?](#até-onde-vale-a-pena)
   - [Requests paralelos](#requests-paralelos)
     - [Limites](#limites)
   - [Cache](#cache)
@@ -80,8 +80,6 @@ Um exemplo clássico é quando servimos icones e thumbnails que são de alta res
 #### Metadados
 
 Todas as imagens tem metadados, ou seja, dados que dizem aonde as imagens foram obtidas ou qualquer outra propriedade da camera ou do autor, para uma organização pessoal eles são legais, mas para otimização web eles são extremamente desnecessários. Esse processo de remoção de metadados é chamado deminificação ou otimização de imagens.
-
-Uma das formas de otimização é utilizar sites na web como o [Kraken.io](http://kraken.io) que fazem esse tipo de otimização automaticamente.
 
 Existem dois tipos de otimizações de imagens:
 
