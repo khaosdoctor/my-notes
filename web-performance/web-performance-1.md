@@ -40,7 +40,7 @@
 
 ## Motivos para otimização
 
-Um site rápido aumenta a conversão de usuários e a opinião do usuário em relação ao seu site, pois um site rápido passa a ideia de maior responsividade e de que o seu sistema funciona muito melhor do que ele aparenta, até porque um site rápido dá uma ideia fluida para o usuário. 
+Um site rápido aumenta a conversão de usuários e a opinião do usuário em relação ao seu site, pois um site rápido passa a ideia de maior responsividade e de que o seu sistema funciona muito melhor do que ele aparenta, até porque um site rápido dá uma ideia fluida para o usuário.
 
 ## Tamanho dos arquivos
 
@@ -114,9 +114,7 @@ O tempo para cada requisição pode variar de acordo com várias variáveis: A d
 
 Um navegador pode apenas abrir 6 conexões máximas no HTTP1.1, isso faz com que o número de requisições máximas que um browser pode sustentar por requisição, desta forma todas as conexões que excedem o número máximo precisam esperar até as outras conexões sejam liberadas para que elas comecem a ser iniciados. Assim, é possível dizer que o um dos maiores problemas na performance web seja esse impedimento do número de conexões.
 
-![](https://dl.dropboxusercontent.com/u/267101/cursos-online-alura/otimizacao-performance-web/waterfall.png)
-
-> Na imagem é possível ver que as requests ficam esperando (barra cinza), até que as conexões de requests anteriores sejam liberadas.
+> Se você abrir o browser é possível ver que as requests ficam esperando (barra cinza), até que as conexões de requests anteriores sejam liberadas.
 
 Existem algumas ferramentas online que testam essas performances automaticamente, mas neste caso o site precisa estar hospedado na web.
 
@@ -187,7 +185,7 @@ Existem serviços online de análise de performance.
 
 ### Concatenação de CSS
 
-Para diminuir o número de requests é importante reduzir a quantidade de arquivos que são baixados pelo browser. Em sites modernos, é uma prática comum modularizar a maioria dos arquivos de imagem ou texto, como CSS, JS e etc. 
+Para diminuir o número de requests é importante reduzir a quantidade de arquivos que são baixados pelo browser. Em sites modernos, é uma prática comum modularizar a maioria dos arquivos de imagem ou texto, como CSS, JS e etc.
 
 Na situação atual, uma quantidade muito grande de arquivos CSS ou JS pode criar um gargalo de implementação e de performance em um site, pois utilizamos todas as 6 conexões de rede do browser par baixar apenas arquivos CSS e "travamos" todos os outros recursos.
 
