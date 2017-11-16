@@ -16,7 +16,8 @@ Técnicas de minificação e performance para aplicações web:
 - Compressão de imagens
 - Lazy Loading
 - Pre-fetching: Carregar imagens e scripts em background
-- Server Side Rendering: O primeiro carregamento vai ao lado do servidor e os demais para o front-end
+- Server Side Rendering: O primeiro carregamento vai ao lado do servidor e os demais para o front-end. Procure por <framework> Universal para saber
+  sobre as implementações nativas dos frameworks
 
 ## Infra
 
