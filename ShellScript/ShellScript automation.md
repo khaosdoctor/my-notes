@@ -10,6 +10,8 @@
   - [Checando existência](#checando-existência)
   - [Verificando erros](#verificando-erros)
   - [Redirecionament de erros](#redirecionament-de-erros)
+  - [Recursão de diretórios](#recursão-de-diretórios)
+  - [Listando processos do sistema](#listando-processos-do-sistema)
 
 <!-- /TOC -->
 
@@ -209,7 +211,7 @@ converter () {
   done
 }
 
-converte_imagem 2>erros_conversao.txt
+converte 2>erros_conversao.txt
 
 if [ $? -eq 0 ] then
   echo 'Conversão executada com sucesso'
@@ -220,3 +222,84 @@ fi
 
 Agora só mostraremos a mensagem importante.
 
+## Recursão de diretórios
+
+Digamos que agora temos que fazer a varredura de todos os arquivos em pastas distintas dentro de um diretório passado, ou seja, temos que pesquisar recursivamente os diretórios para todas as imagens.
+
+Nosso script anterior não vai nos ajudar muito, então vamos criar outro:
+
+```sh
+#!/bin/bash
+
+cd ~/Downloads/livros
+
+for arquivo in * do # Iterar por todos os arquivos do local
+  if [ -d $arquivo ] then
+    cd $arquivo
+    for conteudo in * do
+      # Repetição de código
+    done
+  else
+    # Converter a imagem
+  fi
+done
+```
+
+Perceba que temos uma função repetitiva, porque dentro do diretório podemos ter também imagens ou outros diretórios. Temos que criar uma função recursiva.
+
+```sh
+#!/bin/bash
+
+converte_imagem() {
+  local caminho_imagem=$1
+  local imagem_sem_extensao=$(ls $caminho_imagem | awk -F. '{ print $1 }')
+
+  convert $imagem_sem_extensao.jpg $imagem_sem_extensao.png
+}
+
+varrer_diretório() {
+  cd $1
+  for arquivo in * do
+    local caminho_arquivo=$(find ~/Downloads/livros -name $arquivo)
+    if [ -d $caminho_arquivo ] then
+      varrer_diretorio $caminho_arquivo # Passando um parâmetro para a função
+    else
+      converte_imagem $caminho_arquivo
+    fi
+  done
+}
+
+varrer_diretorio ~/Downloads/livros
+
+if [ $? -eq 0 ] then
+  echo "Conversão realizada com sucesso"
+else
+  echo "Houve um erro de conversão"
+fi
+```
+
+Note que, para passarmos parâmetros para funções, basta que escrevamos o mesmo na frente da função, e depois buscamos utilizando `$1` ou qualquer outra parte de busca de argumentos que já sabemos.
+
+Note também que verificamos o status de erro dentro da função para podermos exibir a mensagem de sucesso ou falha.
+
+## Listando processos do sistema
+
+Uma nova aplicação do uso do shellScript é para busca de informações de processos. Para isto, em sistemas Unix, temos um arquivo para cada processo com o log de data, hora e a quantidade de memória em Mb alocada para cada processo. Estes arquivos são salvos com o número do processo (PID) como nome.
+
+Felizmente podemos fazer uma ordenação e listagem de processos usando o comando `ps`. Se utilizarmos o comando completo `ps -e -o pid --sort -size` teremos a lista de todos os processos do sistema que estão usando mais memória.
+
+Queremos apenas os 10 primeiros, podemos utilizar o `head`, mas temos que ficar atentos porque teremos um cabeçalho, então temos que forçar a busca de 11 linhas (ao invés dos 10 padrões do `head`) utilizando o comando `head -n 11`.
+
+Removemos o cabeçalho usando `grep [0-9]` para pegar apenas os PID's. O comando completo seria `ps -e -o pid --sort -size | head -n 11 | grep [0-9]`.
+
+Vamos criar o nosso script:
+
+```sh
+#!/bin/bash
+
+processos=$(ps -e -o pid --sort -size | head -n 11 | grep [0-9])
+
+for pid in $processos do
+  nome_proesso=$(ps -p $pid -o comm=)
+done
+```
