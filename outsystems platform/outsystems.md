@@ -433,8 +433,6 @@ Para criar um widget temos que entrar na visualização de tela e arrasatar o wi
 
 Usado para exibir dados calculados na tela. Se você especificar um exemplo, ele será usado para exibição no modo design
 
-![](https://i.imgur.com/pnnavee.png)
-
 #### Text Widget
 
 Exibição de um texto estático
