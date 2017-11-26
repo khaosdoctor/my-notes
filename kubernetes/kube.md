@@ -20,7 +20,6 @@
       - [Kubelet](#kubelet)
       - [Kube-proxy](#kube-proxy)
   - [Trabalhando com objetos do kubernetes](#trabalhando-com-objetos-do-kubernetes)
-    - [Spec e Status](#spec-e-status)
 
 <!-- /TOC -->
 
@@ -152,7 +151,3 @@ utilizar a API do kubernetes. Quando você utiliza o comando `kubectl` no CLI, p
 exemplo, a linha de comando faz as chamadas necessárias à API do sistema, abstraindo esta
 funcionalidade para o usuário. Você também pode utilizar a API do kubernetes diretamente nos
 seus próprio programas. Atualmente há uma biblioteca client escrita em `golang`.
-
-### Spec e Status
-
-
