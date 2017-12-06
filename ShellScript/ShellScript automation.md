@@ -12,6 +12,9 @@
   - [Redirecionament de erros](#redirecionament-de-erros)
   - [Recursão de diretórios](#recursão-de-diretórios)
   - [Listando processos do sistema](#listando-processos-do-sistema)
+  - [Obtendo uso de memória](#obtendo-uso-de-memória)
+  - [Agrupando logs](#agrupando-logs)
+  - [Tratando o status de saída](#tratando-o-status-de-saída)
 
 <!-- /TOC -->
 
@@ -303,3 +306,120 @@ for pid in $processos do
   nome_proesso=$(ps -p $pid -o comm=)
 done
 ```
+
+Para podermos printar a data no nosso arquivo de log, podemos utilizar `date +%F,%H:%M:%S`. Assim podemos redirecionar o nosso script para escrever no nosso arquivo de log com:
+
+```sh
+#!/bin/bash
+
+processos=$(ps -e -o pid --sort -size | head -n 11 | grep [0-9])
+
+for pid in $processos do
+  nome_proesso=$(ps -p $pid -o comm=)
+  echo -n $(date +%F,%H:%M:%S,) >> $nome_processo.log
+done
+```
+
+Estamos utilizando uma `,` após os segundos para podermos já colocar a nossa alocação de memória em megabytes, enquanto utilizamos `-n` para evitar que o `echo` pule uma linha.
+
+## Obtendo uso de memória
+
+Para obtermos a quantidade de memória utilizada pelo processo, podemos utilizar o comando `ps -p <pid> -o size`, mas vamos precisar remover o cabeçalho, pois temos uma saída com a primeira linha tendo o cabeçalho `SIZE`, vamos usar `grep [0-9]` juntamente para remove-lo.
+
+Estes valores estão em Kbytes, e queremos Megabytes, então temos que dividir o valor por 1024, mas se utilizarmos `echo <mem>/1024` teremos printado a string desta conta, mas não seu resultado. Então temos que utilizar um comando chamado `bc` desta forma `bc <<< <mem>/1024`, podendo usar a opção `scale` para limitar a quantidade de casas depois da virgula, desta forma: `bc <<< "scale=2;<mem>/1024"`.
+
+Nosso script vai ficar assim:
+
+```sh
+#!/bin/bash
+
+processos=$(ps -e -o pid --sort -size | head -n 11 | grep [0-9])
+
+for pid in $processos do
+  nome_proesso=$(ps -p $pid -o comm=)
+  echo -n $(date +%F,%H:%M:%S,) >> $nome_processo.log
+  tamanho_processo=$(ps -p $pid -o size | grep [0-9])
+  echo "$(bc <<< "scale=2;$tamanho_processo/1024") MB" >> $nome_processo.log
+done
+```
+
+## Agrupando logs
+
+Vamos fazer uma verificação apenas para que possamos salvar nosso arquivo dentro de uma única pasta:
+
+```sh
+#!/bin/bash
+
+if [ ! -d log ] then
+  mkdir log
+fi
+
+processos=$(ps -e -o pid --sort -size | head -n 11 | grep [0-9])
+
+for pid in $processos do
+  nome_proesso=$(ps -p $pid -o comm=)
+  echo -n $(date +%F,%H:%M:%S,) >> log/$nome_processo.log
+  tamanho_processo=$(ps -p $pid -o size | grep [0-9])
+  echo "$(bc <<< "scale=2;$tamanho_processo/1024") MB" >> log/$nome_processo.log
+done
+```
+
+## Tratando o status de saída
+
+Agora podemos implementar uma função agrupando todo o nosso código para podemos pegar o status de saída:
+
+```sh
+#!/bin/bash
+
+if [ ! -d log ] then
+  mkdir log
+fi
+
+processos_memoria() {
+
+processos=$(ps -e -o pid --sort -size | head -n 11 | grep [0-9])
+
+for pid in $processos do
+  nome_proesso=$(ps -p $pid -o comm=)
+  echo -n $(date +%F,%H:%M:%S,) >> log/$nome_processo.log
+  tamanho_processo=$(ps -p $pid -o size | grep [0-9])
+  echo "$(bc <<< "scale=2;$tamanho_processo/1024") MB" >> log/$nome_processo.log
+done
+
+}
+
+processos_memoria
+```
+
+Então podemos tratar nosso erro:
+
+```sh
+#!/bin/bash
+
+if [ ! -d log ] then
+  mkdir log
+fi
+
+processos_memoria() {
+
+processos=$(ps -e -o pid --sort -size | head -n 11 | grep [0-9])
+
+for pid in $processos do
+  nome_proesso=$(ps -p $pid -o comm=)
+  echo -n $(date +%F,%H:%M:%S,) >> log/$nome_processo.log
+  tamanho_processo=$(ps -p $pid -o size | grep [0-9])
+  echo "$(bc <<< "scale=2;$tamanho_processo/1024") MB" >> log/$nome_processo.log
+done
+
+}
+
+processos_memoria
+
+if [ $? -eq 0 ] then
+  echo "Os arquivos foram salvos com sucesso"
+else
+  echo "Houve um erro ao salvar os arquivos"
+fi
+```
+
+Com isto podemos finalizar o nosso script.
