@@ -258,7 +258,7 @@ Uma outra vantagem da _arrow function_ é o problema do `bind`. Com ela não pre
       .then((response) => {
         this.props.updateUser(response);
       });
-    
+
     GitHubUserService.getReposByUser(this.refs.username.value)
       .then((response) => {
         this.props.updateRepo(response.data);
@@ -276,7 +276,7 @@ Note que removemos o `.bind(this)` da função `then` no retorno da promise:
       .then(function (response) {
         this.props.updateUser(response);
       }.bind(this));
-    
+
     GitHubUserService.getReposByUser(this.refs.username.value)
       .then(function (response) {
         this.props.updateRepo(response.data);
@@ -352,7 +352,7 @@ const userInfo = ({ user, repos }) => {
 
 ## Classes
 
-Umc alsse é uma das features mais polêmicas da atual release, vamos refatorar o `userRepos` para ser uma classe:
+Uma classe é uma das features mais polêmicas da atual release, vamos refatorar o `userRepos` para ser uma classe:
 
 Original:
 
@@ -389,7 +389,7 @@ var UserRepos = React.createClass({
           </div>
        </div>
       );
-    }); 
+    });
 
     return (
       <div>
@@ -442,7 +442,7 @@ class UserRepos extends React.Component{
           </div>
        </div>
       );
-    }); 
+    });
 
     return (
       <div>
@@ -458,7 +458,7 @@ class UserRepos extends React.Component{
 export default UserRepos;
 ```
 
-Não mais usamos `React.createComponent` mas agora nosso componente todo virou uma classe que estende `React.Component`. Desta forma não preci samos mais de nenhuma `function` no meio, pois podemos simplesmente omitir este simbolo em favor do nome da função.
+Não mais usamos `React.createComponent` mas agora nosso componente todo virou uma classe que estende `React.Component`. Desta forma não precisamos mais de nenhuma `function` no meio, pois podemos simplesmente omitir este simbolo em favor do nome da função.
 
 Também veja que o método `getInitialState` foi substituido por um `constructor` que recebe `props` como parâmetro, este parâmetro são as propriedades que vão ser passadas ao componente quando ele for renderizado. Por isto chamamos o `super` para invocar a função pai e criar o objeto `state` utilizando o `this.state` ao invés de `return`.
 
@@ -493,6 +493,7 @@ class searchUser extends React.Component {
     super(props)
     this.handleSubmit = this.handleSubmit.bind(this)
   }
+}
 ```
 
 Desta forma vamos estar já linkando o `this` dentro da função em runtime uma única vez.
