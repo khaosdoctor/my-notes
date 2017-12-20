@@ -112,7 +112,7 @@ O que queremos dizer aqui é que o browser busca a maior eficiência para carreg
 
 É o caminho crítico de renderização, chamado de crítico porque é o que fica entre o usuário ver uma página pintada e uma página em branco. Pois antes de todo o processo ser executado o site não pode ser pintado.
 
-![CRP](https://cdn.infoq.com/statics_s1_20170323-0336/resource/presentations/critical-rendering-path/pt/slides/sl15.jpg)
+![CRP](https://image.slidesharecdn.com/criticalrenderingpath-devday2014-141105192619-conversion-gate02/95/critical-rendering-path-velocidade-tambm-uma-funcionalidade-12-638.jpg?cb=1415216034)
 
 Vamos analisar a imagem:
 
@@ -230,7 +230,7 @@ window.onscroll = function() {
   if(ran) return;
   ran = true;
   setTimeout(function() {ran = false;}, 150);
-  
+
   var imgs = document.querySelectorAll('img[data-src]'); //Selecionamos todas as imagens que tem o atributo que colocamos
 
   for(var i=0; i < imgs.length; i++) {
@@ -518,7 +518,7 @@ O polyfill é uma técnica que força a implementação de um recurso não exist
 ```html
 <html>
   <head>
-  
+
     <script src="loadcss.js" async></script>
     <script src="cssrelpreload.js" async></script>
 
@@ -776,7 +776,7 @@ Quado temos diversos recursos que podem ser baixados com o preload, usamos o atr
 
 Dando a cada recurso uma prioridade maior ou menor na lista de recursos que serão baixados com o preload.
 
-Um outro bom uso do preload é para fazer o download de fontes. A fonte em si é um recurso que é tardiamente descoberto porque ele é declarado no CSS e precisa haver pelo menos um nó no html que use tal fonte para que o browser possa de fato baixar o recurso. 
+Um outro bom uso do preload é para fazer o download de fontes. A fonte em si é um recurso que é tardiamente descoberto porque ele é declarado no CSS e precisa haver pelo menos um nó no html que use tal fonte para que o browser possa de fato baixar o recurso.
 
 ![](https://s3.amazonaws.com/caelum-online-public/performance+2/8/8_5+fontes+no+c%C3%B3digo.png)
 
@@ -816,7 +816,7 @@ Exemplos disso podem ser vários:
 - Quando estamos em uma tela de login de um sistema, sabemos que o usuário ao fazer login será redirecionado para uma página interna do dashboard do sistema, então podemos pré carrega-la na memória
 - Um exemplo real, o Google pre renderiza o primeiro resultado de cada busca pois ele sabe que a chance de você clicar lá é bastante alta
 
-Além disso, quando temos um fluxo de tabalho definido, é muito importante pré renderizarmos as páginas que queremos, um grande exemplo disso é um input de newsletter. 
+Além disso, quando temos um fluxo de tabalho definido, é muito importante pré renderizarmos as páginas que queremos, um grande exemplo disso é um input de newsletter.
 
 ![](https://s3.amazonaws.com/caelum-online-public/performance+2/8/8_8+mostrando+a+p%C3%A1gina+obrigado.png)
 
