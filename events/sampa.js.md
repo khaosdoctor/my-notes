@@ -92,7 +92,7 @@ Ele se encarrega dos fallbacks para cada browser e se encarrega de armazenar no 
 
 ### PouchDB
 
-- https://pouchdb.com/
+- https://github.com/pouchdb/pouchdb
 
 Armazena a informação local e pode sincronizar através da rede mantendo online ou offline os dados.
 
