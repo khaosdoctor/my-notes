@@ -9,6 +9,9 @@
       - [Transpilers](#transpilers)
   - [Importando CSS](#importando-css)
   - [Criando componentes](#criando-componentes)
+  - [Estados](#estados)
+    - [Alterando estados](#alterando-estados)
+      - [Ciclos de vida](#ciclos-de-vida)
 
 <!-- /TOC -->
 
@@ -118,3 +121,121 @@ ReactDOM.render(<MeuComponente />, document.getElementById('root'));
 ```
 
 De forma que vamos criar o nosso componente inteiro dentro da tag com o ID `root`.
+
+## Estados
+
+Estamos são partes importantes da aplicação, eles vão definir um objeto global que vai ser o estado atual do nosso componente. Sempre que nosso estado for alterado, o nosso componente vai ser renderizado novamente.
+
+Para criarmos um estado, vamos até nosso aquivo `App.js` e declaramos um construtor:
+
+```js
+import React, { Component } from 'react'
+import './css/pure-min.css'
+import './css/side-menu.css'
+
+class App extends Component {
+  constructor () {
+    super()
+    this.state = {
+      lista: []
+    }
+  }
+
+  render () {
+    return ( ) // Nosso JSX aqui
+  }
+}
+```
+
+Aqui estamos criando um estado com uma chave chamada `lista` que está associada a um array vazio. O que queremos é gerar um conteúdo dinâmico para a nossa lista, então vamos utilizar as propriedades dinâmicas do JSX utilizando `{}` no nosso HTML.
+
+```js
+// ...
+
+render () {
+  return (
+    // Aqui vai o conteúdo anterior
+    <tbody>
+    {
+      this.state.lista.map((autor) => {
+        return (
+        <tr>
+          <td>{autor.nome}</td>
+          <td>{autor.email}</td>
+        </tr>
+        )
+      })
+    }
+    </tbody>
+  )
+}
+```
+
+Podemos colocar um estado estático, do tipo `this.state = { lista: [{nome: 'Lucas', email: 'email@gmail.com'}] }`, assim teríamos a lista de autores definida no nosso estado do componente, mas queremos carregar o estado dinâmicamente.
+
+### Alterando estados
+
+Para popularmos o estado, vamos fazer uma chamada AJAX para uma API, esta chamada vai retornar todos os nossos autores. Como estamos utilizando o React, podemos importar o jQuery usando `yarn add jquery` e depois `import $ from 'jquery'` dentro do nosso arquivo:
+
+```js
+import React, { Component } from 'react'
+import './css/pure-min.css'
+import './css/side-menu.css'
+import $ from 'jquery'
+
+class App extends Component {
+  constructor () {
+    super()
+    this.state = {
+      lista: []
+    }
+  }
+
+  render () {
+    return ( ) // Nosso JSX aqui
+  }
+}
+```
+
+#### Ciclos de vida
+
+Como estamos falando de carregar uma informação antes de renderizarmos o componente, o ideal seria que esta chamada AJAX ficasse dentro do nosso `constructor` correto? Não, pois lá é aonde vamos apenas fazer chamadas simples e inicializar variáveis, não podemos fazer nenhuma chamada ou algo mais complexo no construtor.
+
+Temos então uma API do React que define os __ciclos de vida de um componente__. Estes ciclos são métodos que incluímos dentro do nosso componente e são chamados em determinadas partes do mesmo. Vamos ver dois deles:
+
+- `componentWillMount`: Chamado antes do `render`
+- `componentDidMount`: Chamado depois do `render`
+
+Vamos utilizar o `componentWillMount` para realizar as nossas chamadas e carregar a tabela:
+
+```js
+componentWillMount()
+  $.ajax({
+      url:"http://localhost:8080/api/autores",
+      dataType: 'json',
+      success: (resposta) => {
+        this.setState({ lista: resposta })
+      }
+    }
+  )
+}
+```
+
+Precisamos chamar o `setState` pois esta função delega ao React a execução do `render` novamente, se nós estivessemos apenas executando um `this.state = { estado novo }` teríamos que renderizar novamente usando o `this.forceUpdate()`, esta é uma das grandes vantagens. Mas veja que nosso código não funcionará porque dentro do escopo do `$.ajax`, a função tem a keyword `this` definida para o próprio jQuery. Então temos que fazer uma alteração imnportante:
+
+```js
+componentWillMount()
+  $.ajax({
+      url:"http://localhost:8080/api/autores",
+      dataType: 'json',
+      success: (resposta) => {
+        this.setState({ lista: resposta })
+      }.bind(this)
+    }
+  )
+}
+```
+
+Isto é importante porque sem o `bind`, nosso `this` não encontraria a classe `Component` que estendemos, mas sim o próprio jQuery.
+
+> Isto também é válido para funções definidas fora do componente, como controllers e serviços que podem estender alguma classe do React mas não usam especificamente seu `this`
