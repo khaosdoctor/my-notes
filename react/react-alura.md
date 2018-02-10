@@ -12,6 +12,9 @@
   - [Estados](#estados)
     - [Alterando estados](#alterando-estados)
       - [Ciclos de vida](#ciclos-de-vida)
+  - [Virtual DOM](#virtual-dom)
+  - [Eventos](#eventos)
+  - [Reutilização de componentes](#reutilização-de-componentes)
 
 <!-- /TOC -->
 
@@ -239,3 +242,162 @@ componentWillMount()
 Isto é importante porque sem o `bind`, nosso `this` não encontraria a classe `Component` que estendemos, mas sim o próprio jQuery.
 
 > Isto também é válido para funções definidas fora do componente, como controllers e serviços que podem estender alguma classe do React mas não usam especificamente seu `this`
+
+Neste ciclo de vida não faz muito sentido chamarmos uma requisição assíncrona no `componentWillMount`, porque é mais rápido que renderizemos tudo primeiro e depois fazemos o que temos de fazer. Vamos alterar o método para `componentDidMount`.
+
+```js
+componentDidMount()
+  $.ajax({
+      url:"http://localhost:8080/api/autores",
+      dataType: 'json',
+      success: (resposta) => {
+        this.setState({ lista: resposta })
+      }.bind(this)
+    }
+  )
+}
+```
+
+## Virtual DOM
+
+Geralmente, quando temos uma tabela ou algum componente aninhado, o React vai reclamar que todos os elementos filhos devem ter um identificador próprio. Isto é feito para que o Ract possa identificar qual é a parte exata do DOM que alterou, esta alteração é realizada primeiramente no Virtual DOM e depois repassada para o DOM real do navegador.
+
+Essas verificações são realizadas em tempo de execução, antão ao termos elementos filhos dentro de um pai o React pede que adicionemos um atributo `key`, o valor deste atributo deve ser um valor único que não se repete em nenhum momento, por exemplo, um ID de usuário. Desta forma se um dos elementos filhos se alterar, é muito mais simples para o React descobrir qual deles se alterou e depois aplicar a mudança no virtual DOM:
+
+```js
+<tbody>
+{
+  this.state.lista.map(autor => {
+    return (
+      <tr key={autor.id}>
+        <td>{autor.nome}</td>
+        <td>{autor.email}</td>
+      </tr>
+    )
+  })
+}
+</tbody>
+```
+
+Perceba que estamos utilizando o ID, um elemento não repetitivo, se você possui elementos que são repetitivos, aplique a concatenação de valores e realize um hash para poder aplicar um valor único sobre ele.
+
+## Eventos
+
+Para criarmos eventos atrelados ao componente HTML, podemos utilizar elementos do React que mapeiam para funções de eventos do próprio HTML, veja um exemplo no nosso form:
+
+```js
+<form className="pure-form pure-form-aligned" onSubmit={this.enviaForm} methor="POST">
+// Conteúdo aqui
+</form>
+```
+
+Agora podemos fazer nossa função na nossa classe:
+
+```js
+enviaForm (evento) {
+  console.log("dados enviados")
+}
+```
+
+Vamos remover o recarregamento da página:
+
+```js
+enviaForm (evento) {
+  evento.preventDefault()
+  console.log("dados enviados")
+}
+```
+
+Agora vamos enviar os nossos dados:
+
+```js
+enviaForm (evento) {
+  evento.preventDefault()
+  $.ajax({
+    url: 'http://localhost:8080/api/autores',
+    contentType: 'application/json',
+    dataType: 'json',
+    type: 'post',
+    data: JSON.stringify({ nome: this.state.nome, email: this.state.email, senha: this.state.senha }),
+    success: (resposta) => {
+
+    },
+    error: (erro) => {
+
+    }
+  })
+}
+```
+
+Vamos declarar que existem essas novas propriedades do nosso estado, e também vamos corrigir o nosso problema com o `bind` do JavaScript, que não existe:
+
+```js
+import React, { Component } from 'react'
+import './css/pure-min.css'
+import './css/side-menu.css'
+import $ from 'jquery'
+
+class App extends Component {
+  constructor () {
+    super()
+    this.state = {
+      lista: [],
+      nome: '',
+      email: '',
+      senha: ''
+    }
+
+    this.enviaForm = this.enviaForm.bind(this)
+  }
+
+  render () {
+    return ( ) // Nosso JSX aqui
+  }
+}
+```
+
+Importante dizer também que precisamos manter os estados nos nossos valores dos inputs, também precisamos atualizar o estado com o novo valor. Então temos que setar isso no nosso JS:
+
+```jsx
+<input id="nome" type="text" name="nome" value={this.state.nome} onChange={(evento) => { this.setState({ nome: evento.evento.target.value }) }}/>
+```
+
+Vamos fazer o mesmo para todos os outros inputs e componentes que definimos no formulário. Agora precisamos apenas renderizar a tabela com os novos valores.
+
+```js
+enviaForm (evento) {
+  evento.preventDefault()
+  $.ajax({
+    url: 'http://localhost:8080/api/autores',
+    contentType: 'application/json',
+    dataType: 'json',
+    type: 'post',
+    data: JSON.stringify({ nome: this.state.nome, email: this.state.email, senha: this.state.senha }),
+    success: (resposta) => {
+      this.setState({ lista: resposta, nome: '', email: '', senha: '' })
+    }.bind(this),
+    error: (erro) => {
+
+    }.bind(this)
+  })
+}
+```
+
+## Reutilização de componentes
+
+Veja que estamos repetindo todos os componentes do formulário, podemos criar componentes reaproveitáveis para nossos inputs. Vamos criar o nosso componente input:
+
+```jsx
+import React, { Component } from 'react'
+
+export default class InputCustomizado extends Component {
+  render() {
+    return (
+      <div className="pure-control-group">
+        <label htmlFor={this.props.id}>{this.props.label}:</label>
+        <input id={this.props.id} type={this.props.type} name={this.props.name} value={this.props.value} onChange={this.props.onChange} />
+      </div>
+    )
+  }
+}
+```
