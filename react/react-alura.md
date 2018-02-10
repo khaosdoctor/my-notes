@@ -401,3 +401,5 @@ export default class InputCustomizado extends Component {
   }
 }
 ```
+
+E ai podemos importar no nosso formulário (usando o `import` no início) e depois utilizar apenas `<InputCustomizado />` como nome de componente.
