@@ -15,6 +15,9 @@
   - [Virtual DOM](#virtual-dom)
   - [Eventos](#eventos)
   - [Reutilização de componentes](#reutilização-de-componentes)
+  - [High Order Components](#high-order-components)
+  - [Pub/Sub e desacoplamento](#pubsub-e-desacoplamento)
+  - [React Router](#react-router)
 
 <!-- /TOC -->
 
@@ -403,3 +406,123 @@ export default class InputCustomizado extends Component {
 ```
 
 E ai podemos importar no nosso formulário (usando o `import` no início) e depois utilizar apenas `<InputCustomizado />` como nome de componente.
+
+## High Order Components
+
+Um dos grandes problemas do React é que, quando precisamos que um componente interaja com outro, temos que passar as funções destes dois componentes para ambos os locais para que eles possam ser acessados sem problemas. Estes são os chamados High Order Components, que são componentes que incluem outros componentes e fazem a função de unir os dois.
+
+Se separarmos os nossos componentes de autores e lista, vamos ter um problema que quando inserirmos um novo autor, nossa lista não vai mais ser acessível, então precisamos criar um objeto único:
+
+```jsx
+export default class AutorBox extends Component {
+
+  constructor () {
+    super()
+    this.state = { lista: [] }
+    this.atualizaListagem = this.atualizaListagem.bind(this)
+  }
+
+  atualizaListagen (novaLista) {
+    this.setState({lista: novaLista})
+  }
+
+  render () {
+    return (
+      <div>
+        <AutorForm callbackAtualizaListagem={this.atualizaListagem} />
+        <AutorLista lista={this.state.lista} />
+      </div>
+    )
+  }
+}
+```
+
+Veja que agora temos acesso externo das funções do nosso `AutorBox` a partir do nosso formulário, este é um modelo de chamada externa, por isto que passamos o objeto da função para este formulário. Da mesma forma que passamos a lista atual para o componente da lista.
+
+## Pub/Sub e desacoplamento
+
+Quando temos que passar o ponteiro de uma função para dentro de um componente, criamos um acoplamento mínimo entre os dois, como podemos criar um novo componente ou comunicar um componente com outro sem manter este acoplamento. Primeiramente removemos o acoplamento
+
+```jsx
+export default class AutorBox extends Component {
+
+  constructor () {
+    super()
+    this.state = { lista: [] }
+    this.atualizaListagem = this.atualizaListagem.bind(this)
+  }
+
+  atualizaListagen (novaLista) {
+    this.setState({lista: novaLista})
+  }
+
+  render () {
+    return (
+      <div>
+        <AutorForm />
+        <AutorLista lista={this.state.lista} />
+      </div>
+    )
+  }
+}
+```
+
+Agora, dentro do nosso formulário, vamos aonde chamaríamos a função que acabamos de remover e vamos utilizar eventos para poder disparar um aviso geral para todos os componentes:
+
+```jsx
+enviaForm (evento) {
+  evento.preventDefault()
+  $.ajax({
+    url: //url,
+    // Outras propriedades
+    success: function (resposta) {
+      // Disparamos nosso evento
+    }
+  })
+}
+```
+
+Vamos utilizar uma lib chamada de _pubsubJS_ para fazer esta funcionalidade. Importaremos no nosso formulário:
+
+```jsx
+import PubSub from 'pubsub-js'
+ // Lógica
+
+ enviaForm (evento) {
+  evento.preventDefault()
+  $.ajax({
+    url: //url,
+    // Outras propriedades
+    success: function (resposta) {
+      Pubsub.publish('atualiza-listagem-autores-topico', resposta)
+    }
+  })
+}
+```
+
+Agora vamos para nosso box e ouvir este tópico:
+
+```jsx
+export default class AutorBox extends Component {
+
+  constructor () {
+    super()
+    this.state = { lista: [] }
+  }
+
+  componentDidMount () {
+    PubSub.subscribe('atualiza-lista-autores-topico', (topico, novaListagem) => { return this.setState({lista: novaListagem}) }.bind(this))
+  }
+
+  render () {
+    return (
+      <div>
+        <AutorForm />
+        <AutorLista lista={this.state.lista} />
+      </div>
+    )
+  }
+}
+```
+
+## React Router
