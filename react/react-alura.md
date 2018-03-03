@@ -526,3 +526,9 @@ export default class AutorBox extends Component {
 ```
 
 ## React Router
+
+O React Router é a biblioteca que faz o gerenciamento de rotas do nosso aplicativo. Isto significa que podemos ter nossa SPA de forma mais transparente.
+
+A grande propriedade de uma SPA é que ela não possui nenhum tipo de reload, então temos que trocar a nossa URL mas não podemos recarregar a página, isso pode ser feito através da _history API_ que é uma API nativa do Javascript desde o ES5.
+
+> Conteúdo da Alura está desatualizado nesta parte
