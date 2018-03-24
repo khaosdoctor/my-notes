@@ -1,2 +1,4 @@
 .DS_Store
-alurabank
+node_modules/
+yarn.lock
+package-lock.json
