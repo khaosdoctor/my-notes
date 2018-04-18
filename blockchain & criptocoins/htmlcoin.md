@@ -11,7 +11,6 @@
 
 ## Informações
 
-- [Marketcap](https://coinmarketcap.com/currencies/htmlcoin/): $3.938.046 em 30/11/2017
 - [Site Oficial](http://htmlcoin.com)
 - [Carteira oficial](http://htmlcoin.com/wallets)
 - [Chat oficial](http://t.me/htmlcoinofficial)
