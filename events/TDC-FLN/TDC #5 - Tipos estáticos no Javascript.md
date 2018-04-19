@@ -1,5 +1,8 @@
 # Tipos estáticos no Javascript
 
+@aputhin (github)
+@aputhin_ (Twitter)
+
 - **Tipos primitivos**: Tipos básicos que geralmente já estão presentes em alguma linguagem
 - **Tipos Compostos**: São derivados de um ou mais tipos primitivos
 
