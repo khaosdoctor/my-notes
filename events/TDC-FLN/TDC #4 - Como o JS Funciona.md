@@ -1,6 +1,7 @@
 # Como o Javascript funciona
 
 @viniciuskneves (twitter, gh, etc)
+__Slides__: https://www.slideshare.net/viniciuskneves/como-o-javascript-funciona-tdc-floripa
 
 ## Engine
 
