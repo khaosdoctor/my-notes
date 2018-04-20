@@ -4,3 +4,5 @@
 
 O ChakraCore permite o Time Travel Debugging (olhar a extensão do VSCode para ChakraCore time travel debugging)
 
+@mmarkini
+http://mmarchini.me
