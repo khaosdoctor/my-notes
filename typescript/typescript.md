@@ -3,7 +3,6 @@
 
 <!-- TOC -->
 
-
 - [Typescript](#typescript)
   - [O que é Typescript](#o-que-é-typescript)
   - [Iniciando com o projeto](#iniciando-com-o-projeto)
@@ -22,7 +21,7 @@
   - [Listando negociações](#listando-negociações)
     - [Inferição de tipos](#inferição-de-tipos)
     - [Imutabilidade de valores](#imutabilidade-de-valores)
-
+  - [Exibindo o modelo ao usuário](#exibindo-o-modelo-ao-usuário)
 
 <!-- /TOC -->
 
@@ -372,7 +371,7 @@ Um dos pontos mais importantes do TS é que podemos tipar todas as variáveis. Q
 ```
 
 > O `noImplicitAny` fará com que o compilador de erros quando encontrar qualquer um dos tipos Any implicitos
-> 
+>
 > O TS obtém os tipos de um tipo de arquivos chamado `ts.d`, chamado normalmente de _Typescript Definition_, estes tipos vem definidos diretamente no compilador quando instalamos o pacote
 
 Para podermos tipar nossas variáveis, vamos adicionar `:` seguido do tipo que queremos logo depois da definição das mesmas:
@@ -570,7 +569,7 @@ class Negociacoes {
 ```
 
 > Veja que temos um array privado _de negociações_, ele leva o tipo negociação como parâmetro para especificar o tipo de array que estamos usando. Da mesma forma estamos criando o método adiciona com um parâmetro do tipo de negociação.
-> 
+>
 > Uma outra forma de escrever um array específico é `Negociacao[]` ao invés de `Array<Negociacao>`.
 
 ### Inferição de tipos
@@ -675,3 +674,179 @@ class Negociacoes {
 Agora temos o nosso intellisense funcionando novamente.
 
 > É uma boa prática sempre tipar os retornos porque isso evita que retornemos coisas diferentes do que nossos métodos precisam, evitando que ela quebre ao longo da aplicação.
+
+## Exibindo o modelo ao usuário
+
+Para podermos exibir a lista de negociações para o usuário vamos precisar manipular o DOM. Existem duas formas de fazer isso, da forma imperativa (falando como vamos alterar o DOM), ou declarativa (de forma que temos templates para fazer isso).
+
+Em um novo arquivo `NegociacoesView.ts` dentro da pasta `views` com este conteúdo:
+
+```ts
+class NegociacoesView {
+
+  template(): string {
+    return `
+      <table class="table table-hover table-bordered">
+      <thead>
+        <tr>
+          <th>DATA</th>
+          <th>QUANTIDADE</th>
+          <th>VALOR</th>
+          <th>VOLUME</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+      <tfoot>
+      </tfoot>
+    </table>`
+  }
+}
+```
+
+Agora vamos dentro do nosso controller de negociações e criaremos uma nova propriedade nessa classe:
+
+```ts
+private _negociacoesView = new NegociacoesView('#negociacoesView')
+```
+
+E no arquivo `index.html` vamos incluir uma nova div com o ID `negociacoesView` e, de volta na view vamos incluir o seletor e um método de update:
+
+```ts
+private _elemento: Element
+
+constructor (seletor: string) {
+  this._elemento = document.querySelector(seletor)
+}
+
+update (): void {
+  this._elemento.innerHTML = this.template()
+}
+```
+
+Para podermos exibir os dados da nossa negociação vamos ter que adicionar a chamada para este método dentro do nosso controller para, assim que a página for carregada, nós renderizemos a tabela.
+
+```ts
+constructor () {
+  // Código
+  this._negociacoesView.update()
+}
+```
+
+Agora temos que passar os dados para isto vamos chamar este método tanto no construtor quanto no método `adiciona` do nosso controller. Mas agora vamos passar o modelo que vamos adicionar na tabela:
+
+```ts
+import NegociacoesView from "../views/NegociacoesView"
+
+class NegociacaoController {
+  private _inputData: HTMLInputElement
+  private _inputQuantidade: HTMLInputElement
+  private _inputValor: HTMLInputElement
+  private _negociacoes = new Negociacoes()
+  private _negociacoesView = new NegociacoesView('#negociacoesView')
+
+  constructor () {
+    this._inputData = <HTMLInputElement>document.querySelector('#data')
+    this._inputQuantidade = <HTMLInputElement>document.querySelector('#quantidade')
+    this._inputValor = <HTMLInputElement>document.querySelector('#valor')
+    this._negociacoesView.update(this._negociacoes)
+  }
+
+  adiciona (evento: Event): void {
+    evento.preventDefault()
+    const negociacao = new Negociacao(
+      new Date(this._inputData.value.replace(/-/g, ',')),
+      parseInt(this._inputQuantidade.value),
+      parseFloat(this._inputValor.value)
+    )
+
+    this._negociacoes.adiciona(negociacao)
+
+    this._negociacoesView.update(this._negociacoes)
+  }
+}
+```
+
+Vamos refletir isso na nossa view:
+
+```ts
+export default class NegociacoesView {
+
+  private _elemento: Element
+
+  constructor (seletor: string) {
+    this._elemento = document.querySelector(seletor)
+  }
+
+  update (model: Negociacoes): void {
+    this._elemento.innerHTML = this.template(model)
+  }
+
+  template(model: Negociacoes): string {
+    return `
+      <table class="table table-hover table-bordered">
+      <thead>
+        <tr>
+          <th>DATA</th>
+          <th>QUANTIDADE</th>
+          <th>VALOR</th>
+          <th>VOLUME</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+      <tfoot>
+      </tfoot>
+    </table>`
+  }
+}
+```
+
+Agora é só completar a tabela:
+
+```js
+export default class NegociacoesView {
+
+  private _elemento: Element
+
+  constructor (seletor: string) {
+    this._elemento = document.querySelector(seletor)
+  }
+
+  update (model: Negociacoes): void {
+    this._elemento.innerHTML = this.template(model)
+  }
+
+  template(model: Negociacoes): string {
+    return `
+      <table class="table table-hover table-bordered">
+      <thead>
+        <tr>
+          <th>DATA</th>
+          <th>QUANTIDADE</th>
+          <th>VALOR</th>
+          <th>VOLUME</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${
+          model.toArray().map((negociacao: Negociacao) => {
+            return `
+              <tr>
+                <td>${negociacao.data.getDate()}/${negociacao.data.getMonth()+1}/${negociacao.data.getFullYear()}</td>
+                <td>${negociacao.quantidade}</td>
+                <td>${negociacao.valor}</td>
+                <td>${negociacao.volume}</td>
+              </tr>
+            `
+          }).join('')
+        }
+      </tbody>
+      <tfoot>
+      </tfoot>
+    </table>`
+  }
+}
+```
+
+
