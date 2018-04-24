@@ -1,6 +1,8 @@
 # Typescript
 
+
 <!-- TOC -->
+
 
 - [Typescript](#typescript)
   - [O que é Typescript](#o-que-é-typescript)
@@ -21,7 +23,9 @@
     - [Inferição de tipos](#inferição-de-tipos)
     - [Imutabilidade de valores](#imutabilidade-de-valores)
 
+
 <!-- /TOC -->
+
 
 ## O que é Typescript
 
@@ -81,7 +85,6 @@ class Negociacao {
     return this._quantidade * this._valor
   }
 }
-
 ```
 
 Pontos importantes:
@@ -369,7 +372,7 @@ Um dos pontos mais importantes do TS é que podemos tipar todas as variáveis. Q
 ```
 
 > O `noImplicitAny` fará com que o compilador de erros quando encontrar qualquer um dos tipos Any implicitos
-
+> 
 > O TS obtém os tipos de um tipo de arquivos chamado `ts.d`, chamado normalmente de _Typescript Definition_, estes tipos vem definidos diretamente no compilador quando instalamos o pacote
 
 Para podermos tipar nossas variáveis, vamos adicionar `:` seguido do tipo que queremos logo depois da definição das mesmas:
@@ -567,7 +570,7 @@ class Negociacoes {
 ```
 
 > Veja que temos um array privado _de negociações_, ele leva o tipo negociação como parâmetro para especificar o tipo de array que estamos usando. Da mesma forma estamos criando o método adiciona com um parâmetro do tipo de negociação.
-
+> 
 > Uma outra forma de escrever um array específico é `Negociacao[]` ao invés de `Array<Negociacao>`.
 
 ### Inferição de tipos
