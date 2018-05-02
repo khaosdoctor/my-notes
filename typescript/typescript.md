@@ -22,6 +22,10 @@
     - [Inferição de tipos](#inferição-de-tipos)
     - [Imutabilidade de valores](#imutabilidade-de-valores)
   - [Exibindo o modelo ao usuário](#exibindo-o-modelo-ao-usuário)
+    - [Evitando repetição de código](#evitando-repetição-de-código)
+      - [Herança](#herança)
+    - [Generics](#generics)
+    - [Classes Abstratas](#classes-abstratas)
 
 <!-- /TOC -->
 
@@ -848,5 +852,302 @@ export default class NegociacoesView {
   }
 }
 ```
+
+### Evitando repetição de código
+
+Agora que exibimos o model para o usuário, queremos mostrar uma mensagem falando que esta negociação foi inserida com sucesso. Para isso vamos criar uma nova view que será muito parecida com a nossa `NegociacaoView`, chamada `MensagemView`:
+
+```ts
+class MensagemView {
+
+  private _elemento: Element
+
+  constructor (selector: string) {
+    this._elemento = document.querySelector(selector)
+  }
+
+  update (model: string) {
+    this._elemento.innerHTML = this.template(model)
+  }
+
+  template (model: string) {
+    return `<p class="alert alert-info">${model}</p>`
+  }
+}
+```
+
+Vamos usar nossa mensagem no nosso controlador de negociação:
+
+```ts
+import NegociacoesView from "../views/NegociacoesView"
+
+class NegociacaoController {
+  private _inputData: HTMLInputElement
+  private _inputQuantidade: HTMLInputElement
+  private _inputValor: HTMLInputElement
+  private _negociacoes = new Negociacoes()
+  private _negociacoesView = new NegociacoesView('#negociacoesView')
+  private _mensagemView = new MensagemView('#mensagemView')
+
+  constructor () {
+    this._inputData = <HTMLInputElement>document.querySelector('#data')
+    this._inputQuantidade = <HTMLInputElement>document.querySelector('#quantidade')
+    this._inputValor = <HTMLInputElement>document.querySelector('#valor')
+    this._negociacoesView.update(this._negociacoes)
+  }
+
+  adiciona (evento: Event): void {
+    evento.preventDefault()
+    const negociacao = new Negociacao(
+      new Date(this._inputData.value.replace(/-/g, ',')),
+      parseInt(this._inputQuantidade.value),
+      parseFloat(this._inputValor.value)
+    )
+
+    this._negociacoes.adiciona(negociacao)
+
+    this._negociacoesView.update(this._negociacoes)
+    this._mensagemView.update('Negociação adicionada com sucesso!')
+  }
+}
+```
+
+Mas existe um problema, estamos repetindo muito o código de `MensagemView` e `NegociacoesView`. Para não repetirmos isso, vamos utilizar o recurso de herança.
+
+#### Herança
+
+Herança já é nativo do ES6 desde 2015 através da keyword `extends`. Vamos refatorar o código para utilizar herança. Primeiro vamos criar uma nova classe `View`:
+
+```ts
+class View {
+
+  protected _elemento: Element
+
+  constructor (selector: string) {
+    this._elemento = document.querySelector(selector)
+  }
+}
+```
+
+E agora vamos estender de ambas a views:
+
+```ts
+export default class NegociacoesView extends View {
+
+
+  update (model: Negociacoes): void {
+    this._elemento.innerHTML = this.template(model)
+  }
+
+  template(model: Negociacoes): string {
+    return `
+      <table class="table table-hover table-bordered">
+      <thead>
+        <tr>
+          <th>DATA</th>
+          <th>QUANTIDADE</th>
+          <th>VALOR</th>
+          <th>VOLUME</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${
+          model.toArray().map((negociacao: Negociacao) => {
+            return `
+              <tr>
+                <td>${negociacao.data.getDate()}/${negociacao.data.getMonth()+1}/${negociacao.data.getFullYear()}</td>
+                <td>${negociacao.quantidade}</td>
+                <td>${negociacao.valor}</td>
+                <td>${negociacao.volume}</td>
+              </tr>
+            `
+          }).join('')
+        }
+      </tbody>
+      <tfoot>
+      </tfoot>
+    </table>`
+  }
+}
+```
+
+e `MensagemView`:
+
+```ts
+class MensagemView extends View{
+
+  update (model: string) {
+    this._elemento.innerHTML = this.template(model)
+  }
+
+  template (model: string) {
+    return `<p class="alert alert-info">${model}</p>`
+  }
+}
+```
+
+Mas veja que também nas duas classes filhas, o método `update` é quase identico, sendo diferenciado apenas pelo tipo do parâmetro, vamos refatorar para podermos inclui-lo também na classe pai `View`.
+
+### Generics
+
+Primeiramente, vamos passar o método `update` para a classe `View`, depois vamos ver que precisaremos do método `template` também na classe `View`, uma vez que eles são dependentes entre si.
+
+```ts
+class View {
+
+  protected _elemento: Element
+
+  constructor (selector: string) {
+    this._elemento = document.querySelector(selector)
+  }
+
+  update (model: string) {
+    this._elemento.innerHTML = this.template(model)
+  }
+
+  template (model: string) {
+    return `<p class="alert alert-info">${model}</p>`
+  }
+}
+```
+
+Isso vai dar um erro, porque nossa `NegociacoesView`, está utilizando uma assinatura de função diferente da assinatura estendida da classe pai. Então obrigatóriamente temos que fazer a classe filha sobrescrever o método da classe pai:
+
+```ts
+class View {
+
+  protected _elemento: Element
+
+  constructor (selector: string) {
+    this._elemento = document.querySelector(selector)
+  }
+
+  update (model: string) {
+    this._elemento.innerHTML = this.template(model)
+  }
+
+  template (model: string) {
+    throw new Error('O método template precisa ser sobrescrito')
+  }
+}
+```
+
+Mas ai teremos um problema de tipos, porque na nossa classe `MensagemView`, temos uma função `update` e `template` que recebem, ambas, uma string como parâmetro, mas na nossa classe `NegociacoesView` ambas recebem `Negociacao` como parâmetro, então temos que trabalhar com __tipos genéricos__.
+
+Para isso vamos incluir `<T>` na nossa `View`, T significa "type" e é um tipo genérico, depois vamos passar para todas as funções da `View` o tipo T como sendo o tipo do parâmetro:
+
+```ts
+class View<T> {
+
+  protected _elemento: Element
+
+  constructor (selector: string) {
+    this._elemento = document.querySelector(selector)
+  }
+
+  update (model: T): void {
+    this._elemento.innerHTML = this.template(model)
+  }
+
+  template (model: T): string {
+    throw new Error('O método template precisa ser sobrescrito')
+  }
+}
+```
+
+Agora vamos ter que alterar nossas duas views implementadas para trabalharem com seus tipos especificos:
+
+```ts
+export default class NegociacoesView extends View<Negociacoes> {
+
+  template (model: Negociacoes): string {
+    return `
+      <table class="table table-hover table-bordered">
+      <thead>
+        <tr>
+          <th>DATA</th>
+          <th>QUANTIDADE</th>
+          <th>VALOR</th>
+          <th>VOLUME</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${
+          model.toArray().map((negociacao: Negociacao) => {
+            return `
+              <tr>
+                <td>${negociacao.data.getDate()}/${negociacao.data.getMonth()+1}/${negociacao.data.getFullYear()}</td>
+                <td>${negociacao.quantidade}</td>
+                <td>${negociacao.valor}</td>
+                <td>${negociacao.volume}</td>
+              </tr>
+            `
+          }).join('')
+        }
+      </tbody>
+      <tfoot>
+      </tfoot>
+    </table>`
+  }
+}
+```
+
+Veja que a view de negociações trabalha com o tipo de negociações, enquanto abaixo a view de mensagens trabalha com string:
+
+```ts
+class MensagemView extends View<string> {
+
+  template (model: string): string {
+    return `<p class="alert alert-info">${model}</p>`
+  }
+}
+```
+
+Agora também não precisamos mais do `protected` no arquivo `View`, podendo retornar para `private`, pois ambos os métodos que utilizavam ele já estão dentro da própria classe.
+
+### Classes Abstratas
+
+Não faz muito sentido termos uma instancia de `View`, apenas podemos estender da mesma, então vamos adicionar na nossa `View` o modificador `abstract`:
+
+```ts
+abstract class View<T> {
+
+  private _elemento: Element
+
+  constructor (selector: string) {
+    this._elemento = document.querySelector(selector)
+  }
+
+  update (model: T): void {
+    this._elemento.innerHTML = this.template(model)
+  }
+
+  template (model: T): string {
+    throw new Error('O método template precisa ser sobrescrito')
+  }
+}
+```
+
+Isto previne coisas do tipo: `const a = new View<string>`.
+
+Vamos fazer o mesmo com o método `template` dentro da `View`, pois este é o método que a classe filha vai ter que sobrescrever obrigatóriamente e, no nosso atual código o programador só vai saber disso na hora que o código estiver executando.
+
+```ts
+abstract class View<T> {
+
+  private _elemento: Element
+
+  constructor (selector: string) {
+    this._elemento = document.querySelector(selector)
+  }
+
+  update (model: T): void {
+    this._elemento.innerHTML = this.template(model)
+  }
+
+  abstract template (model: T): string
+}
+```
+
 
 
