@@ -26,6 +26,9 @@
       - [Herança](#herança)
     - [Generics](#generics)
     - [Classes Abstratas](#classes-abstratas)
+  - [Usando definitions](#usando-definitions)
+    - [Typescript Definitions](#typescript-definitions)
+  - [Removendo partes inúteis do código](#removendo-partes-inúteis-do-código)
 
 <!-- /TOC -->
 
@@ -1149,5 +1152,148 @@ abstract class View<T> {
 }
 ```
 
+## Usando definitions
 
+Utilizamos o jQuery simplesmente porque precisamos manter a compatibilidade entre navegadores antigos e outras diferenciações pequenas de sistemas (principalmente sistemas mobile). Primeiramente vamos importar o jQuery no nosso `index.html` e vamos substituir o nosso `document.querySelector` pelo famoso `$` do jQuery. Isso vai nos dar um erro, pois o seletor de dólar não está definido no TypeScript.
 
+Para resolver esse problema teremos que silenciar o compilador, não temos como importar globalmente este tipo de variável. Para declarar, vamos usar uma sintaxe especial no nosso arquivo `View.ts`:
+
+```ts
+declare var $: any
+
+abstract class View<T> {
+
+  private _elemento: Element
+
+  constructor (selector: string) {
+    this._elemento = $(selector)
+  }
+
+  update (model: T): void {
+    this._elemento.innerHTML = this.template(model)
+  }
+
+  abstract template (model: T): string
+}
+```
+
+Agora caímos em outro problema, também vamos ter que alterar a sintaxe de `innerHTML` para `html`, pois estamos agora trabalhando com jQuery, e isto é uma função, não mais uma propriedade. Então teremos outro erro porque a função não espera receber o tipo `Element` que enviamos. Para isto vamos alterar o tipo de `_elemento` para `any`:
+
+```ts
+declare var $: any
+
+abstract class View<T> {
+
+  private _elemento: any
+
+  constructor (selector: string) {
+    this._elemento = $(selector)
+  }
+
+  update (model: T): void {
+    this._elemento.innerHTML = this.template(model)
+  }
+
+  abstract template (model: T): string
+}
+```
+
+Fazer este tipo de solução não é uma boa, pois perderemos o intellisense e todo o autocomplete
+
+### Typescript Definitions
+
+Arquivos TSD (Typescript Definitions) são mapas de funções e tipos que dizem ao TS quais são os tipos que cada função recebe e como elas se comportam, é uma forma de criar um intellisense externo. Estes arquivos podem ser criados pelos autores das bibliotecas ou então por terceiros.
+
+Para instalarmos esses tipos vamos executar, na pasta do nosso projeto, o comando `npm install @types/jquery@2.0.42 --save-dev`. Isto irá instalar os arquivos de definição do TS para o jQuery.
+
+> Como TSDs são arquivos externos, um bom jeito de encontrar um é pesquisar no Google "<framework> typescript definitions" pelo typing mais atualizado.
+
+Depois de fazermos a instalação precisaremos reiniciar o nosso editor para que as alterações sejam computadas.
+
+Agora, em nosso arquivo `View.ts` vamos alterar para o tipo correto:
+
+```ts
+abstract class View<T> {
+
+  private _elemento: jQuery
+
+  constructor (selector: string) {
+    this._elemento = $(selector)
+  }
+
+  update (model: T): void {
+    this._elemento.innerHTML = this.template(model)
+  }
+
+  abstract template (model: T): string
+}
+```
+
+Veja que não precisamos mais do `declare var $`.
+
+Vamos fazer a alteração no nosso arquivo `NegociacaoController.ts`:
+
+```ts
+import NegociacoesView from "../views/NegociacoesView"
+
+class NegociacaoController {
+  private _inputData: JQuery
+  private _inputQuantidade: JQuery
+  private _inputValor: JQuery
+  private _negociacoes = new Negociacoes()
+  private _negociacoesView = new NegociacoesView('#negociacoesView')
+  private _mensagemView = new MensagemView('#mensagemView')
+
+  constructor () {
+    this._inputData = $('#data')
+    this._inputQuantidade = $('#quantidade')
+    this._inputValor = $('#valor')
+    this._negociacoesView.update(this._negociacoes)
+  }
+
+  adiciona (evento: Event): void {
+    evento.preventDefault()
+    const negociacao = new Negociacao(
+      new Date(this._inputData.val().replace(/-/g, ',')),
+      parseInt(this._inputQuantidade.val()),
+      parseFloat(this._inputValor.val())
+    )
+
+    this._negociacoes.adiciona(negociacao)
+
+    this._negociacoesView.update(this._negociacoes)
+    this._mensagemView.update('Negociação adicionada com sucesso!')
+  }
+}
+```
+
+Vamos fazer o mesmo no nosso arquivo `app.ts`:
+
+```ts
+const controller = new NegociacaoController();
+
+$('.form').submit(controller.adiciona.bind(controller));
+```
+
+Agora temos a possibilidade de utilizar bibliotecas externas.
+
+## Removendo partes inúteis do código
+
+Comentários no código são documentações que não precisam ser enviadas para o código de produção, então vamos extirpa-los do processo de compilação alterando no nosso arquivo `tsconfig.json`:
+
+```ts
+{
+  "compilerOptions": {
+    "target": "es6",
+    "outDir": "app/js",
+    "noEmitOnError": true,
+    "noImplicitAny": true,
+    "removeComments": true
+  },
+  "include": [
+    "app/ts/**/*"
+  ]
+}
+```
+
+Vamos reiniciar o nosso compilador e percebemos que todos os arquivos não tem mais nenhum comentário.
