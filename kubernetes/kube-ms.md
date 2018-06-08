@@ -8,6 +8,13 @@ a Azure.
 
 ![Exemplo de deploy com Kubernetes](kubedeploy.png)
 
+### O que é um container
+
+É uma definição de logística de uma caixa que pode ser utilizada para transporte. O container é construído para ser resistente e para ser
+reutilizado várias vezes.
+
+Da mesma forma, em serviços, os containers são processos que podem ser isolados dos demais serviços como uma caixa.
+
 ## Datacenter orientado a código
 
 - Abstração de todos os recursos de hardware
@@ -26,7 +33,21 @@ Podemos ter um Pool de recursos de Memória, processamento e armazenamento, que 
 - Paga somente o que usar
 - Escalabilidade por necessidade
 - Menos configurações
-
-
-
  
+## Docker
+
+O docker é um sistema de gerenciamento de containers que permite, entre outras coisas:
+
+- Unificação entre ambientes de produção e desenvolvimento
+- Possibilidade de manter o ambiente limpo
+- Reutilização de imagens e a comunicação entre esses containers através de redes internas
+- Possibilidade de criar receitas de como essa aplicação vai funcionar
+
+## Kubernetes
+
+- Orquestrar containers em multiplos hosts em multiplas regiões
+- Controlar e automatizar processos de deploys e updates
+- Auto-replacement, auto-restart, auto-replication e auto-scaling
+- Rolling updates e load balancers
+
+Age como uma camada entre o host e os containers.
