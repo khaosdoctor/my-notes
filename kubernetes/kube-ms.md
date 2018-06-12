@@ -51,3 +51,39 @@ O docker é um sistema de gerenciamento de containers que permite, entre outras 
 - Rolling updates e load balancers
 
 Age como uma camada entre o host e os containers.
+
+## Clusters
+
+### Master
+
+- Control Plan: Plano de controle do cluster
+- Scheduler: Gerenciam os pods e os containers
+- API Server: Faz a interface com os clientes que interagem com o Kubernetes
+- Node Controller: Realiza o controle do estados dos nós
+- Cluster Store (etcd): Realiza o armazenamento dos estados dos nós
+
+### Nodes
+
+O nodes possuem um conjunto de sistemas individuais que trabalham juntos para poder fazer com que todo o cluster funcionar.
+
+- Kubelet: Responsável por reportar ao master o que houve com o Node, também é o responsável por mandar health checks
+- Container Runtime: É o sistema de gerenciamento de containers, que contem as nossas aplicações em si
+- Network Proxy: Os sistemas dentro do node, bem como o Node em si, podem se comunicar internamente com outros nós e outras aplicações
+  que já estão rodando dentro do cluster através de uma rede interna
+
+## Workloads
+
+### Pods e containers
+
+Um pod é a menor unidade do Kubernetes. Você pode ter mais de um container em um Pod, conversando com outros containers dentro do mesmo pod.
+Isto traz alguns problemas:
+
+- Se o Pod cair, todos os containers caem junto
+- Todos os containers compartilham os mesmos recursos
+- Todos os pods compartilham a mesma rede
+
+Por isto este modelo não é muito utilizado, e não deve ser muito utilizado. O ideal seria que cada container tenha seu próprio Pod e que eles se
+comuniquem internamente usando o proxy interno do próprio Kubernetes.
+
+Alguns casos específicos, como aplicações de Logging que precisam estar totalmente ligadas umas as outras. Se uma aplicação cai então não existe
+motivo para seu log continuar inteiro e funcionando.
