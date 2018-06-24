@@ -33,7 +33,7 @@ Podemos ter um Pool de recursos de Memória, processamento e armazenamento, que 
 - Paga somente o que usar
 - Escalabilidade por necessidade
 - Menos configurações
- 
+
 ## Docker
 
 O docker é um sistema de gerenciamento de containers que permite, entre outras coisas:
@@ -87,3 +87,42 @@ comuniquem internamente usando o proxy interno do próprio Kubernetes.
 
 Alguns casos específicos, como aplicações de Logging que precisam estar totalmente ligadas umas as outras. Se uma aplicação cai então não existe
 motivo para seu log continuar inteiro e funcionando.
+
+### Services
+
+No Kubernetes, os Pods são totalmente descartáveis. Porém dentro do nó temos nossa rede interna, como podemos garantir que um pod vai continuar com o
+mesmo IP da rede interna até depois da sua morte?
+
+![](podnet.png)
+
+Na foto anterior, temos dois bancos de dados onde metade dos pods se conectam com um e a outra metade no outro. Se um desses pods de bancos de dados caírem, não vamos conseguir ter conexão a partir de metade de nossos pods front-end.
+
+Para resolver esse problema, colocamos um serviço na frente dos pods de bancos de dados para gerenciar os IPs.
+
+![image-20180614124936854](podnet-service.png)
+
+O service vai fazer o bind entre os IPs e os pods finais.
+
+#### Service Labels
+
+Cada service é atrelado a uma label, a label é o modelo de organização disponível no Kubernetes. Então, se quisermos que o service só gerencie os pods com a label da versão 1.3, iremos tagear todos esses pods com essa label e automaticamente o serviço vai se ligar a esses pods.
+
+![image-20180614125345613](servicelabels.png)
+
+Caso criemos uma nova versão, digamos, 1.4, o pod já não será mais gerenciado por este service.
+
+### Deployments
+
+Deployments são agrupamentos e gerenciamentos de pods através de Replicasets
+
+![image-20180614125616582](deployments.png)
+
+O Deployment permite uma série de coisas:
+
+- Múltiplas versões concorrentes
+- Testes blue/green
+- Versionamento de rollbacks
+- Auto rollback em caso de falha de deploy
+
+O Deployment irá sempre manter o estado corrente da aplicação independente de quantos pods você delete.
+
