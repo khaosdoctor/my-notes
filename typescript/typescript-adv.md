@@ -7,7 +7,9 @@
     - [O problema](#o-problema)
   - [ES6 Modules](#es6-modules)
     - [Melhorando o desenvolvimento](#melhorando-o-desenvolvimento)
-  - [Organização de módulos em barris](#organização-de-módulos-em-barris)
+  - [Organização de módulos em barrels](#organização-de-módulos-em-barrels)
+  - [Propriedades ReadOnly](#propriedades-readonly)
+  - [Parâmetros Opicionais](#parâmetros-opicionais)
 
 <!-- /TOC -->
 
@@ -130,7 +132,7 @@ Então podemos utilizar `npm run server` e em outra aba o `npm start`. Podemos a
 
 Agora vamos poder utilizar o comando de uma vez só.
 
-## Organização de módulos em barris
+## Organização de módulos em barrels
 
 Podemos otimizar a nossa importação de módulos, ao invés de ter que importar diversos módulos separados como em:
 
@@ -166,3 +168,38 @@ E então importar este arquivo como:
 import { View, MensagemView } from './Views'
 ```
 
+## Propriedades ReadOnly
+
+Podemos criar uma propriedade que seja possível apenas a leitura e não mais a escrita, criando o que chamamos de propriedades `readOnly`.
+
+```ts
+class Negociacao {
+  readonly data: Date
+  readonly quantidade: number
+  readonly valor: number
+
+  constructor (data: Date, quantidade: number, valor: number) {
+    this.data = data
+    this.quantidade = quantidade
+    this.valor = valor
+  }
+}
+```
+
+Então ao fazermos:
+
+```ts
+const N = new Negociacao(new Date(), 1, 1)
+console.log(N.quantidade) // 1
+```
+
+Vamos conseguir ler, mas:
+
+```ts
+const N = new Negociacao(new Date(), 1, 1)
+N.quantidade = 1 // Error
+```
+
+Vai nos dar um erro de compilação porque não vamos poder alterar a propriedade a partir de outro escopo.
+
+## Parâmetros Opicionais
