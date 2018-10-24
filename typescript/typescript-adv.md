@@ -17,6 +17,9 @@
   - [Decorators de métodos](#decorators-de-métodos)
   - [DOM Injector e Lazy Loading utilizando Decorators de propriedades](#dom-injector-e-lazy-loading-utilizando-decorators-de-propriedades)
   - [Decorators de classe](#decorators-de-classe)
+  - [API Externa](#api-externa)
+    - [Fetch API](#fetch-api)
+    - [Interfaces de API](#interfaces-de-api)
 
 <!-- /TOC -->
 
@@ -562,3 +565,115 @@ export class NegociacaoController {
 ```
 
 Este é outro tipo de decorator possível dentro da linguagem.
+
+## API Externa
+
+Vamos fazer com que nossa aplicacão consuma uma API de terceiros. Estaremos usando um servidor feito em Node com a base de uma API simples; esta api vai rodar no endereço `localhost:8080` e trará um JSON de resposta para o caminho `/dados` com o seguinte conteúdo:
+
+```json
+[
+  {"montante": 200.5, "vezes": 2},
+  {"montante": 100.2, "vezes": 5},
+  {"montante": 50.5, "vezes": 1},
+  {"montante": 70.5, "vezes": 2},
+]
+```
+
+Veja que não temos as datas, isto porque vamos utilizar a própria data de importação.
+
+Primeiramente vamos incluir um botão novo no nosso HTML, com o tipo `button` e vamos atribuir a ele a ação de importar dados do nosso controller:
+
+```html
+<button id="botao-importa" type="button">Importar</button>
+```
+
+Este botão vai chamar um método `importaDados` do nosso `NegociacaoController`:
+
+```ts
+class NegociacaoController {
+  // Código omitido
+
+  importaDados () {
+    alert('olá')
+  }
+
+}
+```
+
+Agora vamos associar este botão ao controller no `app.ts`:
+
+```ts
+import { NegociacaoController } from './controllers/NegociacaoController'
+
+$('#botao-importa').click(controller.importaDados.bind(controller))
+```
+
+Até ai só temos um botão no HTML.
+
+### Fetch API
+
+Vamos utilizar a *fetch api*, que é um recurso mais novo do Javascript para fazer requisições XHR. Vamos atualizar nosso método `importaDados` no controller:
+
+```ts
+class NegociacaoController {
+  // Código omitido
+
+  importaDados () {
+    const isOk = (res: any) => {
+      if (res.ok) return res
+      throw new Error(res.statusText)
+    }
+
+    fetch('http://localhost:8080/dados')
+      .then(isOk)
+      .then((res) => res.json())
+      .then((dados: any[]) => {
+          dados
+            .map((dado) => new Negociacao(new Date(), dado.vezes, dado.montante))
+            .forEach((negociacao) => this._negociacoes.adiciona(negociacao))
+          this._negociacoesView.update(this._negociacoes)
+      })
+      .catch(console.error)
+  }
+}
+```
+
+### Interfaces de API
+
+Quando estamos trabalhando com APIs externas, é uma boa prática definir uma interface para APIs externas para prevenir que façamos alguma chamada errada de método. Vamos então definir uma interface `INegociacaoParcial` que será o retorno da nossa API e utiliza-la no código anterior:
+
+```ts
+import { INegociacaoParcial } from './INegociacaoParcial'
+
+class NegociacaoController {
+  // Código omitido
+
+  importaDados () {
+    const isOk = (res: any) => {
+      if (res.ok) return res
+      throw new Error(res.statusText)
+    }
+
+    fetch('http://localhost:8080/dados')
+      .then(isOk)
+      .then((res) => res.json())
+      .then((dados: INegociacaoParcial[]) => {
+          dados
+            .map((dado) => new Negociacao(new Date(), dado.vezes, dado.montante))
+            .forEach((negociacao) => this._negociacoes.adiciona(negociacao))
+          this._negociacoesView.update(this._negociacoes)
+      })
+      .catch(console.error)
+  }
+}
+```
+
+Agora vamos criar o arquivo `INegociacaoParcial`:
+
+```ts
+export interface INegociacaoParcial {
+  vezes: number
+  montante: number
+}
+```
+
