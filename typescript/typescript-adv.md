@@ -20,6 +20,7 @@
   - [API Externa](#api-externa)
     - [Fetch API](#fetch-api)
     - [Interfaces de API](#interfaces-de-api)
+  - [Aplicando o pattern throttle](#aplicando-o-pattern-throttle)
 
 <!-- /TOC -->
 
@@ -674,6 +675,107 @@ Agora vamos criar o arquivo `INegociacaoParcial`:
 export interface INegociacaoParcial {
   vezes: number
   montante: number
+}
+```
+
+## Aplicando o pattern throttle
+
+Se clicarmos milhares de vezes, então vamos bombardear nosso back-end com requisições desnecessárias, para resolver esse problema, vamos realizar a aplicação do que é chamado *throttling*, ou *debounce*. Que consiste em agendar a execução do evento para o futuro e ignorar todos os eventos que ocorrem no meio deste intervalo. Vamos usar decorators.
+
+Primeiramente vamos no arquivo `NegociacaoController` e incluiremos um timer.
+
+
+```ts
+import { INegociacaoParcial } from './INegociacaoParcial'
+let timer = 0
+
+class NegociacaoController {
+  // Código omitido
+
+  importaDados () {
+    const isOk = (res: any) => {
+      if (res.ok) return res
+      throw new Error(res.statusText)
+    }
+
+    clearTimeout(timer)
+    timer = setTimeout(() => {
+      fetch('http://localhost:8080/dados')
+        .then(isOk)
+        .then((res) => res.json())
+        .then((dados: INegociacaoParcial[]) => {
+            dados
+              .map((dado) => new Negociacao(new Date(), dado.vezes, dado.montante))
+              .forEach((negociacao) => this._negociacoes.adiciona(negociacao))
+            this._negociacoesView.update(this._negociacoes)
+        })
+        .catch(console.error)
+    }, 500)
+  }
+}
+```
+
+Veja que estamos limpando o timeout e depois setando ele novamente com todo o código de importação dentro dele. Mas, se tivermos outros métodos, vamos precisar copiar tudo isso novamente. Vamos criar um decorator para isso:
+
+
+```ts
+import { INegociacaoParcial } from './INegociacaoParcial'
+
+class NegociacaoController {
+  // Código omitido
+
+  @throttle()
+  importaDados () {
+    const isOk = (res: any) => {
+      if (res.ok) return res
+      throw new Error(res.statusText)
+    }
+
+    fetch('http://localhost:8080/dados')
+      .then(isOk)
+      .then((res) => res.json())
+      .then((dados: INegociacaoParcial[]) => {
+          dados
+            .map((dado) => new Negociacao(new Date(), dado.vezes, dado.montante))
+            .forEach((negociacao) => this._negociacoes.adiciona(negociacao))
+          this._negociacoesView.update(this._negociacoes)
+      })
+      .catch(console.error)
+  }
+}
+```
+
+Vamos criar nosso arquivo `throttle.ts`:
+
+```ts
+export function throttle (ms: number = 500) {
+  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+    const original = descriptor.value
+    let timer = 0
+
+    descriptor.value = function (...args: any[]) {
+      clearInterval(timer)
+      timer = setTimeout(() => original.apply(this, args), ms)
+    }
+  }
+}
+```
+
+Ao testar veremos que está tudo funcionando. Um problema que podemos ter é quando temos um objeto `Event`, nestes casos, como é o caso do método `adiciona`, a linha `event.preventDefault()` irá ser também postergada quando a execução do método todo for postergada, para resolver esse problema e podermos adicionar o nosso decorator no método `adiciona` vamos precisar remover o evento do método e passar ele para dentro do decorator:
+
+```ts
+export function throttle (ms: number = 500) {
+  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+    if (event) event.preventDefault()
+
+    const original = descriptor.value
+    let timer = 0
+
+    descriptor.value = function (...args: any[]) {
+      clearInterval(timer)
+      timer = setTimeout(() => original.apply(this, args), ms)
+    }
+  }
 }
 ```
 
