@@ -21,6 +21,13 @@
     - [Fetch API](#fetch-api)
     - [Interfaces de API](#interfaces-de-api)
   - [Aplicando o pattern throttle](#aplicando-o-pattern-throttle)
+  - [Organizando o código de acesso de APIs em serviços](#organizando-o-código-de-acesso-de-apis-em-serviços)
+    - [Interfaces de funções](#interfaces-de-funções)
+  - [Isolando o `console.log`](#isolando-o-consolelog)
+  - [Polimorfismo](#polimorfismo)
+  - [Interfaces para métodos](#interfaces-para-métodos)
+    - [Estendendo interfaces](#estendendo-interfaces)
+  - [Type Alias](#type-alias)
 
 <!-- /TOC -->
 
@@ -779,3 +786,178 @@ export function throttle (ms: number = 500) {
 }
 ```
 
+## Organizando o código de acesso de APIs em serviços
+
+Para podermos reutilizar os códigos de acessos para APIs externas, chamadas e tudo o que criamos para poder chamar nossas APIs de negociação, vamos precisar encapsular sua lógica em um *service*.
+
+Vamos criar uma pasta `services` e vamos colocar nosso arquivo `NegociacaoService.ts` dentro dela:
+
+```ts
+import {Negociacao, NegociacaoParcial} from '../models'
+
+export class NegociacaoService {
+  obterNegociacoes (handler: Function): Promise<Negociacao[]> {
+    fetch('http://localhost:8080/dados')
+      .then((res) => handler(res))
+      .then((res) => res.json())
+      .then((dados: NegociacaoParcial[] => {dados.map((dado) => new Negociacao(new Date(), dado.vezes, dado.montante))}))
+      .catch((err) => console.error(err))
+  }
+}
+```
+
+> O método handler será a função de validação da resposta
+
+Vamos criar um arquivo `index.ts` que será nosso *barrel* e exportará a nossa classe criada acima. Então no nosso controller poderemos substituir nossas chamadas puras pelo `fetch` pelo nosso service uma vez que inicializarmos ele com `this._service = new NegociacaoService()`:
+
+```ts
+this._service.obterNegociacoes(isOk)
+  .then((negociacoes) => { /.../ })
+```
+
+### Interfaces de funções
+
+No nosso código de service temos um ponto de falha: O programador poderá passar qualquer função para o handler, inclusive uma função vazia, isto fará com que o nosso método dê um erro porque sua assinatura não é a função que estamos esperando, no nosso caso, estamos esperando uma função que receba um parâmetro `response` e retorne um `response`.
+
+Vamos definir uma interface de função:
+
+```ts
+export interface handlerFuncion {
+  (res: Response): Response
+}
+```
+
+Quando fazemos isto estamos dizendo que o handler precisa ter essa assinatura:
+
+```ts
+import {Negociacao, NegociacaoParcial} from '../models'
+
+export class NegociacaoService {
+  obterNegociacoes (handler: handlerFunction): Promise<Negociacao[]> {
+    fetch('http://localhost:8080/dados')
+      .then((res) => handler(res))
+      .then((res) => res.json())
+      .then((dados: NegociacaoParcial[] => {dados.map((dado) => new Negociacao(new Date(), dado.vezes, dado.montante))}))
+      .catch((err) => console.error(err))
+  }
+}
+```
+
+## Isolando o `console.log`
+
+Quando estamos programando, constantemente temos a necessidade de imprimir algum dado na tela com o `console.log` a fins de debug. Mas sempre que fazemos isto, temos que nos contentar com o formato que o `console` nos dá. Quando queremos fazer algo diferente, temos que recorrer a template strings ou algo do genero. Porém, temos que ficar replicando toda essa lógica, por exemplo:
+
+```ts
+console.log(`
+  Data: ${negociacao.data}
+  Quantidade: ${negociacao.quantidade}
+`)
+```
+
+Podemos encapsular essa lógica dentro da nossa entidade de `Negociacao` na forma de um `toString()`:
+
+```ts
+export class Negociacao {
+  // ... //
+
+  paraTexto (): void {
+    console.log(`
+      Data: ${this.data}
+      Quantidade: ${this.quantidade}
+    `)
+  }
+}
+```
+
+E agora podemos utilizar o `negociacao.paraTexto()`. Podemos estender essa funcionalidade para as demais entidades (como `Negociacoes`).
+
+## Polimorfismo
+
+Podemos ter um método que recebe várias instancias diferentes e chama o método `paraTexto()` de todas elas, ele teria uma assinatura mais ou menos deste tipo:
+
+```ts
+export function imprime (...obj: any[]) {
+  objetos.forEach(objeto => objeto.paraTexto())
+}
+```
+
+Temos dois problemas aqui:
+
+1. Não vamos ter o intellisense para o `paraTexto()`
+2. Podemos receber qualquer tipo de objeto já que nosso tipo é `any`
+
+Como podemos nos certificar que todos os objetos possuem o método `paraTexto`? Com classes abstratas e polimorfismo, vamos primeiramente criar um arquivo `Imprimivel.ts` que será nossa classe abstrata:
+
+```ts
+export abstract class Imprimivel {
+  abstract paraTexto (): void
+}
+```
+
+E agora todas as classes filhas devem implementar o método `paraTexto` desde que estendam a classe `Imprimivel`, desta forma todas as classes deverão receber o método, se ele não for implementado então o TS não vai compilar. Agora na nossa função `imprime` podemos atualizar nosso método:
+
+```ts
+export function imprime (...obj: Imprimivel[]) {
+  objetos.forEach(objeto => objeto.paraTexto())
+}
+```
+
+Agora nos certificamos que todos os objetos contém o método que queremos.
+
+## Interfaces para métodos
+
+Geralmente, classes abstratas são utilizadas para quando temos algum código pronto, mas também temos obrigações para implementar alguns métodos. No nosso caso anterior, não temos nenhum método, então não é necessário ter uma classe, vamos transformar em uma interface:
+
+```ts
+export interface Imprimivel {
+  paraTexto (): void
+}
+```
+
+E agora vamos alterar nossa classe que estendia nossa classe `Imprimivel` para que implemente a interface:
+
+```ts
+export class Negociacao implements Imprimivel {
+
+}
+```
+
+Isso fará com que tenhamos a obrigação de implementar o método `paraTexto` mas não precisemos herdar uma classe. Porque no TS e no JS só podemos herdar de um único pai. Dessa forma liberamos o espaço da herança para classes que realmente importam. Uma vez que uma classe pode implementar quantas interfaces forem necessárias:
+
+```ts
+export class Negociacao implements Imprimivel, Igualavel, Calculavel {
+
+}
+```
+
+### Estendendo interfaces
+
+Uma interface pode estender outras interfaces, então, ao invés de termos uma única interface que possui um método e outra que possui outro método, vamos criar uma terceira interface que estende ambas:
+
+```ts
+export interface MeuObjeto<T> extends Imprimivel, Igualavel<T> {}
+```
+
+Agora esta interface vai ter todos os métodos de `Imprimivel` e também todos os métodos de `Igualavel`.
+
+## Type Alias
+
+É possível criar aliases de nomes para tipos para que não precisemos importar ou criar novas interfaces dentro do Typescrip, por exemplo:
+
+```ts
+function tokenize (token: string | number) {
+  if(typeof(token) === 'string') return token.replace(/2/g,'X')
+  return token.toFixed().replace(/2/g,'X')
+}
+```
+
+Podemos reduzir isto com um alias para o tipo `string | number`:
+
+```ts
+type TokenType = string | number
+
+function tokenize (token: TokenType) {
+  if(typeof(token) === 'string') return token.replace(/2/g,'X')
+  return token.toFixed().replace(/2/g,'X')
+}
+```
