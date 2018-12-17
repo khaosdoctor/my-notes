@@ -7,6 +7,8 @@
     - [Onde está o conteúdo?](#onde-está-o-conteúdo)
   - [Global View Object](#global-view-object)
   - [Interpolação e Data Binding](#interpolação-e-data-binding)
+  - [Adequando o template](#adequando-o-template)
+    - [Adicionando dados](#adicionando-dados)
 
 ## O que é Vue?
 
@@ -152,6 +154,7 @@ Este arquivo é o que é chamado de *single file template*. Ou seja, é um módu
 - Template: É aonde vamos ter a estrutura do nosso componente, seria onde o HTML irá ficar
 - Script: É onde vamos definir o comportamento do nosso componente
 - Style: É onde vamos definir o estilo do nosso componente
+  - Em style, podemos ter vários pré processadores utilizando o atributo `lang`, no nosso caso está setado para `scss`, mas podemos ter `less`, `stylus` ou então vazio, que seria o CSS normal sem nenhum pré processamento
 
 ## Global View Object
 
@@ -191,3 +194,219 @@ export default {
 ```
 
 Essa função `data` precisa sempre retornar um objeto JS e **todas as interpolações são *data bindings***, ou seja, quando estamos interpolando um valor, na verdade, estamos criando um *data binding* unidirecional que flui sempre da **origem do dado** para o **destino do dado** e não ao contrário como tínhamos no Angular 1.
+
+## Adequando o template
+
+Para podermos criar a nossa aplicação não podemos nos contentar somente com o que o Vue nos deu por padrão não é mesmo? Temos que adequar este template ao que queremos criar. Vamos começar removendo o conteúdo do arquivo `App.vue` e deixando apenas as seções principais:
+
+```vue
+<template>
+
+</template>
+
+<script>
+export default {
+
+}
+</script>
+
+<style lang="scss">
+
+</style>
+```
+
+Na nossa aplicação, vamos exibir uma lista de fotos. Para isso vamos começar colocando uma tag `<img>` com uma foto qualquer:
+
+```vue
+<template>
+<img src="https://statig2.akamaized.net/bancodeimagens/2c/43/2l/2c432l7iz802ihqs98uzjic6x.jpg" alt="Cachorro">
+</template>
+
+<script>
+export default {
+
+}
+</script>
+
+<style lang="scss">
+
+</style>
+```
+
+Vamos agora adicionar um título à nossa aplicação:
+
+```vue
+<template>
+  <h1>PicLib</h1>
+  <img src="https://statig2.akamaized.net/bancodeimagens/2c/43/2l/2c432l7iz802ihqs98uzjic6x.jpg" alt="Cachorro" />>
+</template>
+
+<script>
+export default {
+
+}
+</script>
+
+<style lang="scss">
+
+</style>
+```
+
+Agora, se recarregarmos a página de testes, vamos ver que temos um erro e nada é exibido:
+
+> Component template should contain exactly one root element
+
+Isso significa que nossa tag `<template>` não pode ter múltiplas tags filhas, tudo deve estar aninhado dentro do mesmo elemento inicial. Podemos resolver este problema envolvendo os elementos em uma tag container qualquer:
+
+```vue
+<template>
+  <div id="app">
+    <h1>PicLib</h1>
+    <img src="https://statig2.akamaized.net/bancodeimagens/2c/43/2l/2c432l7iz802ihqs98uzjic6x.jpg" alt="Cachorro" />
+  </div>
+</template>
+
+<script>
+export default {
+
+}
+</script>
+
+<style lang="scss">
+
+</style>
+```
+
+### Adicionando dados
+
+Vamos adicionar dados ao nosso template através da função `data`:
+
+```vue
+<template>
+  <div id="app">
+    <h1>{{ appTitle }}</h1>
+    <img src="https://statig2.akamaized.net/bancodeimagens/2c/43/2l/2c432l7iz802ihqs98uzjic6x.jpg" alt="Cachorro" />
+  </div>
+</template>
+
+<script>
+export default {
+  data: () => ({
+    appTitle: 'PicLib'
+  })
+}
+</script>
+
+<style lang="scss">
+
+</style>
+```
+
+Além disso, como vamos ter uma lista de imagens no futuro, temos que ter a capacidade de passar tudo o que nossa imagem necessita através de parâmetros também, vamos criar outra variável:
+
+```vue
+<template>
+  <div id="app">
+    <h1>{{ appTitle }}</h1>
+    <img src="{{ foto.url }}" alt="{{ foto.alt }}" />
+  </div>
+</template>
+
+<script>
+export default {
+  data: () => ({
+    appTitle: 'PicLib',
+    foto: {
+      url: 'https://statig2.akamaized.net/bancodeimagens/2c/43/2l/2c432l7iz802ihqs98uzjic6x.jpg',
+      alt: 'Cachorro'
+    }
+  })
+}
+</script>
+
+<style lang="scss">
+
+</style>
+```
+
+Vamos ter um erro dizendo: **"Interpolation inside attributes has been removed. Use v-bind or the colon shorthand instead. For example, instead of <div id="{{ val }}">, use <div :id="val">"**. Isto significa que, dentro de atributos, não podemos utilizar interpolação, vamos ter que utilizar um novo modelo de interpolação utilizando o modelo `v-bind:<attr>`:
+
+```vue
+<template>
+  <div id="app">
+    <h1>{{ appTitle }}</h1>
+    <img v-bind:src="foto.url" v-bind:alt="foto.alt" />
+  </div>
+</template>
+
+<script>
+export default {
+  data: () => ({
+    appTitle: 'PicLib',
+    foto: {
+      url: 'https://statig2.akamaized.net/bancodeimagens/2c/43/2l/2c432l7iz802ihqs98uzjic6x.jpg',
+      alt: 'Cachorro'
+    }
+  })
+}
+</script>
+
+<style lang="scss">
+
+</style>
+```
+
+Além disso, podemos usar uma forma mais simples somente com o `:`:
+
+```vue
+<template>
+  <div id="app">
+    <h1>{{ appTitle }}</h1>
+    <img :src="foto.url" :alt="foto.alt" />
+  </div>
+</template>
+
+<script>
+export default {
+  data: () => ({
+    appTitle: 'PicLib',
+    foto: {
+      url: 'https://statig2.akamaized.net/bancodeimagens/2c/43/2l/2c432l7iz802ihqs98uzjic6x.jpg',
+      alt: 'Cachorro'
+    }
+  })
+}
+</script>
+
+<style lang="scss">
+
+</style>
+```
+
+Interpolações, na verdade, são *shorthands* para um atributo chamado `v-text` que podemos utilizar, então, ao invés de `{{ appTitle }}` podemos remover o conteúdo do nosso `h1` alterando para o seguinte modelo:
+
+```vue
+<template>
+  <div id="app">
+    <h1 v-text='appTitle'></h1>
+    <img :src="foto.url" :alt="foto.alt" />
+  </div>
+</template>
+
+<script>
+export default {
+  data: () => ({
+    appTitle: 'PicLib',
+    foto: {
+      url: 'https://statig2.akamaized.net/bancodeimagens/2c/43/2l/2c432l7iz802ihqs98uzjic6x.jpg',
+      alt: 'Cachorro'
+    }
+  })
+}
+</script>
+
+<style lang="scss">
+
+</style>
+```
+
