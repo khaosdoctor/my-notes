@@ -1,0 +1,3 @@
+[submodule "vuejs/vuejs-test"]
+	path = vuejs/vuejs-test
+	url = https://github.com/khaosdoctor/vuejs-test
