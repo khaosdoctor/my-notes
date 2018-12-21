@@ -9,6 +9,11 @@
   - [Interpolação e Data Binding](#interpolação-e-data-binding)
   - [Adequando o template](#adequando-o-template)
     - [Adicionando dados](#adicionando-dados)
+  - [Laços de repetição](#laços-de-repetição)
+  - [Obtendo dados através de requests](#obtendo-dados-através-de-requests)
+    - [Vue Resource](#vue-resource)
+    - [Axios](#axios)
+    - [Plugins](#plugins)
 
 ## O que é Vue?
 
@@ -291,9 +296,9 @@ Vamos adicionar dados ao nosso template através da função `data`:
 
 <script>
 export default {
-  data: () => ({
-    appTitle: 'PicLib'
-  })
+  data() {
+    return { appTitle: 'PicLib' }
+  }
 }
 </script>
 
@@ -314,13 +319,15 @@ Além disso, como vamos ter uma lista de imagens no futuro, temos que ter a capa
 
 <script>
 export default {
-  data: () => ({
-    appTitle: 'PicLib',
-    foto: {
-      url: 'https://statig2.akamaized.net/bancodeimagens/2c/43/2l/2c432l7iz802ihqs98uzjic6x.jpg',
-      alt: 'Cachorro'
+  data() {
+    return {
+      appTitle: 'PicLib',
+      foto: {
+        url: 'https://statig2.akamaized.net/bancodeimagens/2c/43/2l/2c432l7iz802ihqs98uzjic6x.jpg',
+        alt: 'Cachorro'
+      }
     }
-  })
+  }
 }
 </script>
 
@@ -341,13 +348,15 @@ Vamos ter um erro dizendo: **"Interpolation inside attributes has been removed. 
 
 <script>
 export default {
-  data: () => ({
-    appTitle: 'PicLib',
-    foto: {
-      url: 'https://statig2.akamaized.net/bancodeimagens/2c/43/2l/2c432l7iz802ihqs98uzjic6x.jpg',
-      alt: 'Cachorro'
+  data() {
+    return {
+      appTitle: 'PicLib',
+      foto: {
+        url: 'https://statig2.akamaized.net/bancodeimagens/2c/43/2l/2c432l7iz802ihqs98uzjic6x.jpg',
+        alt: 'Cachorro'
+      }
     }
-  })
+  }
 }
 </script>
 
@@ -368,13 +377,15 @@ Além disso, podemos usar uma forma mais simples somente com o `:`:
 
 <script>
 export default {
-  data: () => ({
-    appTitle: 'PicLib',
-    foto: {
-      url: 'https://statig2.akamaized.net/bancodeimagens/2c/43/2l/2c432l7iz802ihqs98uzjic6x.jpg',
-      alt: 'Cachorro'
+  data() {
+    return {
+      appTitle: 'PicLib',
+      foto: {
+        url: 'https://statig2.akamaized.net/bancodeimagens/2c/43/2l/2c432l7iz802ihqs98uzjic6x.jpg',
+        alt: 'Cachorro'
+      }
     }
-  })
+  }
 }
 </script>
 
@@ -395,13 +406,15 @@ Interpolações, na verdade, são *shorthands* para um atributo chamado `v-text`
 
 <script>
 export default {
-  data: () => ({
-    appTitle: 'PicLib',
-    foto: {
-      url: 'https://statig2.akamaized.net/bancodeimagens/2c/43/2l/2c432l7iz802ihqs98uzjic6x.jpg',
-      alt: 'Cachorro'
+  data() {
+    return {
+      appTitle: 'PicLib',
+      foto: {
+        url: 'https://statig2.akamaized.net/bancodeimagens/2c/43/2l/2c432l7iz802ihqs98uzjic6x.jpg',
+        alt: 'Cachorro'
+      }
     }
-  })
+  }
 }
 </script>
 
@@ -410,3 +423,420 @@ export default {
 </style>
 ```
 
+## Laços de repetição
+
+E se quisermos adicionar mais de uma foto? Podemos simplesmente adicionar mais uma imagem no template, certo?
+
+```vue
+<template>
+  <div id="app">
+    <h1 v-text='appTitle'></h1>
+    <img :src="foto.url" :alt="foto.alt" />
+    <img :src="foto2.url" :alt="foto2.alt" />
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      appTitle: 'PicLib',
+      foto: {
+        url: 'https://statig2.akamaized.net/bancodeimagens/2c/43/2l/2c432l7iz802ihqs98uzjic6x.jpg',
+        alt: 'Cachorro'
+      },
+      foto2: {
+        url: 'https://statig2.akamaized.net/bancodeimagens/2c/43/2l/2c432l7iz802ihqs98uzjic6x.jpg',
+        alt: 'Cachorro2'
+      }
+    }
+  }
+}
+</script>
+
+<style lang="scss">
+
+</style>
+```
+
+Porém sabemos que isso se torna inviável ao longo do tempo, trabalhar com objetos individuais não é escalável, então vamos começar a trabalhar com arrays. E, para isso, vamos criar um elemento de lista no nosso HTML:
+
+```vue
+<template>
+  <div id="app">
+    <h1>{{ appTitle }}</h1>
+    <ul>
+      <li>
+        <img :src="foto.url" :alt="foto.alt" />
+      </li>
+      <li>
+        <img :src="foto2.url" :alt="foto2.alt" />
+      </li>
+    </ul>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      appTitle: 'PicLib',
+      fotos: [{
+        url: 'https://statig2.akamaized.net/bancodeimagens/2c/43/2l/2c432l7iz802ihqs98uzjic6x.jpg',
+        alt: 'Cachorro'
+      },
+      {
+        url: 'https://statig2.akamaized.net/bancodeimagens/2c/43/2l/2c432l7iz802ihqs98uzjic6x.jpg',
+        alt: 'Cachorro2'
+      }]
+    }
+  }
+}
+</script>
+
+<style lang="scss">
+
+</style>
+```
+
+Agora vamos iterar pelo array para exibir nossas fotos com a diretiva `v-for`:
+
+```vue
+<template>
+  <div id="app">
+    <h1>{{ appTitle }}</h1>
+    <ul>
+      <li v-for='foto of fotos'>
+        <img :src="foto.url" :alt="foto.alt" />
+      </li>
+    </ul>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      appTitle: 'PicLib',
+      fotos: [{
+        url: 'https://statig2.akamaized.net/bancodeimagens/2c/43/2l/2c432l7iz802ihqs98uzjic6x.jpg',
+        alt: 'Cachorro'
+      },
+      {
+        url: 'https://statig2.akamaized.net/bancodeimagens/2c/43/2l/2c432l7iz802ihqs98uzjic6x.jpg',
+        alt: 'Cachorro2'
+      }]
+    }
+  }
+}
+</script>
+
+<style lang="scss">
+
+</style>
+```
+
+> **Nota**
+> A diretiva `v-for` pode ser utilizada tanto com `in` quanto com `of` como em `v-for='foto in fotos'` ou `v-for='foto of fotos'`
+
+Outro detalhe importante é que é *recomendável* termos uma chave para cada item da lista que é iterado, a melhor forma de fazermos isto com arrays é utilizando seu próprio índice, podemos obter um índice do `v-for` colocando uma tupla do tipo `(foto, index)` da seguinte forma:
+
+```vue
+<template>
+  <div id="app">
+    <h1>{{ appTitle }}</h1>
+    <ul>
+      <li v-for='(foto, index) of fotos'>
+        <img :src="foto.url" :alt="foto.alt" />
+      </li>
+    </ul>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      appTitle: 'PicLib',
+      fotos: [{
+        url: 'https://statig2.akamaized.net/bancodeimagens/2c/43/2l/2c432l7iz802ihqs98uzjic6x.jpg',
+        alt: 'Cachorro'
+      },
+      {
+        url: 'https://statig2.akamaized.net/bancodeimagens/2c/43/2l/2c432l7iz802ihqs98uzjic6x.jpg',
+        alt: 'Cachorro2'
+      }]
+    }
+  }
+}
+</script>
+
+<style lang="scss">
+
+</style>
+```
+
+E por fim utilizamos um `v-bind:key` (ou apenas `:key`) para criar a chave:
+
+```vue
+<template>
+  <div id="app">
+    <h1>{{ appTitle }}</h1>
+    <ul>
+      <li v-for='(foto, index) of fotos' :key="index">
+        <img :src="foto.url" :alt="foto.alt" />
+      </li>
+    </ul>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      appTitle: 'PicLib',
+      fotos: [{
+        url: 'https://statig2.akamaized.net/bancodeimagens/2c/43/2l/2c432l7iz802ihqs98uzjic6x.jpg',
+        alt: 'Cachorro'
+      },
+      {
+        url: 'https://statig2.akamaized.net/bancodeimagens/2c/43/2l/2c432l7iz802ihqs98uzjic6x.jpg',
+        alt: 'Cachorro2'
+      }]
+    }
+  }
+}
+</script>
+
+<style lang="scss">
+
+</style>
+```
+
+## Obtendo dados através de requests
+
+Todos sabemos que, na maioria dos casos, todas as nossas imagens vão vir a partir de uma API externa. Esta API externa vai nos dar uma lista de imagens que vamos poder ler e incluir na nossa página:
+
+Para podermos utilizar o poder das APIs, vamos instalar um novo módulo chamado *vue-resource* através do comando `npm i vue-resource`.
+
+>**Nota**
+>O `vue-resource` não é mais a recomendação da documentação oficial, agora podemos utilizar o Axios para fazer requests
+
+### Vue Resource
+
+Depois de fazer a instalação do `vue-resource`, vamos registrá-lo no nosso arquivo `main.js`:
+
+```js
+import Vue from 'vue'
+import App from './App.vue'
+
+import VueResource from 'vue-resource'
+
+Vue.use(VueResource)
+
+new Vue({
+  el: '#app',
+  render: h => h(App)
+})
+```
+
+Agora em nosso componente `App.vue` vamos esvaziar a nossa lista:
+
+```vue
+<template>
+  <div id="app">
+    <h1>{{ appTitle }}</h1>
+    <ul>
+      <li v-for="(foto, index) of fotos" :key="index">
+        <img :src="foto.url" :alt="foto.alt">
+      </li>
+    </ul>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      appTitle: "PicLib",
+      fotos: []
+    }
+  }
+};
+</script>
+
+<style lang="scss">
+</style>
+```
+
+**Hooks**
+
+Todos os componentes do Vue tem o que é chamado de *lifecycle hooks*, esta é uma funcionalidade que nos permite executar um código em um determinado momento do componente.
+
+> Para mais informações sobre os lifecycles, veja [este link com explicações](https://alligator.io/vuejs/component-lifecycle/) e o [link da documentação oficial](https://vuejs.org/v2/api/#Options-Lifecycle-Hooks)
+
+A função que queremos é chamada `created`, que é executada sempre que o componente é criado. Podemos incluir juntamente com a nossa definição de dados:
+
+```vue
+<template>
+  <div id="app">
+    <h1>{{ appTitle }}</h1>
+    <ul>
+      <li v-for="(foto, index) of fotos" :key="index">
+        <img :src="foto.url" :alt="foto.alt">
+      </li>
+    </ul>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      appTitle: "PicLib",
+      fotos: []
+    }
+  },
+  created() {}
+};
+</script>
+
+<style lang="scss">
+</style>
+```
+
+Agora podemos utilizar o `vue-resource` para podermos buscar nossas fotos. Imagine que temos uma API imaginária que nos trará algumas fotos:
+
+```vue
+<template>
+<template>
+  <div id="app">
+    <h1>{{ appTitle }}</h1>
+    <ul>
+      <li v-for="(foto, index) of fotos" :key="index">
+        <img :src="foto.url" :alt="foto.alt">
+      </li>
+    </ul>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      appTitle: "PicLib",
+      fotos: []
+    }
+  },
+  created() {
+    this.$http
+      .get("http://localhost:3000/fotos")
+      .then(res => res.json())
+      .then(fotos => (this.fotos = fotos));
+      .catch(console.error)
+  }
+};
+</script>
+
+<style lang="scss">
+</style>
+```
+
+Veja que podemos acessar a propriedade `fotos` que temos na função `data` através do objeto `this`. O método `created` é **síncrono** então não temos como usar `async/await` para ele.
+
+### Axios
+
+A biblioteca padrão que a documentação oficial indica é o Axios. O Axios é uma biblioteca genérica de requests, para podermos utiliza-la, vamos ter que instalar dois módulos, o Axios em si e o wrapper que transforma a biblioteca em um plugin do Vue, chamado `vue-axios`:
+
+```sh
+$npm i vue-axios axios
+```
+
+Agora vamos no nosso arquivo `main.js`:
+
+```js
+import Vue from 'vue'
+import App from './App.vue'
+
+import VueResource from 'vue-resource'
+import axios from 'axios'
+import VueAxios from 'vue-axios'
+
+Vue.use(VueResource)
+Vue.use(VueAxios, axios)
+
+new Vue({
+  el: '#app',
+  render: h => h(App)
+})
+```
+
+Isso exportará para nós o método `this.$http` e também `this.axios` para ser utilizado na aplicação. A partir daí podemos realizar exatamente a mesma ideia que desenvolvemos no bloco anterior, com as devidas mudanças por conta da biblioteca:
+
+```vue
+<template>
+<template>
+  <div id="app">
+    <h1>{{ appTitle }}</h1>
+    <ul>
+      <li v-for="(foto, index) of fotos" :key="index">
+        <img :src="foto.url" :alt="foto.alt">
+      </li>
+    </ul>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      appTitle: "PicLib",
+      fotos: []
+    }
+  },
+  created() {
+    this.$http
+      .get("http://localhost:3000/fotos")
+      .then(response => (this.fotos = response.data));
+      .catch(console.error)
+  }
+};
+</script>
+
+<style lang="scss">
+</style>
+```
+
+### Plugins
+
+Um plugin do Vue nada mais é do que uma função que exporta um método install que recebe uma instancia do Vue e uma instancia de opções. Podemos tirar vantagem disso para criar nossos próprios plugins e não depender de libs como a `vue-axios`. Vamos criar um arquivo na pasta `src/plugins` chamado `axios.js`:
+
+```js
+import axios from 'axios'
+
+let AxiosPlugin = {}
+
+AxiosPlugin.install = (Vue, options) => {
+  Vue.prototype.$http = axios
+  Vue.prototype.$axios = axios
+}
+
+export default AxiosPlugin
+```
+
+Agora, no nosso arquivo `main.js` vamos importar o módulo e utilizar
+
+```js
+import Vue from 'vue'
+import Axios from './plugins/axios'
+import App from './App.vue'
+
+Vue.use(Axios)
+
+new Vue({
+  el: '#app',
+  render: h => h(App)
+})
+```
+
+E então podemos continuar chamando como estávamos chamando anteriormente.
