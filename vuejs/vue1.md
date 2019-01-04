@@ -14,6 +14,12 @@
     - [Vue Resource](#vue-resource)
     - [Axios](#axios)
     - [Plugins](#plugins)
+  - [Estilizando um componente](#estilizando-um-componente)
+  - [Criando um novo componente](#criando-um-novo-componente)
+    - [Comunicação entre componentes](#comunicação-entre-componentes)
+    - [Incluindo o componente](#incluindo-o-componente)
+    - [Slots](#slots)
+  - [Estilos e escopo](#estilos-e-escopo)
 
 ## O que é Vue?
 
@@ -840,3 +846,332 @@ new Vue({
 ```
 
 E então podemos continuar chamando como estávamos chamando anteriormente.
+
+## Estilizando um componente
+
+O Vue, juntamente com outras bibliotecas front-end, é conhecida pela criação de componentes que permitem não só levar o estilo mas também o comportamento de telas inteiras ou pedaços dela para outros lugares sem precisarmos fazer nada.
+
+Na nossa página vamos precisar estilizar algumas coisas, então vamos começar criando classes e wrappers para o que vamos ter que fazer
+
+```html
+<template>
+  <div id="app" class="site-body">
+    <h1 class="site-title centered">{{ appTitle }}</h1>
+    <ul class="image-list">
+      <li v-for="(foto, index) of fotos" :key="index" class="image-item">
+        <img :src="foto.url" :alt="foto.alt" width="100" height="100" class="image">
+      </li>
+    </ul>
+  </div>
+</template>
+```
+
+Na nossa seção `style` vamos adicionar os nosso estilos:
+
+```vue
+<style lang="scss">
+.site-body {
+  font-family: Arial, Helvetica, sans-serif;
+  width: 96%;
+  margin: 0 auto;
+}
+
+.site-title {
+  .centered {
+    text-align: center;
+  }
+}
+
+.image-list {
+  list-style: none;
+
+  .image-item {
+    display: inline-block;
+  }
+}
+</style>
+```
+
+Vamos colocar cada imagem dentro de um painel e cada painel terá um título, isso pede algumas mudanças de layout. Vamos criar o nosso painel:
+
+```html
+<template>
+  <div id="app" class="site-body">
+    <h1 class="site-title centered">{{ appTitle }}</h1>
+    <ul class="image-list">
+      <li v-for="(foto, index) of fotos" :key="index" class="image-item">
+        <div class="painel">
+          <h2 class="painel-titulo">{{ foto.alt }}</h2>
+          <div class="painel-conteudo">
+            <img :src="foto.url" :alt="foto.alt" width="100" height="100" class="image">
+          </div>
+        </div>
+      </li>
+    </ul>
+  </div>
+</template>
+```
+
+E agora vamos aplicar o estilo como fizemos ao outro:
+
+```vue
+<style lang="scss">
+.site-body {
+  font-family: Arial, Helvetica, sans-serif;
+  width: 96%;
+  margin: 0 auto;
+}
+
+.site-title {
+  .centered {
+    text-align: center;
+  }
+}
+
+.image-list {
+  list-style: none;
+
+  .image-item {
+    display: inline-block;
+  }
+}
+
+.painel {
+  padding: 0 auto;
+  border: solid 2px grey;
+  display: inline-block;
+  margin: 5px;
+  box-shadow: 5px 5px 10px grey;
+  width: 260px;
+  height: 100%;
+  vertical-align: top;
+  text-align: center;
+
+  .painel-titulo {
+    text-align: center;
+    border: solid 2px;
+    background: lightblue;
+    margin: 0 0 15px 0;
+    padding: 10px;
+    text-transform: uppercase;
+  }
+}
+</style>
+```
+
+## Criando um novo componente
+
+E se quiséssemos utilizar um desses paineis em outro lugar? Vamos transformá-lo em um componente compartilhado. O primeiro passo é criar uma pasta chamada `components` dentro da nossa `src`. Dentro desta pasta vamos criar uma nova pasta `shared` e dentro dela uma outra pasta com o nome do nosso componente, por fim vamos ter um arquivo `Painel.vue` dentro desta pasta.
+
+> Algumas convenções são utilizadas para facilitar o desenvolvimento e a padronização de projetos. A organização de pastas neste modelo é uma convenção bem conhecida, o uso de CamelCase para a nomenclatura dos componentes é outra.
+
+Nosso componente será este:
+
+```vue
+<template>
+  <div class="painel">
+    <h2 class="painel-titulo"></h2>
+    <div class="painel-conteudo"></div>
+  </div>
+</template>
+
+<script>
+export default {}
+</script>
+
+<style lang="scss">
+.painel {
+  padding: 0 auto;
+  border: solid 2px grey;
+  display: inline-block;
+  margin: 5px;
+  box-shadow: 5px 5px 10px grey;
+  width: 260px;
+  height: 100%;
+  vertical-align: top;
+  text-align: center;
+
+  .painel-titulo {
+    text-align: center;
+    border: solid 2px;
+    background: lightblue;
+    margin: 0 0 15px 0;
+    padding: 10px;
+    text-transform: uppercase;
+  }
+}
+</style>
+```
+
+Agora vamos remover tudo que é relativo ao painel do nosso componente principal e deixar somente a chamada de **como** queremos que o painel seja no final:
+
+```vue
+<template>
+  <div id="app" class="site-body">
+    <h1 class="site-title centered">{{ appTitle }}</h1>
+    <ul class="image-list">
+      <li v-for="(foto, index) of fotos" :key="index" class="image-item">
+        <image-panel :title="foto.alt" class="painel-conteudo">
+          <img :src="foto.url" :alt="foto.alt" class="image">
+        </image-panel>
+      </li>
+    </ul>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return { appTitle: "PicLib", fotos: [] }
+  },
+  created() {
+    this.$http
+      .get("http://www.splashbase.co/api/v1/images/latest")
+      .then(({ data }) => {
+        console.log(data)
+        const URLs = data.images.map(image => ({
+          url: image.url,
+          alt: image.id
+        }))
+        this.fotos = URLs
+      })
+      .catch(console.error)
+  }
+}
+</script>
+
+<style lang="scss">
+.site-body {
+  font-family: Arial, Helvetica, sans-serif;
+  width: 96%;
+  margin: 0 auto;
+}
+
+.site-title {
+  .centered {
+    text-align: center;
+  }
+}
+
+.image-list {
+  list-style: none;
+
+  .image-item {
+    display: inline-block;
+  }
+}
+
+.image {
+  width: 100%;
+}
+</style>
+```
+
+### Comunicação entre componentes
+
+Como podemos fazer nosso componente de painel funcionar no nosso `App.vue` e receber um valor chamado `title`. Para isso, dentro do painel, vamos criar uma propriedade `props` dentro do nosso escopo `script`:
+
+```html
+<script>
+export default {
+  props: ["title"]
+}
+</script>
+```
+
+O valor de `props` é um array de nomes de propriedades que podem ser recebidas pelo componente, a partir de agora podemos utilizar como se fosse uma variável padrão, vamos colocá-lo no nosso título:
+
+```html
+<template>
+  <div class="painel">
+    <h2 class="painel-titulo">{{ title }}</h2>
+    <div class="painel-conteudo"></div>
+  </div>
+</template>
+
+<script>
+export default {
+  props: ["title"]
+}
+</script>
+```
+
+### Incluindo o componente
+
+Agora, vamos para o nosso componente principal `App.vue` e vamos importar nosso componente de painel dentro da tag `<script>`:
+
+```html
+<script>
+import Painel from "./components/shared/painel/Painel.vue"
+export default {
+  data() {
+    return { appTitle: "PicLib", fotos: [] }
+  },
+  created() {
+    this.$http
+      .get("http://www.splashbase.co/api/v1/images/latest")
+      .then(({ data }) => {
+        console.log(data)
+        const URLs = data.images.map(image => ({
+          url: image.url,
+          alt: image.id
+        }))
+        this.fotos = URLs
+      })
+      .catch(console.error)
+  }
+}
+</script>
+```
+
+Para podermos utilizar o componente importado, temos que registrar esse novo componente como utilizável, fazemos isso através da chave `components`:
+
+```html
+<script>
+import Painel from "./components/shared/painel/Painel.vue"
+export default {
+  components: {
+    "image-panel": Painel
+  },
+  data() {
+    return { appTitle: "PicLib", fotos: [] }
+  },
+  created() {
+    this.$http
+      .get("http://www.splashbase.co/api/v1/images/latest")
+      .then(({ data }) => {
+        console.log(data)
+        const URLs = data.images.map(image => ({
+          url: image.url,
+          alt: image.id
+        }))
+        this.fotos = URLs
+      })
+      .catch(console.error)
+  }
+}
+</script>
+```
+
+> Note que estamos dando um **alias** para o `Painel`, para podermos utilizar como `image-panel`
+
+Ao voltarmos a nossa aplicação, vamos ver que os paineis estão sem conteúdo, mas estão exibindo o título que estamos enviando para ele.
+
+### Slots
+
+Por baixo dos panos, o Vue irá buscar a tag relativa ao `image-panel` e substituirá tudo pelo `template` do componente. Temos que indicar que o componente filho poderá receber outra marcação ou outra tag como conteúdo, no nosso caso, a imagem que vamos colocar dentro dele. Para isso vamos utilizar uma marcação chamada `<slot>` dentro do próprio painel.
+
+Basta substituir a marcação `div` que colocamos o conteúdo por `slot`:
+
+```html
+<template>
+  <div class="painel">
+    <h2 class="painel-titulo">{{ title }}</h2>
+    <slot class="painel-conteudo"></slot>
+  </div>
+</template>
+```
+
+Agora o Vue sabe que dentro do nosso componente, nós temos um outro componente ou tag, portanto ela será renderizada.
+
+## Estilos e escopo
