@@ -19,7 +19,11 @@
     - [Comunicação entre componentes](#comunicação-entre-componentes)
     - [Incluindo o componente](#incluindo-o-componente)
     - [Slots](#slots)
+      - [Slots nomeados](#slots-nomeados)
   - [Estilos e escopo](#estilos-e-escopo)
+  - [Binding de campos](#binding-de-campos)
+  - [Computed properties](#computed-properties)
+  - [Adicionando comportamento](#adicionando-comportamento)
 
 ## O que é Vue?
 
@@ -97,7 +101,7 @@ Temos o babel instalado juntamente com plugins, além disso temos o webpack que 
 
 O conteúdo da nossa página está presente dentro da pasta `src` no arquivo `app.vue`:
 
-```vue
+```html
 <template>
   <div id="app">
     <img src="./assets/logo.png">
@@ -191,7 +195,7 @@ A tag `<template>` é onde vamos criar a nossa visualização. Se observarmos be
 
 O conteúdo desta variável pode vir de outro componente externo, ou então pode vir do próprio componente, como é o nosso caso. Quando a variável está dentro do próprio componente, temos uma função especial chamada `data` que fica na seção `scripts` que permite que exportemos um objeto com todos os dados que desejamos que nosso componente tenha acesso:
 
-```vue
+```html
 <script>
 export default {
   name: 'app',
@@ -210,7 +214,7 @@ Essa função `data` precisa sempre retornar um objeto JS e **todas as interpola
 
 Para podermos criar a nossa aplicação não podemos nos contentar somente com o que o Vue nos deu por padrão não é mesmo? Temos que adequar este template ao que queremos criar. Vamos começar removendo o conteúdo do arquivo `App.vue` e deixando apenas as seções principais:
 
-```vue
+```html
 <template>
 
 </template>
@@ -228,7 +232,7 @@ export default {
 
 Na nossa aplicação, vamos exibir uma lista de fotos. Para isso vamos começar colocando uma tag `<img>` com uma foto qualquer:
 
-```vue
+```html
 <template>
 <img src="https://statig2.akamaized.net/bancodeimagens/2c/43/2l/2c432l7iz802ihqs98uzjic6x.jpg" alt="Cachorro">
 </template>
@@ -246,7 +250,7 @@ export default {
 
 Vamos agora adicionar um título à nossa aplicação:
 
-```vue
+```html
 <template>
   <h1>PicLib</h1>
   <img src="https://statig2.akamaized.net/bancodeimagens/2c/43/2l/2c432l7iz802ihqs98uzjic6x.jpg" alt="Cachorro" />>
@@ -269,7 +273,7 @@ Agora, se recarregarmos a página de testes, vamos ver que temos um erro e nada 
 
 Isso significa que nossa tag `<template>` não pode ter múltiplas tags filhas, tudo deve estar aninhado dentro do mesmo elemento inicial. Podemos resolver este problema envolvendo os elementos em uma tag container qualquer:
 
-```vue
+```html
 <template>
   <div id="app">
     <h1>PicLib</h1>
@@ -292,7 +296,7 @@ export default {
 
 Vamos adicionar dados ao nosso template através da função `data`:
 
-```vue
+```html
 <template>
   <div id="app">
     <h1>{{ appTitle }}</h1>
@@ -315,7 +319,7 @@ export default {
 
 Além disso, como vamos ter uma lista de imagens no futuro, temos que ter a capacidade de passar tudo o que nossa imagem necessita através de parâmetros também, vamos criar outra variável:
 
-```vue
+```html
 <template>
   <div id="app">
     <h1>{{ appTitle }}</h1>
@@ -344,7 +348,7 @@ export default {
 
 Vamos ter um erro dizendo: **"Interpolation inside attributes has been removed. Use v-bind or the colon shorthand instead. For example, instead of <div id="{{ val }}">, use <div :id="val">"**. Isto significa que, dentro de atributos, não podemos utilizar interpolação, vamos ter que utilizar um novo modelo de interpolação utilizando o modelo `v-bind:<attr>`:
 
-```vue
+```html
 <template>
   <div id="app">
     <h1>{{ appTitle }}</h1>
@@ -373,7 +377,7 @@ export default {
 
 Além disso, podemos usar uma forma mais simples somente com o `:`:
 
-```vue
+```html
 <template>
   <div id="app">
     <h1>{{ appTitle }}</h1>
@@ -402,7 +406,7 @@ export default {
 
 Interpolações, na verdade, são *shorthands* para um atributo chamado `v-text` que podemos utilizar, então, ao invés de `{{ appTitle }}` podemos remover o conteúdo do nosso `h1` alterando para o seguinte modelo:
 
-```vue
+```html
 <template>
   <div id="app">
     <h1 v-text='appTitle'></h1>
@@ -433,7 +437,7 @@ export default {
 
 E se quisermos adicionar mais de uma foto? Podemos simplesmente adicionar mais uma imagem no template, certo?
 
-```vue
+```html
 <template>
   <div id="app">
     <h1 v-text='appTitle'></h1>
@@ -467,7 +471,7 @@ export default {
 
 Porém sabemos que isso se torna inviável ao longo do tempo, trabalhar com objetos individuais não é escalável, então vamos começar a trabalhar com arrays. E, para isso, vamos criar um elemento de lista no nosso HTML:
 
-```vue
+```html
 <template>
   <div id="app">
     <h1>{{ appTitle }}</h1>
@@ -507,7 +511,7 @@ export default {
 
 Agora vamos iterar pelo array para exibir nossas fotos com a diretiva `v-for`:
 
-```vue
+```html
 <template>
   <div id="app">
     <h1>{{ appTitle }}</h1>
@@ -547,7 +551,7 @@ export default {
 
 Outro detalhe importante é que é *recomendável* termos uma chave para cada item da lista que é iterado, a melhor forma de fazermos isto com arrays é utilizando seu próprio índice, podemos obter um índice do `v-for` colocando uma tupla do tipo `(foto, index)` da seguinte forma:
 
-```vue
+```html
 <template>
   <div id="app">
     <h1>{{ appTitle }}</h1>
@@ -584,7 +588,7 @@ export default {
 
 E por fim utilizamos um `v-bind:key` (ou apenas `:key`) para criar a chave:
 
-```vue
+```html
 <template>
   <div id="app">
     <h1>{{ appTitle }}</h1>
@@ -648,7 +652,7 @@ new Vue({
 
 Agora em nosso componente `App.vue` vamos esvaziar a nossa lista:
 
-```vue
+```html
 <template>
   <div id="app">
     <h1>{{ appTitle }}</h1>
@@ -683,7 +687,7 @@ Todos os componentes do Vue tem o que é chamado de *lifecycle hooks*, esta é u
 
 A função que queremos é chamada `created`, que é executada sempre que o componente é criado. Podemos incluir juntamente com a nossa definição de dados:
 
-```vue
+```html
 <template>
   <div id="app">
     <h1>{{ appTitle }}</h1>
@@ -713,7 +717,7 @@ export default {
 
 Agora podemos utilizar o `vue-resource` para podermos buscar nossas fotos. Imagine que temos uma API imaginária que nos trará algumas fotos:
 
-```vue
+```html
 <template>
 <template>
   <div id="app">
@@ -779,7 +783,7 @@ new Vue({
 
 Isso exportará para nós o método `this.$http` e também `this.axios` para ser utilizado na aplicação. A partir daí podemos realizar exatamente a mesma ideia que desenvolvemos no bloco anterior, com as devidas mudanças por conta da biblioteca:
 
-```vue
+```html
 <template>
 <template>
   <div id="app">
@@ -868,7 +872,7 @@ Na nossa página vamos precisar estilizar algumas coisas, então vamos começar 
 
 Na nossa seção `style` vamos adicionar os nosso estilos:
 
-```vue
+```html
 <style lang="scss">
 .site-body {
   font-family: Arial, Helvetica, sans-serif;
@@ -914,7 +918,7 @@ Vamos colocar cada imagem dentro de um painel e cada painel terá um título, is
 
 E agora vamos aplicar o estilo como fizemos ao outro:
 
-```vue
+```html
 <style lang="scss">
 .site-body {
   font-family: Arial, Helvetica, sans-serif;
@@ -967,7 +971,7 @@ E se quiséssemos utilizar um desses paineis em outro lugar? Vamos transformá-l
 
 Nosso componente será este:
 
-```vue
+```html
 <template>
   <div class="painel">
     <h2 class="painel-titulo"></h2>
@@ -1005,7 +1009,7 @@ export default {}
 
 Agora vamos remover tudo que é relativo ao painel do nosso componente principal e deixar somente a chamada de **como** queremos que o painel seja no final:
 
-```vue
+```html
 <template>
   <div id="app" class="site-body">
     <h1 class="site-title centered">{{ appTitle }}</h1>
@@ -1174,4 +1178,166 @@ Basta substituir a marcação `div` que colocamos o conteúdo por `slot`:
 
 Agora o Vue sabe que dentro do nosso componente, nós temos um outro componente ou tag, portanto ela será renderizada.
 
+#### Slots nomeados
+
+É possível ter mais de um slot no mesmo componente, para que possamos inserir conteúdos diferentes em locais diferentes dele. Para isso temos os *named slots*. Que podemos criar da seguinte forma:
+
+```html
+<!-- ComponenteQualquer.vue -->
+<template>
+    <div>
+        <slot name="cabecalho" class="header" ></slot>
+        <hr>
+        <slot class="body"></slot>
+        <hr>
+        <slot name="rodape" class="footer"></slot>
+    </div>
+</template>
+<script>
+export default {}
+</script>
+```
+
+E então podemos referenciar o conteúdo que será colocado nesses slots através de um atributo `slot` com o nome do mesmo:
+
+```html
+<componente-qualquer>
+    <div slot="cabecalho">
+        <h1>Bem-vindo!</h1>
+    </div>
+    <p>Seja bem-vindo!</p>
+    <div slot="rodape">
+        <p>copyright 2017</p>
+    </div>
+</componente-qualquer>
+```
+
 ## Estilos e escopo
+
+Digamos que queremos que nossos boxes agora ganhem uma sombra nas bordas, então poderíamos simplesmente adicionar um CSS dentro do nosso componente vue, certo? Errado, se adicionarmos:
+
+```css
+* {
+  box-shadow: 5px 5px 10px black;
+}
+```
+
+Ao aplicarmos esse CSS no nosso componente, estaremos aplicando ele no site inteiro, ou seja, o CSS não possui escopo. O que queremos é encapsular o estilo do componente dentro do componente em si e não para a página toda. Isto é muito simples de fazer. Basta incluirmos o atributo `scoped` na nossa tag `style` do componente:
+
+```html
+<style lang="scss" scoped>
+.painel {
+  padding: 0 auto;
+  border: solid 2px grey;
+  display: inline-block;
+  margin: 5px;
+  box-shadow: 5px 5px 10px grey;
+  width: 260px;
+  height: 100%;
+  vertical-align: top;
+  text-align: center;
+
+  .painel-titulo {
+    text-align: center;
+    border: solid 2px;
+    background: lightblue;
+    margin: 0 0 15px 0;
+    padding: 10px;
+    text-transform: uppercase;
+  }
+}
+</style>
+```
+
+Então é uma boa prática **sempre** criarmos estilos com `scoped` em nossos componentes.
+
+## Binding de campos
+
+Agora temos um problema, temos nossa página, mas queremos filtrar o conteúdo da nossa lista de imagens, porque podemos ter infinitas imagens ali e o usuário gostaria de poder pesquisar pelo título delas. Vamos primeiramente adicionar o nosso campo `input` – que será nosso campo de busca para a lista de imagens – dentro do nosso `App.vue`:
+
+```html
+<template>
+  <div id="app" class="site-body">
+    <h1 class="site-title centered">{{ appTitle }}</h1>
+
+    <input type="search" class="filtro" placeholder="Filtre por parte do título">
+    <ul class="image-list">
+<!-- Omitido -->
+```
+
+Vamos editar o estilo dele para que fique bonito. Agora vamos montar o nosso *binding* com o campo `input.filtro`. Primeiramente vamos adicionar na seção `data` de `App.vue` uma nova propriedade chamada `imageFilter` que começará com uma string em branco:
+
+```js
+data() {
+  return {
+    appTitle: "PicLib",
+    fotos: [],
+    imageFilter: ""
+  }
+}
+```
+
+Agora precisamos criar nosso *binding* para o evento `onInput` do campo. Por padrão faríamos apenas `oninput=...` no nosso campo, porém não estaríamos usando o poder do Vue. Então vamos utilizar a diretiva `v-on`:
+
+```html
+<template>
+  <div id="app" class="site-body">
+    <h1 class="site-title centered">{{ appTitle }}</h1>
+
+    <input type="search" class="filtro" v-on:input="imageFilter = $event.target.value" placeholder="Filtre por parte do título">
+    <ul class="image-list">
+<!-- Omitido -->
+```
+
+Agora estamos capturando os dados da nossa view para nossa variável do Vue, para podermos exibir este dado na tela podemos simplesmente utilizar a interpolação simples `{{ imageFilter }}`.
+
+> **v-on e v-bind**
+> É importante ressaltar que aprendemos duas diretivas durante este documento: o `v-bind` – e seu atalho `:prop` – e também o `v-on`.
+>
+> A diferença entre esses elementos é que o `v-bind` vai fazer uma associação da fonte de dados para a view, ou seja, qualquer mudança realizada na fonte dos dados vai ser atualizada na view para representar o novo valor. Já o `v-on` é o oposto, estamos criando um *binding* que flui da view para a fonte de dados.
+
+## Computed properties
+
+Todas as propriedades que sofrem algum tipo de computação e depois são devolvidas para a view com um outro valor, por exemplo, nossa lista de fotos que deverá ser filtrada e depois reexibida, deve ser classificada como uma *computed property*. Essas propriedades nada mais são do que métodos que são executados e devolvem um valor final que é atualizado.
+
+Primeiramente, abaixo do nosso objeto `data` em `App.vue` vamos criar um outro objeto chamado `computed`:
+
+```js
+data() {
+  return {
+    appTitle: "PicLib",
+    fotos: [],
+    imageFilter: ""
+  }
+},
+computed: {
+  filteredImages () {
+
+  }
+}
+```
+
+> Veja que nossa propriedade `filteredImages` é um método e podemos acessar normalmente como acessamos a função `data`
+
+Agora vamos modificar nosso template para que o `v-for` seja feito não sobre o array de `fotos`, mas sim sobre `filteredImages`:
+
+```html
+<ul class="image-list">
+      <li v-for="(foto, index) of filteredImages" :key="index" class="image-item">
+```
+
+Dentro deste método, vamos fazer nosso filtro:
+
+```js
+computed: {
+  filteredImages(): {
+    if (this.imageFilter) {
+      const regex = new RegExp(this.imageFilter.trim(), "i")
+      return this.fotos.filter(foto => regex.test(foto.alt))
+    }
+    return this.fotos
+  }
+}
+```
+
+## Adicionando comportamento
