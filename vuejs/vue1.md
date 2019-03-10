@@ -26,6 +26,8 @@
   - [Adicionando comportamento](#adicionando-comportamento)
   - [Incluindo efeitos](#incluindo-efeitos)
   - [Criando outro componente](#criando-outro-componente)
+  - [Criando uma SPA com rotas](#criando-uma-spa-com-rotas)
+    - [VueRouter](#vuerouter)
 
 ## O que é Vue?
 
@@ -1489,4 +1491,100 @@ Podemos usar da seguinte forma:
 <image-panel :title="foto.alt" class="painel-conteudo">
   <responsive-image :url="foto.url" :alt="foto.alt"></responsive-image>
 </image-panel>
+```
+
+## Criando uma SPA com rotas
+
+Nossa aplicação não possui nenhum tipo de rota ou nenhum outro componente além da tela inicial, vamos ter que adequar a nossa aplicação para que ela possa trabalhar com rotas como uma SPA. A forma que vamos fazer isso é removendo todo o conteúdo do `App.vue` e utilizar esta página somente para a alteração de rotas. Vamos então criar um novo componente `home` e mover **todo** o conteúdo de `App.vue` para lá e depois remover a nossa classe "corpo" principal para criar o nosso primeiro scaffold que fica assim:
+
+```html
+<template>
+  <div class="site-body">
+
+  </div>
+</template>
+
+<script>
+export default {
+
+}
+</script>
+
+<style lang='scss' scoped>
+.site-body {
+  font-family: Arial, Helvetica, sans-serif;
+  width: 96%;
+  margin: 0 auto;
+}
+</style>
+```
+
+### VueRouter
+
+Primeiramente vamos instalar o nosso módulo `VueRouter` (na versão 2.1.1 neste exemplo) com `npm i vue-router@2.1.1` e vamos registrá-lo em `main.js`:
+
+```js
+import Vue from 'vue'
+import Axios from './plugins/axios'
+import App from './App.vue'
+import VueRouter from 'vue-router'
+
+Vue.use(Axios)
+Vue.use(VueRouter)
+
+new Vue({
+  el: '#app',
+  render: h => h(App)
+})
+```
+
+Vamos agora criar um novo arquivo `routes.js` junto com nosso arquivo `main.js`:
+
+```js
+import Home from './components/home/Home.vue'
+import Register from './components/register/Register.vue'
+
+export const routes = [
+  { path: '', component: Home },
+  { path: '/register', component: Register }
+]
+```
+
+E agora vamos incluir esse arquivo no nosso Router através do `main.js` para que ele possa saber quais são as nossas rotas:
+
+```js
+import { routes } from './routes'
+
+// Vue.use(VueResource)
+Vue.use(Axios)
+Vue.use(VueRouter)
+
+const router = new VueRouter({
+  routes
+})
+
+new Vue({
+  el: '#app',
+  router,
+  render: h => h(App)
+})
+```
+
+Após isto, vamos ao `App.vue` incluir um novo componente do router que será o suficiente para renderizar nossas rotas:
+
+```html
+<template>
+  <div class="site-body">
+    <router-view></router-view>
+  </div>
+</template>
+```
+
+Agora tudo deve estar funcionando, mas temos um `#` na frente da rota. Queremos remover esse `#`, para isso temos que ter uma configuração no servidor que deve retornar sempre a mesma página `index.html` independente da página que vamos ter. E então alteramos o objeto de configuração que passamos para nosso VueRouter:
+
+```js
+const router = new VueRouter({
+  routes,
+  mode: 'history'
+})
 ```
