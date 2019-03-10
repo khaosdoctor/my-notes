@@ -24,6 +24,8 @@
   - [Binding de campos](#binding-de-campos)
   - [Computed properties](#computed-properties)
   - [Adicionando comportamento](#adicionando-comportamento)
+  - [Incluindo efeitos](#incluindo-efeitos)
+  - [Criando outro componente](#criando-outro-componente)
 
 ## O que é Vue?
 
@@ -1341,3 +1343,150 @@ computed: {
 ```
 
 ## Adicionando comportamento
+
+Vamos adicionar um comportamento no nosso componente para que, quando clicarmos duas vezes no título o painel inteiro colapse. Vamos no nosso componente e colocar uma nova diretiva chamada `v-show`. Mas não podemos adicionar essa diretiva no nosso `slot`, temos que envolve-lo em uma `<div>` para colocarmos a diretiva nesta div e não no slot.
+
+```html
+<template>
+  <div class="painel">
+    <h2 class="painel-titulo">{{ title }}</h2>
+    <div v-show="visible" class="painel-conteudo">
+      <slot></slot>
+    </div>
+  </div>
+</template>
+<script>
+export default {
+  props: ["title"],
+  data () {
+    return {
+      visible: true
+    }
+  }
+}
+</script>
+```
+
+E agora vamos colocar um binding do evento `dblclick` para inverter o valor desta propriedade:
+
+```html
+<template>
+  <div class="painel">
+    <h2 class="painel-titulo" v-on:dblclick="visible = !visible">{{ title }}</h2>
+    <div v-show="visible" class="painel-conteudo">
+      <slot></slot>
+    </div>
+  </div>
+</template>
+```
+
+Podemos também diminuir o nosso evento de click substituindo o nosso `v-on` por `@`:
+
+```html
+<template>
+  <div class="painel">
+    <h2 class="painel-titulo" @dblclick="visible = !visible">{{ title }}</h2>
+    <div class="painel-conteudo" v-show="visible">
+      <slot></slot>
+    </div>
+  </div>
+</template>
+```
+
+## Incluindo efeitos
+
+Vamos incluir uma animação utilizando um componente do Vue chamado `<transition>`. Este componente faz com que o componente filho dele receba classes especiais quando seu comportamento mudar, por exemplo, quando o elemento é escondido, ativado e etc irá receber uma classe de acordo.
+
+```html
+<template>
+  <div class="painel">
+    <h2 class="painel-titulo" @dblclick="visible = !visible">{{ title }}</h2>
+    <transition name="panel-fade">
+      <div class="painel-conteudo" v-show="visible">
+        <slot></slot>
+      </div>
+    </transition>
+  </div>
+</template>
+```
+
+É importante dizer que o nome da transição tem um papel importante porque as classes finais serão criadas levando em conta somente este nome, por exemplo `panel-fade-enter-active` ou `panel-fade-enter`. Vamos criar nosso CSS:
+
+```scss
+.painel {
+  padding: 0 auto;
+  border: solid 2px grey;
+  display: inline-block;
+  margin: 5px;
+  box-shadow: 5px 5px 10px grey;
+  width: 260px;
+  height: 100%;
+  vertical-align: top;
+  text-align: center;
+
+  .painel-titulo {
+    text-align: center;
+    border: solid 2px;
+    background: lightblue;
+    margin: 0 0 15px 0;
+    padding: 10px;
+    text-transform: uppercase;
+  }
+}
+
+* {
+  box-shadow: 5px 5px 5px;
+}
+
+.panel-fade-enter, .panel-fade-leave-active {
+  opacity: 0;
+}
+
+.panel-fade-enter-active, .panel-fade-leave-active {
+  transition: opacity .5s;
+}
+```
+
+## Criando outro componente
+
+Vamos transformar nosso componente de imagem em outro componente separado em um arquivo `responsiveImage.vue`:
+
+```html
+<template>
+  <img :src="url" :alt="alt" class="image">
+</template>
+
+<script>
+export default {
+  props: ['url', 'alt']
+}
+</script>
+
+<style lang="scss" scoped>
+.image {
+  width: 100%;
+}
+</style>
+```
+
+E então importá-lo em nosso arquivo `App.vue`:
+
+```html
+<script>
+import Painel from './components/shared/painel/Painel.vue'
+import ResponsiveImage from './components/shared/responsive-image/responsiveImage.vue'
+export default {
+  components: {
+    'image-panel': Painel,
+    'responsive-image': ResponsiveImage
+  },
+// ...
+```
+
+Podemos usar da seguinte forma:
+
+```html
+<image-panel :title="foto.alt" class="painel-conteudo">
+  <responsive-image :url="foto.url" :alt="foto.alt"></responsive-image>
+</image-panel>
+```
