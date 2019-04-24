@@ -28,6 +28,10 @@
   - [Criando outro componente](#criando-outro-componente)
   - [Criando uma SPA com rotas](#criando-uma-spa-com-rotas)
     - [VueRouter](#vuerouter)
+  - [Criando o menu da aplicação](#criando-o-menu-da-aplicação)
+    - [Transformando o menu em componente](#transformando-o-menu-em-componente)
+    - [Validando tipos de props](#validando-tipos-de-props)
+  - [Animando transição de páginas](#animando-transição-de-páginas)
 
 ## O que é Vue?
 
@@ -1587,4 +1591,317 @@ const router = new VueRouter({
   routes,
   mode: 'history'
 })
+```
+
+## Criando o menu da aplicação
+
+Toda a aplicação que se preze tem um menu de navegação, vamos incluir uma tag `<nav>` no nosso arquivo `App.vue`:
+
+```html
+<template>
+  <div class="site-body">
+    <nav>
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/register">Cadastro</a></li>
+      </ul>
+    </nav>
+
+    <router-view></router-view>
+  </div>
+</template>
+
+<script>
+export default {
+
+}
+</script>
+
+<style lang='scss' scoped>
+.site-body {
+  font-family: Arial, Helvetica, sans-serif;
+  width: 96%;
+  margin: 0 auto;
+}
+</style>
+```
+
+Porém o problema desta abordagem é que a página é recarregada todas as vezes que clicarmos em um link. Isso não pode acontecer porque temos um SPA... Vamos então usar os próprios links do Vue para poder fazer isso acontecer:
+
+```html
+<template>
+  <div class="site-body">
+    <nav>
+      <ul>
+        <li>
+          <router-link to="/">Home</router-link>
+        </li>
+        <li>
+          <router-link to="/register">Cadastro</router-link>
+        </li>
+      </ul>
+    </nav>
+
+    <router-view></router-view>
+  </div>
+</template>
+
+<script>
+export default {
+
+}
+</script>
+
+<style lang='scss' scoped>
+.site-body {
+  font-family: Arial, Helvetica, sans-serif;
+  width: 96%;
+  margin: 0 auto;
+}
+</style>
+```
+
+Agora podemos melhorar ainda mais nosso menu através da criação automática de todas as rotas que temos:
+
+```html
+<template>
+  <div class="site-body">
+    <nav>
+      <ul>
+        <li v-for="route in routes" :key="route.path">
+          <router-link :to="route.path">Home</router-link>
+        </li>
+      </ul>
+    </nav>
+
+    <router-view></router-view>
+  </div>
+</template>
+
+<script>
+import { routes } from './routes'
+export default {
+  data () {
+    return {
+      routes
+    }
+  }
+}
+</script>
+
+<style lang='scss' scoped>
+.site-body {
+  font-family: Arial, Helvetica, sans-serif;
+  width: 96%;
+  margin: 0 auto;
+}
+</style>
+```
+
+Para o título da rota, vamos ter que alterar nosso arquivo `routes.js` para podermos incluir uma nova propriedade de titulo:
+
+```js
+import Home from './components/home/Home.vue'
+import Register from './components/register/Register.vue'
+
+export const routes = [
+  { path: '', component: Home, label: 'Home' },
+  { path: '/register', component: Register, label: 'Cadastro' }
+]
+```
+
+E então:
+
+```html
+<template>
+  <div class="site-body">
+    <nav>
+      <ul>
+        <li v-for="route in routes" :key="route.path">
+          <router-link :to="route.path ? route.path : '/'">{{ route.label }}</router-link>
+        </li>
+      </ul>
+    </nav>
+
+    <router-view></router-view>
+  </div>
+</template>
+
+<script>
+import { routes } from './routes'
+export default {
+  data () {
+    return {
+      routes
+    }
+  }
+}
+</script>
+
+<style lang='scss' scoped>
+.site-body {
+  font-family: Arial, Helvetica, sans-serif;
+  width: 96%;
+  margin: 0 auto;
+}
+</style>
+```
+
+> Veja que usamos um ternário porque, por padrão, quando deixamos `route.path` em branco, o router identifica a rota `/`, então temos que fazer este de-para quando não existe nenhum caminho
+
+### Transformando o menu em componente
+
+Primeiramente vamos criar um arquivo dentro da pasta `components/shared/menu` chamado `Menu.vue`, nele vamos colocar o nosso código de `<nav>`:
+
+```html
+<template>
+  <nav>
+    <ul>
+      <li v-for="route in routes" :key="route.path">
+        <router-link :to="route.path ? route.path : '/'">{{ route.label }}</router-link>
+      </li>
+    </ul>
+  </nav>
+</template>
+
+<script>
+export default {
+  props: ['routes']
+}
+</script>
+
+<style lang="scss" scoped>
+</style>
+```
+
+> Veja que estamos passando as rotas via props
+
+E agora vamos alterar o nosso arquivo `App.vue` para ter nosso menu como componente:
+
+```html
+<template>
+  <div class="site-body">
+    <menu :routes="routes"></menu>
+    <transition name="page">
+      <router-view></router-view>
+    </transition>
+  </div>
+</template>
+
+<script>
+import { routes } from './routes'
+import Menu from './components/shared/menu/Menu.vue'
+
+export default {
+  components: {
+    menu: Menu
+  },
+  data () {
+    return {
+      routes
+    }
+  }
+}
+</script>
+
+<style lang='scss' scoped>
+.site-body {
+  font-family: Arial, Helvetica, sans-serif;
+  width: 96%;
+  margin: 0 auto;
+}
+
+.page-enter,
+.page-leave-active {
+  opacity: 0;
+}
+
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.4s;
+}
+</style>
+```
+
+### Validando tipos de props
+
+Quando passarmos a propriedade `routes` para nosso componente, esperamos um array, porém o Vue não irá validar o que está chegando, isso é um problema porque podemos ter vários erros em tempo de execução. Então vamos usar uma nova forma de poder validar nossas propriedades no arquivo `Menu.vue`:
+
+```html
+<template>
+  <nav>
+    <ul>
+      <li v-for="route in routes" :key="route.path">
+        <router-link :to="route.path ? route.path : '/'">{{ route.label }}</router-link>
+      </li>
+    </ul>
+  </nav>
+</template>
+
+<script>
+export default {
+  props: {
+    routes: {
+      type: Array,
+      required: true
+    }
+  }
+}
+</script>
+
+<style lang="scss" scoped>
+</style>
+```
+
+Desta forma estamos dizendo que a propriedade é obrigatória e também só aceita o tipo Array.
+
+## Animando transição de páginas
+
+Vamos animar as transições de página, através do componente `transition` no `App.vue`:
+
+```html
+<template>
+  <div class="site-body">
+    <nav>
+      <ul>
+        <li v-for="route in routes" :key="route.path">
+          <router-link :to="route.path ? route.path : '/'">{{ route.label }}</router-link>
+        </li>
+      </ul>
+    </nav>
+
+    <transition name="page">
+      <router-view></router-view>
+    </transition>
+  </div>
+</template>
+
+<script>
+import { routes } from './routes'
+export default {
+  data () {
+    return {
+      routes
+    }
+  }
+}
+</script>
+
+<style lang='scss' scoped>
+.site-body {
+  font-family: Arial, Helvetica, sans-serif;
+  width: 96%;
+  margin: 0 auto;
+}
+
+.page-enter,
+.page-leave-active {
+  opacity: 0;
+}
+
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.4s;
+}
+</style>
 ```
