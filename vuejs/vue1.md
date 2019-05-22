@@ -32,6 +32,7 @@
     - [Transformando o menu em componente](#transformando-o-menu-em-componente)
     - [Validando tipos de props](#validando-tipos-de-props)
   - [Animando transição de páginas](#animando-transição-de-páginas)
+  - [Componentes altamente reutilizáveis](#componentes-altamente-reutilizáveis)
 
 ## O que é Vue?
 
@@ -1904,4 +1905,105 @@ export default {
   transition: opacity 0.4s;
 }
 </style>
+```
+
+## Componentes altamente reutilizáveis
+
+Sabemos que botões são altamente reutilizáveis então vamos criar um botão reutilizável para nossa aplicação
+
+```html
+<template>
+  <button class='button button-danger' :type="type">{{label}}</button>
+</template>
+
+<script>
+export default {
+  props: ['type', 'label']
+}
+</script>
+
+
+<style lang="scss" scoped>
+.button {
+  display: inline-block;
+  padding: 10px;
+  border-radius: 3px;
+  margin: 10px;
+  font-size: 1.2em;
+}
+
+.button-danger {
+  background: firebrick;
+  color: white;
+}
+
+.button-default {
+  background: darkcyan;
+  color: white;
+}
+</style>
+```
+
+E depois vamos adicionar o botão na nossa home screen:
+
+```html
+<template>
+  <div id="app">
+    <h1 class="site-title centered">{{ appTitle }}</h1>
+
+    <input type="search" class="filtro" v-on:input="imageFilter = $event.target.value" placeholder="Filtre por parte do título">
+
+    <ul class="image-list">
+      <li v-for="(foto, index) of filteredImages" :key="index" class="image-item">
+        <image-panel :title="foto.alt" class="painel-conteudo">
+          <responsive-image :url="foto.url" :alt="foto.alt" />
+          <vue-button type="button" label="Delete" /> <!-- Colocamos no template -->
+        </image-panel>
+      </li>
+    </ul>
+  </div>
+</template>
+
+<script>
+import Painel from '../shared/painel/Painel.vue'
+import ResponsiveImage from '../shared/responsive-image/responsiveImage.vue'
+import Button from '../shared/button/button.vue' // Incluimos o botão
+
+export default {
+  components: {
+    'image-panel': Painel,
+    'responsive-image': ResponsiveImage,
+    'vue-button': Button // Incluimos o botão
+  },
+  data() {
+    return {
+      appTitle: 'PicLib',
+      fotos: [],
+      imageFilter: ''
+    }
+  },
+  computed: {
+    filteredImages() {
+      if (this.imageFilter) {
+        const regex = new RegExp(this.imageFilter.trim(), 'i')
+        return this.fotos.filter(foto => regex.test(foto.alt))
+      }
+
+      return this.fotos
+    }
+  },
+  created() {
+    this.$http
+      .get('http://www.splashbase.co/api/v1/images/latest')
+      .then(({ data }) => {
+        const URLs = data.images.map(image => ({
+          url: image.url,
+          alt: image.id
+        }))
+        this.fotos = URLs
+      })
+      .catch(console.error)
+  }
+}
+</script>
 ```
