@@ -200,6 +200,7 @@ In order to get started with the
 - [FS module source](https://github.com/nodejs/node/blob/master/lib/fs.js)
 - [FS read_file_context source](https://github.com/nodejs/node/blob/master/lib/internal/fs/read_file_context.js)
 - [V8 Under The Hood Examples](https://github.com/Horaddrim/v8-under-the-hood)
+- [Internals of Node with crypto library](https://medium.com/front-end-weekly/internals-of-node-advance-node-%EF%B8%8F-8612f6a957d7)
 - [Performance Optimizations in V8](https://v8-io12.appspot.com/index.html)
 - [Compiler Optimization list](https://en.wikipedia.org/wiki/Optimizing_compiler)
 - [Why is Node.js so Fast](https://blog.ghaiklor.com/2015/11/14/why-nodejs-is-so-fast/)
