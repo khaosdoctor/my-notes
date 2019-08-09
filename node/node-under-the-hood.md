@@ -13,6 +13,14 @@
     - [Elements that compose Node.js](#elements-that-compose-nodejs)
   - [Our example - I/O function call](#our-example---io-function-call)
   - [JavaScript under the hood](#javascript-under-the-hood)
+    - [JavaScript engine](#javascript-engine)
+    - [JavaScript Runtime](#javascript-runtime)
+    - [Call stack](#call-stack)
+      - [About stacks](#about-stacks)
+      - [Stacks and JavaScript](#stacks-and-javascript)
+      - [Stack Overflow](#stack-overflow)
+      - [Single-threading pros and cons](#single-threading-pros-and-cons)
+    - [Concurrency and Event Loop](#concurrency-and-event-loop)
   - [References](#references)
 
 ## Goal
@@ -251,7 +259,180 @@ It is also valuable to note that the `req` variable is built upon the result of 
 
 ## JavaScript under the hood
 
-Let's put thing in order. So we got a glimpse of the appearance of the actual C++ code that runs underneath all the gibberish we write in Node.js, but we write it in JavaScript, and this is the highest level. So let's start here. How do JavaScript even work?
+Let's put things in order. So, we got a glimpse of the appearance of the actual C++ code that runs underneath all the gibberish we write in Node.js, since JavaScript is the highest level component of Node.js, let's start by asking how our code runs, how do JavaScript even work?
+
+Most of people actually knows a few said words and keep repeating them:
+
+- JavaScript is single-threaded
+- V8 powers the Chrome JavaScript engine
+- JavaScript uses callback queues
+- There's an event loop of some sort
+
+But have dug deeper into these questions?
+
+- What does it mean to be single-threaded?
+- What in heavens is a JS engine? And what, in fact, is V8?
+- How do these callback queues work? Is there only one queue?
+- What is an event loop? How does it work? Who provides it? Is it part of JS?
+
+If you're able to answer more than 3 of those, consider yourself above average, because most JavaScript developers in general don't even know there's something at all behind this language... But, fear not, we're here to help, so let's dig deeper into the concept of JavaScript and how it really works and, most important, why other people bully it
+
+### JavaScript engine
+
+Nowadays, the most popular JavaScript engine is V8 (one of the best pieces softwares ever written by mankind, after Git). This is due to the simple fact that the most used browser is Chrome, or is based on Chromium - which is the open source browsing engine of Chrome - like Opera, Brave and so on... However it is not the only one. We have Chakra, written by Microsoft for the Edge browser, and we have SpiderMonkey, written by Netscape which now powers Firefox and much others like Rhino, KJS, Nashorn and etc.
+
+However, since V8 is used both on Chrome and Node.js, we're sticking with it. This is a very simplified view of what it looks like:
+
+![Image from Session Stack, in references](assets/v8-simplified.png)
+
+This engine consists, mainly, in two components:
+
+- The **memory heap**: where all memory allocation happens
+- The **call stack**: where our code gets framed and stacked to execute
+
+> We'll have a solo chapter for V8 later on
+
+### JavaScript Runtime
+
+Most APIs developers use are provided by the engine itself, like we were able to see in the previous chapters when we wrote the `readFile` code. However, some APIs we use are not provided by the engine, like `setTimeout`, any sort of DOM manipulation, like `document` or even AJAX (the `XMLHttpRequest` object). Where are those comming from? Let's take our previous image and bring it into the harsh reality we live in:
+
+![Image from Session Stack, link in the references](/assets/v8-real.png)
+
+The engine is just a tiny bit of what makes JavaScript, well... JavaScript... There are browser-provided APIs which we call **Web APIs**, these APIs (like `DOM`, `AJAX` and `setTimeout`) are provided by the browser vendors - in this case, for Chrome, it's Google - and they are the main reason why most people hated, and still hate, JavaScript. When we look at today's JavaScript we see a field filled with packages and other stuff, but mostly homogeneous on every side. Well... It wasn't always like that.
+
+Back in the day, before ES6 and way before Node.js even existed as an idea, there were no consensus on how to implement these APIs on the browser side, so every vendor had their own implementation of 'em, or not... Which meant that we had to be constantly checking and writing pieces of code that were meant to only work on specific browser (do you remember IE?), so a particular browser could implement the `XMLHttpRequest` a bit different from other browser, or the `setTimeout` function could be named `sleep` in some implementation; in the worst case scenario, the API would not even exist at all. This has been changing gradually, so now, thankfully, we have some consensus and some agreement on which APIs should exist and how they should be implemented, at least the most used and basic ones.
+
+Aside of that, we have the infamous event loop and the callback queue. Which we'll be talking about later.
+
+### Call stack
+
+Most people have heard that JS is a single-threaded language, and they just accepted it as the final truth in the universe without ever really knowing why. Being single-threaded means we only have a single call stack, in other words, we can only execute one thing at a time.
+
+#### About stacks
+
+[Stacks](https://en.wikipedia.org/wiki/Stack_(abstract_data_type)) are a abstract data type that serves as a collection of elements. The name "stack" comes from the analogy to a set of boxes stacked on top of each other, while it is easy to take a box off the top of the stack, taking a deeper box may require us to take several other items first.
+
+The stack has two principal methods:
+
+- **push**: Adds another element to the collection
+- **pop**: Removes the most recently added element that was not yet removed from the stack and **returns** its value
+
+One thing to note about stacks is that the order of how the elements are pushed and popped really matters. In stacks, the order in which elements come off a stack is called **LIFO**, an acronym for **L***ast* **I***n* **F***irst* **O***ut*, which is pretty self explanatory.
+
+> Additionally, we can have another method called `peek`, which reads the most recently added item (the top of the stack) without removing it.
+
+All we need to know about stacks are these topics:
+
+- They're a data structure on which each item in the stack holds a value, in our case, an instruction or call
+- New items (calls) are added to the **top** of the stack
+- Removed items come off the **top** of the stack as well
+
+#### Stacks and JavaScript
+
+Basically, in JS, the stack records the position we are currently executing in our program. If we step into a function, calling it, we put that call on the top of the stack. After we return from a function, we pop the top of the stack. Each of these calls is called a **Stack Frame**.
+
+Let's take as first example, a simple program, different from the one we had:
+
+```js
+function multiply (x, y) {
+    return x * y
+}
+
+function printSquare (x) {
+    const s = multiply(x, x)
+    console.log(s)
+}
+
+printSquare(5)
+```
+
+> We'll run our `readFile` code later on when we have glued all the pieces together
+
+When the engine runs the code, at first, the call stack will be empty. After each step, it'll be filling up with the following:
+
+![](assets/simple-callstack.png)
+
+Let's go in bit by bit:
+
+- The step 0 (not shown) is the empty stack, which means the very beginning of our program
+- In the first step we add the first function call. The call to `printSquare(5)`, since all other lines are just declarations.
+- In the second step we step into the `printSquare` function definition
+  - See how we call `const s = multiply(x, x)`, so let's add the `multiply(x, x)` to the top of the stack
+  - Later, we step into `multiply`, no function calls, nothing is added to the stack. We only evaluate `x * y` and return it.
+  - Returning means the function has finished running, so we can pop it off the stack
+- In step 3 we no longer have the stack frame referencing `multiply(x, x)`. So now let's go on to the line just after the last line we evaluated, it's the `console.log` line.
+  - `console.log` is a function call, let's add to the top of the stack
+  - After `console.log(s)` runs, we can pop it off the stack
+- In step 4 we now only have a single stack frame: `printSquare(5)`, which was the first we added
+  - Since this is the first function call, and there's no other code after it, this means the function is done. Pop it off the stack
+- Step 5 is equal to step 0, an empty stack
+
+So let's take a few keynotes here:
+
+- The step 0 and the last step in a call stack of some program should be deeply equal - empty, since the first step means the program has just begun and the last means the program has just ended
+- The first step and the step just before the last step should also be equal and have the first ever function called in the program
+- The middle steps are just stacked upon the entrypoint function
+
+Stacks are exactly how stack traces are constructed when an exception is thrown. A stack trace is basically the printed out state of the call stack when the exception happened:
+
+```js
+function foo () {
+    throw new Error('Exception');
+}
+
+function bar () {
+    foo()
+}
+
+function start () {
+    bar()
+}
+
+start()
+```
+
+This should print something like:
+
+```
+Uncaught Error: Exception foo.js:2
+    at foo (foo.js:2)
+    at bat (foo.js:6)
+    at start (foo.js:10)
+    at foo.js:13
+```
+
+The `at` phrases are just our call stack state.
+
+#### Stack Overflow
+
+No, the stack is not named after the site, sorry to disappoint. Actually, the site is named after one of the most common errors found in programming since the beginning of computation: the stack overflow.
+
+A stack overflow error happens when we reach the maxiumum call stack size. Stacks are data structures, which means they're allocated in memory, and memory is not infinite, so this can happen rather easily, specially on non-treated recursive functions, like this:
+
+```js
+function f () {
+  return f()
+}
+
+f()
+```
+
+At every call of `f` we'll pile up `f` in the stack, but, as we saw, we can never remove an item from the stack before it has reached the end of its execution, in other words, whe the code reaches a point where no functions are called. So our stack would be blown because we have no termination condition:
+
+![](assets/stack-overflow.png)
+
+Thankfully, the engine is watching us and realizes the function would never stop calling itself, causing an stack overflow, which is a pretty serious error, since it crashes the whole application. If not stopped, can crash or damage the stack memory for the whole runtime.
+
+#### Single-threading pros and cons
+
+Running in a single-thread environment can be very liberating, since it's much simpler than running in a multi-threaded world where we'd have to care about racing conditions and deadlocks. In this world, such things do not exist, after all, we are doing only one thing at once.
+
+However, single-threading can also be very limiting. Since we have a single stack, what would happen if this stacked is blocked by some slow-running code?
+
+### Concurrency and Event Loop
+
+
+
 
 ## References
 
@@ -270,6 +451,7 @@ Let's put thing in order. So we got a glimpse of the appearance of the actual C+
 - [V8 Under The Hood Examples](https://github.com/Horaddrim/v8-under-the-hood)
 - [Internals of Node with crypto library](https://medium.com/front-end-weekly/internals-of-node-advance-node-%EF%B8%8F-8612f6a957d7)
 - [Performance Optimizations in V8](https://v8-io12.appspot.com/index.html)
+- [What are Stacks?](https://en.wikipedia.org/wiki/Stack_(abstract_data_type))
 - [Compiler Optimization list](https://en.wikipedia.org/wiki/Optimizing_compiler)
 - [Why is Node.js so Fast](https://blog.ghaiklor.com/2015/11/14/why-nodejs-is-so-fast/)
 - [You don't know Node.js](https://medium.com/edge-coders/you-dont-know-node-6515a658a1ed)
