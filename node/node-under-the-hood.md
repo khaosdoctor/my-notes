@@ -21,6 +21,8 @@
       - [Stack Overflow](#stack-overflow)
       - [Single-threading pros and cons](#single-threading-pros-and-cons)
     - [Concurrency and Event Loop](#concurrency-and-event-loop)
+      - [Async callbacks](#async-callbacks)
+      - [Inside the event loop](#inside-the-event-loop)
   - [References](#references)
 
 ## Goal
@@ -367,12 +369,6 @@ Let's go in bit by bit:
   - Since this is the first function call, and there's no other code after it, this means the function is done. Pop it off the stack
 - Step 5 is equal to step 0, an empty stack
 
-So let's take a few keynotes here:
-
-- The step 0 and the last step in a call stack of some program should be deeply equal - empty, since the first step means the program has just begun and the last means the program has just ended
-- The first step and the step just before the last step should also be equal and have the first ever function called in the program
-- The middle steps are just stacked upon the entrypoint function
-
 Stacks are exactly how stack traces are constructed when an exception is thrown. A stack trace is basically the printed out state of the call stack when the exception happened:
 
 ```js
@@ -431,8 +427,158 @@ However, single-threading can also be very limiting. Since we have a single stac
 
 ### Concurrency and Event Loop
 
+Let's step aside of the Node.js environment for a while. In the browser, in pure JavaScript, what would happen if you had a long-running function in your call stack? Those sorts of functions that take a while to finish, like a complex image processing or a long matrix transformation?
+
+In most languages you should have no problem, since they are multi-threaded, however, in single-threaded languages, this is a very serious issue. Because while the call stack has functions to execute, the browser can't actually do anything else, and the browser isn't just about HTML and CSS, there are a few other stuff, like a rendering engine that paints the screen to draw whatever you coded in your markup. This means that if you have long running functions, your browser literally halts all execution in that page. That's why most browsers treat tabs as threads or separate processes, so one tab wouldn't freeze all others.
+
+Another issue that might be raised is that browsers are quite controlling big brothers, so if a tab takes to long to respond, they take action by raising an error to ask you whether you want or not to terminate that web page. So... Not the best UX we can have, right? On the other hand, complex tasks and long running code is what allow us to create great software, so how can we perform those without letting our big brother angry? Asynchronous Callbacks, tha base of what all Node.js is about.
+
+#### Async callbacks
+
+Most JavaScript applications works by loading a single `.js` file into memory, and then all the magic happens after that single entrypoint is executed. This can be divided into several building blocks, the "now" blocks, and the "later" blocks. Usually, only one of those blocks is going to be a "now" block, which means that it'll be the one to execute in the main thread (pushing calls to the call stack), and all the others will be executed later on.
+
+The biggest problem when it comes to async programming is that most people think that "later" is sometime between "now" and a millisecond after it, which is a lie. Everything in JavaScript which is scheduled to execute and finish at a later time doesn't necessarily happen strictly after the main thread, they're, by definition, going to complete when they complete. Which means you won't have that immediate answer you were looking for.
+
+For instance, let's take a simple AJAX call which call an API:
+
+```js
+const response = call('http://api') // call() is some http request package, like fetch
+console.log(response)
+```
+
+Since AJAX calls do not complete right after they're called - it takes some time for the HTTP handshake to be performed, get the data, download the data... - so this call will be completed in a later state, so the response does not have a value assigned to it yet, which means our `console` function would print `undefined`.
+
+A simple way of "waiting" for the response to come are callbacks. Callbacks are, since the beginning of programming, a automatically called function that is passed on as a parameter to another function which will be executed and/or have its value returned after "now". So, basically, callbacks are a way of saying: "Hey, when you do have this value, call this callback". So let's improve our example:
+
+```js
+const response = call('http://api', (response) => {
+  console.log(response)
+})
+```
+
+This is basically stating that when the call is ended, an anonymous function with the `(response) => void` signature will be automatically called, since the call returns the response, this parameter is passed on to the callback. Now we'd have the log on the response.
+
+So in our first code example, the `readFile` call, we're basically transforming it into a Promise, which is a code that will return its value on a later state, and then printing it out, we're reading a file asynchronously. But how does it work at all?
+
+#### Inside the event loop
+
+Until ES6, JS actually never had any sort of consensus or notion of asynchrony built into the core itself, this means that JS would receive your order to execute some async code and send it to the engine, which would give JS a thumbs up and answer with "I'll see into it, someday". So there was no order neither logic on how the "later" would behave built into the engines.
+
+JS engines actually do not run isolated from everything. They run inside what is called a *hosting environment*. This environment can be whatever place JS is running into, like a browser, Node.js or, since JS is pretty much everywhere, can be a toaster or a plane. Every environment is different from each other, every one has their own skills and abilities, but they all have an **event loop**.
+
+The event loop is what actually takes care of asynchronous code execution for JS Engines, at least of the scheduling part. It is the one who calls the engine and send the commands to be executed, and also is the one who queues response callbacks which the engine returns to be called afterwards. So we're beginning to comprehend that a JS Engine is nothing more than an on-demand execution environment for any JS code, working or not. All that surrounds it, the environment, the event loop, is responsible for scheduling the JS code executions, which are called events.
+
+Now let's go back to our `readFile` code. Whe we run it, the `readFile` function is wrapped into a Promise object, but in essence, the `readFile` function is a callback function. So let's analyse only this part:
+
+```js
+fs.readFile(filePath, function cb (err, data) => {
+      if (err) return reject(err)
+      return resolve(callback(data))
+    })
+```
+
+See that we have a callback `(err, data) => string`? This is basically telling the engine to run a read operation on a file, the JS Engine then tells the hosting environment that it's going to suspend the execution of that bit of code for now, but, as soon as the environment (the event loop) has the response, it should schedule this anonymous callback function (the `cb`) to be executed as soon as possible. Then, the environment (in our case, it's Node.js) is set up to listen to this response from the file operation, when this response arrives, it schedules the `cb` function to be executed by insertint it into the event loop.
+
+Let's remind of our old diagram:
+
+![](assets/v8-real.png)
+
+Web APIs are, in essence, threads that we cannot access as developers, we can only make calls to them. Generally these are pieces that are built into the environment itself, for instance, in a browser environment, these would be APIs like `document`, `XMLHttpRequest` or `setTimeout`, which are mostly async functions. In Node.js these would be our C++ APIs we saw in the first part of the guide. Let's zoom into the event loop part:
+
+![](assets/event-loop.png)
+
+The event loop has a single task to do: Monitor the call stack and what is called the *callback queue*. Once the call stack is empty, it'll take the first event from the callback queue and push it into the call stack, which effectively runs it. To this iteration, taking a callback from the queue and executing it into the call stack, we give the name of `tick`.
+
+Let's take a simpler example to show how the event loop actually works:
+
+```js
+console.log('Node.js')
+setTimeout(function cb() { console.log(' awesome!') }, 5000)
+console.log(' is')
+```
+
+This should print "Node.js is awesome!" in the console, in separated lines. But how do this thing happen? Let's run it step by step:
+
+1. The state is empty, call stack is empty, nothing is called
+
+![](assets/el-0.png)
+
+2. `console.log('Node.js')` is added to the call stack
+
+![](assets/el-1.png)
+
+3. `console.log('Node.js')` is executed
+
+![](assets/el-2.png)
 
 
+4. `console.log('Node.js')` is removed from the stack
+
+![](assets/el-3.png)
+
+
+5. `setTimeout(function cb() {...}` is added to the call stack
+
+![](assets/el-4.png)
+
+
+6. `setTimeout(function cb() {...}` is executed. The environment creates a timer as part of the Web APIs. This timer is going to handle the countdown
+
+![](assets/el-5.png)
+
+
+7. `setTimeout(function cb() {...}` itself is completed and removed from the call stack
+
+![](assets/el-6.png)
+
+
+8. `console.log(' is')` is added to the call stack
+
+![](assets/el-7.png)
+
+
+9. `console.log(' is')` is executed
+
+![](assets/el-8.png)
+
+
+10. `console.log(' is')` is removed from the call stack
+
+![](assets/el-9.png)
+
+
+11. After at least 5000 ms, the timer completes and it pushed the `cb` callback function into the callback queue
+
+![](assets/el-10.png)
+
+
+12. The event loop checks the stack, if it is empty, it'll pop the event loop from the callback queue and pushes into the stack
+
+![](assets/el-11.png)
+
+
+13. `cb` is executed and adds `console.log(' awesome!')` into the call stack
+
+![](assets/el-12.png)
+
+
+14. `console.log(' awesome!')` is executed
+
+![](assets/el-13.png)
+
+
+15. `console.log(' awesome!')` is removed from the stack
+
+![](assets/el-14.png)
+
+
+16. `cb` is removed from the stack
+
+![](assets/el-15.png)
+
+As we noted earlier, the ES6 specifies how the event loop should behave, so now, technically, it's within the scope of the JS Engine's responsibilities to take care of that scheduling, which is no longer playing the role of only a hosting environment. The main reason why this happened is because of the introduction of the native Promises in ES6, which - as we'll see later on - needed to take some fine-grained control over scheduling operations and queues.
+
+It is worth noting that the callback queue, like the call stack, is another data structure, a *queue*. Queues act similar to stacks, but the difference is their order. While stack frames are pushed to the top of the stack, queue items are pushed to the end of the queue. And while, in stacks, popping occurs in LIFO way, queues behave on FIFO (First In First Out), which means that the popping operation will take of the head of the queue, or, the oldest item.
 
 ## References
 
@@ -452,6 +598,7 @@ However, single-threading can also be very limiting. Since we have a single stac
 - [Internals of Node with crypto library](https://medium.com/front-end-weekly/internals-of-node-advance-node-%EF%B8%8F-8612f6a957d7)
 - [Performance Optimizations in V8](https://v8-io12.appspot.com/index.html)
 - [What are Stacks?](https://en.wikipedia.org/wiki/Stack_(abstract_data_type))
+- [What are queues?](https://www.studytonight.com/data-structures/queue-data-structure)
 - [Compiler Optimization list](https://en.wikipedia.org/wiki/Optimizing_compiler)
 - [Why is Node.js so Fast](https://blog.ghaiklor.com/2015/11/14/why-nodejs-is-so-fast/)
 - [You don't know Node.js](https://medium.com/edge-coders/you-dont-know-node-6515a658a1ed)
