@@ -1042,6 +1042,42 @@ Basically, the initial steps have not changed, we still need to generate an AST 
 
 #### Ignition
 
+Ignition is a byutecode interpreter for V8, but why do we need a interpreter? Compilers are much faster than an interpreter. Ignition was mainly created for the purpose of reducing memory usage. Since V8 don't have a parser, most code is parsed and compiled on the fly, so several parts of the code are actually compiled and recompiled more than once. This locks up to 20% of memory in V8's heap and it's specially bad for devices with low memory capabilities.
+
+One thing to notice is that Ignition is **not** a parser, it is a bytecode interpreter, which means that the code is being read in bytecode and outputed in bytecode, basically, what ignition does is take a bytecode source and optimized it to generate much smaller bytecode and remove unused code as well. This means that, instead of lazy compiling the JS on the fly, like before, Ignition just takes the whole script, parses it and compiles all at once, reducing compiling time and also generating much smaller bytecode footprints.
+
+So in short. This old compiling pipeline:
+
+![](old-assets/old-compiling-pipeline-mixed.png)
+
+> Note that this is the step in between the old compiling pipeline we just saw, and this new compiling pipeline that V8 uses now.
+
+Has become this:
+
+![](assets/new-compiling-pipeline.jpg)
+
+Which means that the AST, which was the source of truth for the compilers, is now feeded into Ignition which walks all nodes and generates bytecode that is the new source for all compilers.
+
+Essentially, what Ignition does is turn code into bytecode, so it does things like this:
+
+![](assets/func-to-bc.jpg)
+
+As you can see, this is a register-based interpreter, so you can see the registers being manipuled around function calls. `r0` is the representation of a local variable or a temporary expression which needs to be stored on the stack. The baseline to imagine is that you have an infinite register file, since those are **not** machine registers, they get allocated onto the stack frame when we start. In this specific function there's only one register that's used. Once the function starts, `r0` is allocated onto the stack as `undefined`. The other registers (`a0` to `a2`) are the arguments for that function (`a`, `b` and `c`) which are passed by the calee, so they're on the stack as well, this means we can operate them as registers.
+
+There's also another implicit register called `accumulator`, which is stored in the machine's registers, where all the input or output should go, this means the results of operations and variable loadings
+
+Reading that bytecode we have these set of instructions:
+
+```
+LdaSmi #100 -> Load constant 100 into the accumulator (Smi is Small Integer)
+Sub a2 -> Subtract the constant we loaded from the a2 parameter (which is c) and store in the accumulator
+Star r0 -> Store the value in the accumulator into r0
+Ldar a1 -> Read the value of the a1 parameter (b) and store into the accumulator
+Mul r0 -> Multiply r0 by the accumulator and store the result also in the accumulator
+Add a0 -> Adds the first parameter a0 (a) into the accumulator and stores the result in the accumulator
+Return -> Return
+```
+
 
 
 #### Turbofan
