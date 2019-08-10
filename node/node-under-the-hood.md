@@ -20,9 +20,58 @@
       - [Stacks and JavaScript](#stacks-and-javascript)
       - [Stack Overflow](#stack-overflow)
       - [Single-threading pros and cons](#single-threading-pros-and-cons)
-    - [Concurrency and Event Loop](#concurrency-and-event-loop)
-      - [Async callbacks](#async-callbacks)
-      - [Inside the event loop](#inside-the-event-loop)
+  - [Libuv](#libuv)
+    - [What is libuv? Why do we need it?](#what-is-libuv-why-do-we-need-it)
+    - [Event Loop](#event-loop)
+    - [Async callbacks](#async-callbacks)
+    - [Inside the event loop](#inside-the-event-loop)
+    - [Later does not necessarily means "later"](#later-does-not-necessarily-means-later)
+    - [Microtasks and Macrotasks](#microtasks-and-macrotasks)
+  - [V8](#v8)
+    - [What is V8](#what-is-v8)
+    - [Overview](#overview)
+      - [Abstract Syntax Trees](#abstract-syntax-trees)
+      - [Hidden Classes and variable allocation](#hidden-classes-and-variable-allocation)
+    - [Old compiling pipeline](#old-compiling-pipeline)
+      - [The full-codegen compiler](#the-full-codegen-compiler)
+      - [Crankshaft](#crankshaft)
+        - [Hydrogen compiler](#hydrogen-compiler)
+        - [Lithium compiler](#lithium-compiler)
+    - [New Compiling pipeline](#new-compiling-pipeline)
+      - [Ignition](#ignition)
+      - [Turbofan](#turbofan)
+        - [Sea Of Nodes](#sea-of-nodes)
+      - [Bytecodes](#bytecodes)
+    - [Garbage Collection](#garbage-collection)
+  - [Compiler optimizations](#compiler-optimizations)
+    - [On Stack Replacement](#on-stack-replacement)
+    - [Constant Folding](#constant-folding)
+    - [Induction Variable Analysis](#induction-variable-analysis)
+    - [Rematerialization](#rematerialization)
+    - [Removing Recursion](#removing-recursion)
+    - [Deforestation](#deforestation)
+    - [Peephole Optimizations](#peephole-optimizations)
+    - [Inline Expansion](#inline-expansion)
+    - [Inline Caching](#inline-caching)
+    - [Dead Code Elimination](#dead-code-elimination)
+    - [Code Block Reordering](#code-block-reordering)
+    - [Jump Threading](#jump-threading)
+    - [Trampolines](#trampolines)
+    - [Commom subexpression elimination](#commom-subexpression-elimination)
+    - [Loops](#loops)
+      - [Loop Fission/distribution](#loop-fissiondistribution)
+      - [Loop Fusion/ramming/jamming](#loop-fusionrammingjamming)
+      - [Loop Inversion](#loop-inversion)
+      - [Loop Interchange](#loop-interchange)
+      - [Loop-Invariant Code Motion](#loop-invariant-code-motion)
+      - [Loop Nest Optimization](#loop-nest-optimization)
+      - [Loop Reversal](#loop-reversal)
+      - [Loop Unrolling](#loop-unrolling)
+      - [Loop Splitting](#loop-splitting)
+      - [Loop Unswitching](#loop-unswitching)
+  - [Native Modules](#native-modules)
+    - [N-API](#n-api)
+  - [Putting it all together](#putting-it-all-together)
   - [References](#references)
 
 ## Goal
@@ -37,16 +86,13 @@ The goal of this document is to make possible the understanding of how Node.js w
 3. JavaScript
    1. How does it work under the hood?
       1. Callstack
-      2. Heap
-      3. Tail Call Optimization
+   2. Memory allocation
 4. Libuv
    1. What is libuv?
    2. Why do we need it?
    3. EventLoop
-5. Native Modules
-   1. N-API
-   2. FileSystem access through native C++
-6. V8
+   4. Microtasks and Macrotasks
+5. V8
    1. What is v8
    2. Overview
       1. Abstract Syntax Tree using Esprima
@@ -60,8 +106,8 @@ The goal of this document is to make possible the understanding of how Node.js w
       2. TurboFan
          1. Sea Of Nodes
          2. Hidden Classes and variable allocation
-         3. Garbage collection
-7. Compiler optimizations
+   5. Garbage collection
+6. Compiler optimizations
    1. Constant Folding
    2. Induction Variable Analysis
    3. Rematerialization
@@ -86,6 +132,8 @@ The goal of this document is to make possible the understanding of how Node.js w
       8.  Loop Unrolling
       9.  Loop Splitting
       10. Loop Unswitching
+7. Native Modules
+   1. N-API
 
 ## What is Node.js
 
@@ -101,7 +149,7 @@ Node.js was first presented in the JSConf EU, on November 8th, 2009. It combined
 
 ### Brief History of JavaScript itself
 
-Javascript is defined as a "high-level, interpreted scripting language" that conforms to the ECMAScript specification. JS was created in 1995 by Brendan Eich while he worked in a scripting language to Netscape browser. JavaScript was solely created to fulfill Marc Andreessen's idea of having a "glue language" between HTML and web designers, which should be easy to use to assemble components such as images and plugins, in such way that the code would be directly written in the web page markup.
+Javascript is defined as a "high-level, interpreted scripting language" that conforms to the ECMAScript specification and maintained by TC39. JS was created in 1995 by Brendan Eich while he worked in a scripting language to Netscape browser. JavaScript was solely created to fulfill Marc Andreessen's idea of having a "glue language" between HTML and web designers, which should be easy to use to assemble components such as images and plugins, in such way that the code would be directly written in the web page markup.
 
 Brendan Eich was recruited to implement Scheme language into Netscape, but, due to a partnership between Sun Microsystems and Netscape in order to include Java in the Netscape navigator, his focus was switched into creating a language that was somehow Java-like with a similar syntax. In order to defend the idea of JavaScript against other proposals, Eich wrote, in 10 days, a working prototype.
 
@@ -310,6 +358,10 @@ Aside of that, we have the infamous event loop and the callback queue. Which we'
 
 Most people have heard that JS is a single-threaded language, and they just accepted it as the final truth in the universe without ever really knowing why. Being single-threaded means we only have a single call stack, in other words, we can only execute one thing at a time.
 
+![](assets/call-stack.jpg)
+
+> The call stack is not a part of Javascript itself, it's a part of its engine, in our case, V8. But I'll put it here so we can have a sense of how things are suposed to work in a flow
+
 #### About stacks
 
 [Stacks](https://en.wikipedia.org/wiki/Stack_(abstract_data_type)) are a abstract data type that serves as a collection of elements. The name "stack" comes from the analogy to a set of boxes stacked on top of each other, while it is easy to take a box off the top of the stack, taking a deeper box may require us to take several other items first.
@@ -425,15 +477,35 @@ Running in a single-thread environment can be very liberating, since it's much s
 
 However, single-threading can also be very limiting. Since we have a single stack, what would happen if this stacked is blocked by some slow-running code?
 
-### Concurrency and Event Loop
+## Libuv
+
+### What is libuv? Why do we need it?
+
+Libuv is an open-source library that handles the thread-pool, doing signaling, inter process communications all other magic needed to make the asynchronous tasks work at all. Libuv was originally developed for Node.js itself as an abstraction around `libev`, however, by now, multiple projects are already using it.
+
+Most people think libuv is the event loop itself, this is not true, libuv implements a full featured event loop, but also is the home of several other key parts of Node, such as:
+
+- TCP and UDP sockets of the `net` package
+- Async DNS resolutions
+- Async file and file system operations (like the one we're doing here)
+- File System events
+- IPC
+- Child processes and shell control
+- Thread pool
+- Signal handling
+- High resolution clock
+
+This is mainly why Node.js uses it, it's a full abstraction around several key parts of every OS, and it is necessary for the whole runtime to interact with it's surounding environment.
+
+### Event Loop
 
 Let's step aside of the Node.js environment for a while. In the browser, in pure JavaScript, what would happen if you had a long-running function in your call stack? Those sorts of functions that take a while to finish, like a complex image processing or a long matrix transformation?
 
 In most languages you should have no problem, since they are multi-threaded, however, in single-threaded languages, this is a very serious issue. Because while the call stack has functions to execute, the browser can't actually do anything else, and the browser isn't just about HTML and CSS, there are a few other stuff, like a rendering engine that paints the screen to draw whatever you coded in your markup. This means that if you have long running functions, your browser literally halts all execution in that page. That's why most browsers treat tabs as threads or separate processes, so one tab wouldn't freeze all others.
 
-Another issue that might be raised is that browsers are quite controlling big brothers, so if a tab takes to long to respond, they take action by raising an error to ask you whether you want or not to terminate that web page. So... Not the best UX we can have, right? On the other hand, complex tasks and long running code is what allow us to create great software, so how can we perform those without letting our big brother angry? Asynchronous Callbacks, tha base of what all Node.js is about.
+Another issue that might be raised is that browsers are quite controlling big brothers, so if a tab takes to long to respond, they take action by raising an error to ask you whether you want or not to terminate that web page. So... Not the best UX we can have, right? On the other hand, complex tasks and long running code is what allow us to create great software, so how can we perform those without letting our big brother angry? Asynchronous Callbacks, tha base of what Node.js is all about.
 
-#### Async callbacks
+### Async callbacks
 
 Most JavaScript applications works by loading a single `.js` file into memory, and then all the magic happens after that single entrypoint is executed. This can be divided into several building blocks, the "now" blocks, and the "later" blocks. Usually, only one of those blocks is going to be a "now" block, which means that it'll be the one to execute in the main thread (pushing calls to the call stack), and all the others will be executed later on.
 
@@ -460,7 +532,7 @@ This is basically stating that when the call is ended, an anonymous function wit
 
 So in our first code example, the `readFile` call, we're basically transforming it into a Promise, which is a code that will return its value on a later state, and then printing it out, we're reading a file asynchronously. But how does it work at all?
 
-#### Inside the event loop
+### Inside the event loop
 
 Until ES6, JS actually never had any sort of consensus or notion of asynchrony built into the core itself, this means that JS would receive your order to execute some async code and send it to the engine, which would give JS a thumbs up and answer with "I'll see into it, someday". So there was no order neither logic on how the "later" would behave built into the engines.
 
@@ -483,7 +555,11 @@ Let's remind of our old diagram:
 
 ![](assets/v8-real.png)
 
-Web APIs are, in essence, threads that we cannot access as developers, we can only make calls to them. Generally these are pieces that are built into the environment itself, for instance, in a browser environment, these would be APIs like `document`, `XMLHttpRequest` or `setTimeout`, which are mostly async functions. In Node.js these would be our C++ APIs we saw in the first part of the guide. Let's zoom into the event loop part:
+Web APIs are, in essence, threads that we cannot access as developers, we can only make calls to them. Generally these are pieces that are built into the environment itself, for instance, in a browser environment, these would be APIs like `document`, `XMLHttpRequest` or `setTimeout`, which are mostly async functions. In Node.js these would be our C++ APIs we saw in the first part of the guide.
+
+So, in plain words, whenever we call a function like `setTimeout` on Node.js, this call is sent to a different thread. All of this is controlled and provided by libuv, including the APIs we're using.
+
+Let's zoom into the event loop part:
 
 ![](assets/event-loop.png)
 
@@ -578,7 +654,468 @@ This should print "Node.js is awesome!" in the console, in separated lines. But 
 
 As we noted earlier, the ES6 specifies how the event loop should behave, so now, technically, it's within the scope of the JS Engine's responsibilities to take care of that scheduling, which is no longer playing the role of only a hosting environment. The main reason why this happened is because of the introduction of the native Promises in ES6, which - as we'll see later on - needed to take some fine-grained control over scheduling operations and queues.
 
+Once the call stack and all the queues are empty, the event loop will simply terminate the process.
+
 It is worth noting that the callback queue, like the call stack, is another data structure, a *queue*. Queues act similar to stacks, but the difference is their order. While stack frames are pushed to the top of the stack, queue items are pushed to the end of the queue. And while, in stacks, popping occurs in LIFO way, queues behave on FIFO (First In First Out), which means that the popping operation will take of the head of the queue, or, the oldest item.
+
+### Later does not necessarily means "later"
+
+One thing that is important to notice in the above code is that `setTimeout` will **not** automatically put your callback on the event loop queue after it's done. `setTimeout` is an web API whose only job is to set a timer to execute some other function later. After the timer expires, the **environment** puts your callback into the event loop callback queue, so that some future tick will pick it up and launch it into the call stack.
+
+So when we do `setTimeout(cb, 1000)` we expect our `cb` function to be called after 1000 ms, right? Yeah, but that is not what actually happens unde the hood. This is only saying: "Hey! I've noted your request, so when 1000ms pass I'll place your `cb` function on the queue", but remember, queues have a different order than stacks, so callbacks will be added to the end of the queue, which means that the queue might have other events that were added earlier - so your callback will have to wait the completion of them all in order to be processed. One of the best examples to show how this async madness work is to set a timeout function to 0. Naturally you hope this function to be executed soon after you've added it to the code, right? Wrong.
+
+```js
+console.log('Node.js')
+setTimeout(() => console.log('is'), 0)
+console.log('Awesome!')
+```
+
+Our first thought is: "The printed code will be `Node.js is Awesome!` in three lines", but this is not what happens. Setting a timeout to 0 only defers its callback execution to the next moment when the call stack is clear. In fact, our response would be a Yoda-like phrase:
+
+```
+Node.js
+Awesome!
+is
+```
+
+### Microtasks and Macrotasks
+
+This is why ES6 was so important to async executions in JS, it standardized everything we knew about async so they'd all function the same way, and also added another concept called "**Microtask Queue**" - or "**Job Queue**". It's a layer on top of the callback queue - which will now be called "**Macrotask Queue**" - that you'll most likely bump into when working with Promises.
+
+To be very specific and short. The Microtask Queue is a queue that is attached to the end of every tick in the Event Loop. So certain async actions that occur during a tick of the event loop, will not cause a new callback to be added in the Macrotask Queue, but instead, will add an item - which is called "Microtask" or "Job" - to the end of the current tick's Microtask queue. This means that, now, you can be assured that you can add functionality to be executed later in the Microtask queue and it'll be executed right after your tick, before anything from the Macrotask Queue comes up.
+
+Since there are no restrictions of what a Microtask can do to your code, it's possible for a Microtask to add another Microtask in the end of the same queue endlessly, causing what is called a "Microtask loop", which starves the program of the needed resources and prevent it from moving on the the next tick. This is the equivalent of having a `while(true)` loop running in your code, but asynchronously.
+
+> `setTimeout(cb, 0)` was a "workaround" to add callbacks that were sure to be added right after the execution on the queue, much like Microtasks do, however, Microtasks are a much more clean and defined specification of ordering, meaning things will execute later, but ASAP.
+
+According to the [WHATVG](https://html.spec.whatwg.org/multipage/webappapis.html#task-queue) specification, one, and exactly one, macrotask should be processed from the macrotask queue in one tick of the event loop. After this macrotask has finished, all other available microtasks should be processed within the same tick. Since microtasks can queue other microtasks, while there are microtasks in the microtask queue, they should all be run one by one until the microtask queue is empty. As shows this diagram:
+
+![](assets/microtasks.jpg)
+
+Not all tasks are microtasks, these are some examples of microtasks:
+
+- `process.nextTick`
+- Promises
+- `Object.observe`
+
+These are macrotasks:
+
+- `setTimeout`
+- `setInterval`
+- `setImmediate`
+- any I/O operation
+
+Let's take this code as an example:
+
+```js
+console.log('script start')
+
+const interval = setInterval(() => {
+  console.log('setInterval')
+}, 0)
+
+setTimeout(() => {
+  console.log('setTimeout 1')
+
+  Promise.resolve()
+    .then(() => console.log('promise 3'))
+    .then(() => console.log('promise 4'))
+    .then(() => {
+      setTimeout(() => {
+        console.log('setTimeout 2')
+        Promise.resolve().then(() => console.log('promise 5'))
+          .then(() => console.log('promise 6'))
+          .then(() => clearInterval(interval))
+      }, 0)
+    })
+}, 0)
+
+Promise.resolve()
+  .then(() => console.log('promise 1'))
+  .then(() => console.log('promise 2'))
+```
+
+This will log:
+
+```
+script start
+promise 1
+promise 2
+setInterval
+setTimeout 1
+promise 3
+promise 4
+setInterval
+setTimeout 2
+setInterval
+promise5
+promise6
+```
+
+If we go through this step by step we'll have something like this:
+
+**First tick**
+
+- The first `console.log` will be stacked onto the call stack and executed, then it'll be poped out
+- `setInterval` is scheduled as a task
+- `setTimeout 1` is scheduled as a task
+- both "then's" of `Promise.resolve 1` are scheduled as microtasks
+- Since the stack is empty, microtasks are run
+  - The call stack stacks and pops two `console.log` expressions
+  - "promise 1" and "promise 2" are printed
+
+> Our macrotask queue has: [`setInterval`, `setTimeout 1`]
+
+**Second Tick**
+
+- The microtask queue is empty, the `setInterval` handler can be run.
+  - Call stack runs and pops `console.log` expression
+  - "setInterval" is printed
+  - Schedules another `setInterval` after `setTimeout 1`
+
+> Our macrotask queue has: [`setTimeout 1`, `setInterval`]
+
+**Thrid Tick**
+
+- The microtask queue remains empty
+- `setTimeout 1` handler is run
+  - Call stack runs and pops `console.log` expression
+    - "setTimeout 1" is printed
+  - "Promise 3" and "Promise 4" handlers are scheduled as microtasks
+  - Both handlers of Promises 3 and 4 are run
+    - Call stack runs and pops two `console.log` expressions
+    - Prints "promise 3" and "promise 4"
+  - The next handler for promise 3 and 4 schedules a `setTimeout 2` task
+
+> Our macrotask queue has: [`setInterval`, `setTimeout 2`]
+
+**Forth Tick**
+
+- Microtask queue is empty, `setInterval` handler is run, which enqueues another `setInterval` right behind `setTimeout`
+
+> Our macrotask queue has: [`setTimeout 2`, `setInterval`]
+
+- `setTimeout 2` handler is run
+  - Promise 5 and 6 are schedule as microtasks
+  - Handlers for promises 5 and 6 are run
+    - Call stack receives two more `console.log` calls
+    - Prints "promise 5" and "promise 6"
+    - Clears interval
+
+> Our macrotask queue has: []
+
+This is why it's important to note how things work under the hood, otherwise we'd never know Promises execute faster than callbacks.
+
+## V8
+
+So now we've hit the bottom of Node.js, this is where things get messy and complex. We started talking about Javascript, which is the higher level concept we have, then we got into a few concepts like: call stack, event loop, heap, queues and so on...
+
+The thing is: none of this stuff is actually implemented in JS, this is all part of the engine. So JavaScript is basically a dynamic typed language which is interpreted, everything we run in JavaScript is passed on to the engine, which interacts with its environment and generates the bytecode needed for the machine to run our program.
+
+And this engine is called V8.
+
+### What is V8
+
+V8 is Google's open source high-performance JavaScript and WebAssembly engine. It's written in C++ and used both in Chrome or Chrome-like environments, and Node.js. V8 has the full implementation for ECMAScript as well as WebAssembly. But it does not depend on a browser, in fact, V8 can be run standalone and be embedded into any C++ application.
+
+### Overview
+
+V8 was firstly designed to increase JavaScript execution performance inside web browsers - that is why Chrome had a huge difference in speed compared to other browsers back in the day. In order to achieve this increased performance, V8 does something different than just interpret JavaScript code, it translates this code into a more efficient machine code. It compiles JS into machine code at run time by implementing what is called a **JIT (Just In Time)** compiler.
+
+As of now, most engines actually works the same way, the biggest difference between V8 and the others is that it does not produce any intermediate code at all. It runs your code the first time using a first non-optimized compiler called Ignition, it compiles the code straight to how it should be read, then, after a few runs, another compiler (the JIT compiler) receives a lot of information on how your code actually behave in most cases and recompiles the code so it's optimized to how it's running at that time. This is basically what means to "JIT compile" some code. Different from other languages like C++ which uses *AoT (ahead of time)* compilation, which means that we first compile, generate an executable, and then you run it. There's no `compile` task in node.
+
+V8 also uses a lot of different threads to make itself faster:
+
+- The main thread is the one that fetches, compiles and executes JS code
+- Another thread is used for optimization compiling so the main thread continues the execution while the former is optimizing the running code
+- A third thread is used only for profilling, which tells the runtime which methods need optimization
+- A few other threads to handle garbage collection
+
+#### Abstract Syntax Trees
+
+The first step in all compiling pipelines of almost every language out there is to generate what is called an **AST (Abstract Syntax Tree)**. An abstra syntax tree is a tree representation of the syntatic structure of a given source code in an abstract form, which means that it could, in theory, be translated to any other language. Each node of the tree denotes a language construct which occurs in the source code.
+
+Let's recap our code:
+
+```js
+const fs = require('fs')
+const path = require('path')
+const filePath = path.resolve(`../myDir/myFile.md`)
+
+// Parses the buffer into a string
+function callback (data) {
+  return data.toString()
+}
+
+// Transforms the function into a promise
+const readFileAsync = (filePath) => {
+  return new Promise((resolve, reject) => {
+    fs.readFile(filePath, (err, data) => {
+      if (err) return reject(err)
+      return resolve(callback(data))
+    })
+  })
+}
+
+(function start () {
+  readFileAsync(filePath)
+    .then()
+    .catch(console.error)
+})()
+```
+
+This is an example AST (part of it) from our `readFile` code in JSON format generated by a tool called [esprima](https://esprima.org):
+
+```jsonc
+{
+  "type": "Program", // The type of our AST
+  "body": [ // The body of our program, an index per line
+      {
+          "type": "VariableDeclaration", // We start with a variable declaration
+          "declarations": [
+              {
+                  "type": "VariableDeclarator",
+                  "id": {
+                      "type": "Identifier", // This variable is an identifier
+                      "name": "fs" // called 'fs'
+                  },
+                  "init": { // We equal this variable to something
+                      "type": "CallExpression", // This something is a call expression to a function
+                      "callee": {
+                          "type": "Identifier", // Which is an identifier
+                          "name": "require" // called 'require'
+                      },
+                      "arguments": [ // And we pass some arguments to this function
+                          {
+                              "type": "Literal", // The first one of them is a literal type (a string, number or so...)
+                              "value": "fs", // with the value: 'fs'
+                              "raw": "'fs'"
+                          }
+                      ]
+                  }
+              }
+          ],
+          "kind": "const" // Lastly, we declare that our VariableDeclaration is of type const
+      }
+  ]
+}
+```
+
+So as we can see in the JSON we have an openning key called `type`, which denotes that our code is a `Program`, and we have its `body`. The `body` key is an array of object on which every index represents a single line of code. The first line of code we have is `const fs = require('fs')` so that's the first index of our array. In this first object we have a `type` key denoting that what we're doing is a variable declaration, and the declarations (since we can do `const a,b = 2`, the `declarations` key is an array, one for each variable) for this specific variable `fs`. We have a `type` called `VariableDeclarator` which identifies that we're declaring a new identifier called `fs`.
+
+After that we are initializing our variable, that's the `init` key, which denotes everything from the `=` sign onwards. The `init` key is another object defining that we're calling a function named `require` and passing a literal parameter of value `fs`. So basically, this whole JSON defines a single line of our code.
+
+AST's are the base for every compiler because it allows the compiler to transform a higher level representation (the code) into a lower level representation (a tree), striping all useless information that we put into our code, like comments. In addition to that, ASTs allow us, mere programmers, to fiddle with our code, this is basically what intellisense or any other code helper does: it analyses the AST and, based on what you've written so far, it suggests more code which can come after that. ASTs can also be used to replace or change code on the fly, for instance, we can replace every instance of `let` with `const` only by looking into the `kind` keys inside `VariableDeclaration`.
+
+If ASTs make us able to identify performance stuff and analyse our code, it does the same to compilers. This is what a compiler is all about, analysing, optimizing and generating code which can be run by a machine.
+
+#### Hidden Classes and variable allocation
+
+Another cool thing V8 does when it's dealing with JavaScript is that it makes possible for a statically typed language, such as C++, to run dynamically typed code, like JS. One of the simplest examples we have of Dynamic Typing is an object declaraion:
+
+```js
+const myObj = {}
+console.log(myObj) // {}
+
+myObj.x = 1
+console.log(myObj) // { x: 1 }
+
+myObj.y = 2 // Dynamically changing the type
+console.log(myObj) // { x: 1, y: 2 }
+```
+
+Since JavaScript is a dynamic language, properties from our objects can be added and removed on the fly - like we did. These operations require a dynamic lookup to resolve where this property's location is in memory so it can get back the value for you. Dynamic lookups are a high-cost operation for processors. So how does V8 handles this to make JS so fast? The answer is **hidden classes**. And it's one of the optimization tricks V8 is so famous about.
+
+> We'll talk about other compiler optimization techniques later
+
+Generally when we have statically-typed languages, we can easily determine where a property is in memory, since all objects and variables are determined by a fixed object layout you'll define as its type, and new properties cannot be added during runtime, which makes pretty easy for the compiler to find this properties' values (or pointers) in memory since they can be stored as a continuous buffer with a fixed [offset](http://en.wikipedia.org/wiki/Offset_%28computer_science%29) between each object. And this [offset](http://en.wikipedia.org/wiki/Offset_%28computer_science%29) can be easily determined by the object type, since all types have a fixed memory value. V8 takes advantage of these fixed layout object concept to use the approach of a hidden class. Let's see how it works:
+
+For each object **type**, V8 creates a hidden class, so our first declaration of `const myObj = {}` would create a class like this:
+
+![](assets/h0.jpg)
+
+Now, as we add a new key to `myObj`, V8 creates a new hidden class based on C0 (copying it) called C1, and will update C0 to add a transition to C1:
+
+![](assets/h1.jpg)
+
+Now as the last statement we add `y`, this does the exact same steps as before: creates a new class C2 based on C1, add a new transition to C1 pointing to C2:
+
+![](assets/h2.jpg)
+
+This little trick makes possible for V8 to reuse hidden classes for new object. If we create a new object like `{}`, no new classes will be created, instead V8 will point the new object to C0. As we add the new properties `x` and `y`, the new object will point to the classes C1 and C2 writing the values on the offsets those classes specify. This concept makes possible for a compiler to bypass a dictionary lookup for when a proprety is accessed. Since it already knows to what class the object points to and where is the offset to that property, it can simply go straight there. This also makes V8 able to use class-based optimizations and inline caching - which we'll see later.
+
+However, hidden classes are extremely volatile, they are one and only to that specific type of object. So, if we swap the order of our properties to be `y` and `x` instead of the opposite, V8 would have to create new hidden classes since C1 only has offsets for x in the position 0 and C2 only has offsets for y in the first position.
+
+But keep in mind **this is done in the C++** because **JavaScript is a prototype-based language, therefore, it has no classes.**
+
+### Old compiling pipeline
+
+Prior to the V8.5.9 release in 2017, V8 had an old execution pipeline which was composed of the full-codegen compiler, and a JIT compiler called Crankshaft, which had two subcomponents called Hydrogen and Lithium. Let's talk about them a little bit.
+
+#### The full-codegen compiler
+
+Full-codegen compiler is a simple and very fast compiler that produced simple and relatively slow (not-optimized) machine code. The main purpose of this compiler is to be absolutely fast, but to write extremely shitty code. So it translates JS to machine code at the speed of light, however the code is not optimized and might be very slow. Also, it handles the type-feedback that collects information about data types and usage of our functions as our program runs.
+
+It firstly takes our AST, walks over all the nodes and emits calls to a macro-assembler directly. The result: generic native code. That's it! The full-codegen fulfilled its purpose. All the complex cases are handled by emitting calls to runtime procedures and all local variables are stored on heap, like the usual. The magic starts when V8 perceives hot and cold functions!
+
+A hot function is a function that is called several times during the execution of our program so it needs to be optimized more than the others. A cold function is the exact opposite. That's when the Crankshaft compiled comes on.
+
+#### Crankshaft
+
+The Crankshaft compiler used to be the default JIT compiler that handled all the optimization parts of JS.
+
+After receiving the type information and call information from the runtime that full-codegen created, it analyses the data and see which functions have become hot. Then Crankshaft can walk the AST generating optimized code for these particular functions. Aftwards, the optimized function will replace the un-optimized one using what is called **on-stack replacement (OSR)**.
+
+But, this optimized function does not cover all cases, since it is optimized only to work with those defined types we were passing during execution. Let's imagine our `readFile` function. In the first lines we have this:
+
+```js
+const readFileAsync = (filePath) => { /* ... */ }
+```
+
+Let's supose this function is hot, `filePath` is a string, so Crankshaft will optimize it to work with a string. But now, let's imagine the `filePath` is `null`, or maybe a number (who knows?). Then the optimized function would not be fit for this case. So Crankshaft will de-optimize the function, replacing it with the original function.
+
+In order to explain how this whole magic works, we need to understand a few parts **inside** Crankshaft.
+
+##### Hydrogen compiler
+
+The Hydrogen compiler takes the AST with type-feedback information as its input. Based on that information it generates what's called a high-level intermediate representation (HIR) which has a control-flow graph (CFG) in the static-single assignment form (SSA) which is something like this:
+
+For this given function:
+
+```js
+function clamp (x, lower, upper) {
+  if (x < lower) x = lower
+  else if (x > upper) x = upper
+  return x
+}
+```
+
+An SSA translation would be:
+
+```
+entry:
+  x0, lower0, upper0 = args;
+  goto b0;
+
+b0:
+  t0 = x0 < lower0;
+  goto t0 ? b1 : b2;
+
+b1:
+  x1 = lower0;
+  goto exit;
+
+b2:
+  t1 = x0 > upper0;
+  goto t1 ? b3 : exit;
+
+b3:
+  x2 = upper0;
+  goto exit;
+
+exit:
+  x4 = phi(x0, x1, x2);
+  return x4;
+```
+
+In SSA variables are never assigned again; they are bound once to their value and that's it. This form breaks down any procedure into several basic blocks of computation which ends with a branch to another block whether this branch is conditional or not. As you can see variables are bound to unique names at each assignment and, in the end, the `phi` function takes all the `x`s and merge them together, returning the one which has a value.
+
+When the HIR is being generated, Hydrogen applies several optimizations to the code such as contant folding, method inlining and other stuff we'll see at the end of this guide - there's a whole section to it.
+
+The result Hydrogen outputs is an optimized CFG which the next compiler, Lithium, takes as input to generate actual optimized code.
+
+##### Lithium compiler
+
+As we said, the Lithium compiler takes the HIR and translates into a machine-specific low-level intermediate representation (LIR). Which is conceptually similar to what a machine code should be, but also platform independent.
+
+While this LIR is being generated, new code optimizations are applied, but this time those are low-level optimizations.
+
+In the end, this LIR is read and Crankshaft generates a sequence of native instructions for every Lithium instruction, the OSR is applied and then the code is executed.
+
+### New Compiling pipeline
+
+After version V8.5.9, V8 changed its old pipeline (composed of Full-Codegen and Crankshaft) to a new pipeline which uses two brand new compilers, the Ignition and TurboFan. This new pipeline is mostly why JS runs blazing fast nowadays.
+
+![](assets/v8-pipeline.jpg)
+
+Basically, the initial steps have not changed, we still need to generate an AST and parse all the JS code, however, Full-Codegen has been replaced by Ignition and Crankshaft has been replaced by TurboFan.
+
+#### Ignition
+
+
+
+#### Turbofan
+
+##### Sea Of Nodes
+
+#### Bytecodes
+
+### Garbage Collection
+
+
+
+
+## Compiler optimizations
+
+### On Stack Replacement
+
+https://wingolog.org/archives/2011/06/20/on-stack-replacement-in-v8
+
+### Constant Folding
+
+### Induction Variable Analysis
+
+### Rematerialization
+
+### Removing Recursion
+
+### Deforestation
+
+### Peephole Optimizations
+
+### Inline Expansion
+
+### Inline Caching
+
+https://blog.sessionstack.com/how-javascript-works-inside-the-v8-engine-5-tips-on-how-to-write-optimized-code-ac089e62b12e
+
+### Dead Code Elimination
+
+### Code Block Reordering
+
+### Jump Threading
+
+### Trampolines
+
+### Commom subexpression elimination
+
+### Loops
+
+#### Loop Fission/distribution
+
+#### Loop Fusion/ramming/jamming
+
+#### Loop Inversion
+
+#### Loop Interchange
+
+#### Loop-Invariant Code Motion
+
+#### Loop Nest Optimization
+
+#### Loop Reversal
+
+#### Loop Unrolling
+
+#### Loop Splitting
+
+#### Loop Unswitching
+
+## Native Modules
+
+### N-API
+
+## Putting it all together
 
 ## References
 
@@ -591,15 +1128,22 @@ It is worth noting that the callback queue, like the call stack, is another data
 - [JS History](https://en.wikipedia.org/wiki/JavaScript)
 - [Node.js history](https://en.wikipedia.org/wiki/Node.js)
 - [Element Kinds in V8](https://v8.dev/blog/elements-kinds)
+- [WHATVG spec on microtasks](https://html.spec.whatwg.org/multipage/webappapis.html#task-queue)
 - [V8 Under the Hood](https://slides.com/igorfranca/v8-under-the-hood#/)
 - [FS module source](https://github.com/nodejs/node/blob/master/lib/fs.js)
 - [FS read_file_context source](https://github.com/nodejs/node/blob/master/lib/internal/fs/read_file_context.js)
 - [V8 Under The Hood Examples](https://github.com/Horaddrim/v8-under-the-hood)
 - [Internals of Node with crypto library](https://medium.com/front-end-weekly/internals-of-node-advance-node-%EF%B8%8F-8612f6a957d7)
 - [Performance Optimizations in V8](https://v8-io12.appspot.com/index.html)
+- [How to get bytecode from NodeJS](https://medium.com/@drag13dev/https-medium-com-drag13dev-how-to-get-javascript-bytecode-from-nodejs-7bd396805d30)
+- [Understanding V8 Bytecodes](https://medium.com/dailyjs/understanding-v8s-bytecode-317d46c94775)
+- [V8 Bytecode List](https://github.com/v8/v8/blob/master/src/interpreter/bytecodes.h)
+- [V8 Interpreter Generator](https://github.com/v8/v8/blob/master/src/interpreter/interpreter-generator.cc)
 - [What are Stacks?](https://en.wikipedia.org/wiki/Stack_(abstract_data_type))
 - [What are queues?](https://www.studytonight.com/data-structures/queue-data-structure)
 - [Compiler Optimization list](https://en.wikipedia.org/wiki/Optimizing_compiler)
+- [What are Static Single Assignments?](https://wingolog.org/archives/2011/07/12/static-single-assignment-for-functional-programmers)
+- [On stack replacement in V8](https://wingolog.org/archives/2011/06/20/on-stack-replacement-in-v8)
 - [Why is Node.js so Fast](https://blog.ghaiklor.com/2015/11/14/why-nodejs-is-so-fast/)
 - [You don't know Node.js](https://medium.com/edge-coders/you-dont-know-node-6515a658a1ed)
 - [V8 - A tale of Turbofan](https://dzone.com/articles/v8-behind-the-scenes-and-a-tale-of-turbofan)
@@ -609,6 +1153,7 @@ It is worth noting that the callback queue, like the call stack, is another data
 - [My personal notes (in Portuguese) about V8](https://github.com/khaosdoctor/my-notes/blob/master/node/V8.md)
 - [[BOOK] Node.js Under the Hood](https://resources.risingstack.com/Node.js+at+Scale+Vol.+2+-+Node.js+Under+the+Hood.pdf)
 - [Tracing de-optimizations in Node.js](https://blog.ghaiklor.com/2016/05/16/tracing-de-optimizations-in-nodejs/)
+- [Understanding Promises Once and for All](https://medium.com/trainingcenter/entendendo-promises-de-uma-vez-por-todas-32442ec725c2)
 - [JS Rendering Engine](https://blog.sessionstack.com/how-javascript-works-the-rendering-engine-and-tips-to-optimize-its-performance-7b95553baeda)
 - [Memory Allocation in Javascript](https://blog.sessionstack.com/how-javascript-works-memory-management-how-to-handle-4-common-memory-leaks-3f28b94cfbec)
 - [How JavaScript works: an overview of the engine, the runtime, and the call stack](https://blog.sessionstack.com/how-does-javascript-actually-work-part-1-b0bacc073cf)
