@@ -19,7 +19,7 @@
       - [About stacks](#about-stacks)
       - [Stacks and JavaScript](#stacks-and-javascript)
       - [Stack Overflow](#stack-overflow)
-      - [Single-threading pros and cons](#single-threading-pros-and-cons)
+    - [Single-threading pros and cons](#single-threading-pros-and-cons)
   - [Libuv](#libuv)
     - [What is libuv? Why do we need it?](#what-is-libuv-why-do-we-need-it)
     - [Event Loop](#event-loop)
@@ -471,7 +471,7 @@ At every call of `f` we'll pile up `f` in the stack, but, as we saw, we can neve
 
 Thankfully, the engine is watching us and realizes the function would never stop calling itself, causing an stack overflow, which is a pretty serious error, since it crashes the whole application. If not stopped, can crash or damage the stack memory for the whole runtime.
 
-#### Single-threading pros and cons
+### Single-threading pros and cons
 
 Running in a single-thread environment can be very liberating, since it's much simpler than running in a multi-threaded world where we'd have to care about racing conditions and deadlocks. In this world, such things do not exist, after all, we are doing only one thing at once.
 
