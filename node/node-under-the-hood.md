@@ -170,7 +170,7 @@ Node.js is composed of few dependencies:
 
 This image (in Samer Buna's course) has the perfect explanation:
 
-![](./assets/nodejs-components.png)
+![](assets/nodejs-components.png)
 
 With that said, we can split Node.js into two parts: V8 and Libuv. V8 is about 70% C++ and 30% JavaScript, while Libuv is completely written in C++.
 
@@ -346,7 +346,7 @@ This engine consists, mainly, in two components:
 
 Most APIs developers use are provided by the engine itself, like we were able to see in the previous chapters when we wrote the `readFile` code. However, some APIs we use are not provided by the engine, like `setTimeout`, any sort of DOM manipulation, like `document` or even AJAX (the `XMLHttpRequest` object). Where are those comming from? Let's take our previous image and bring it into the harsh reality we live in:
 
-![Image from Session Stack, link in the references](/assets/v8-real.png)
+![Image from Session Stack, link in the references](assets/v8-real.png)
 
 The engine is just a tiny bit of what makes JavaScript, well... JavaScript... There are browser-provided APIs which we call **Web APIs**, these APIs (like `DOM`, `AJAX` and `setTimeout`) are provided by the browser vendors - in this case, for Chrome, it's Google - and they are the main reason why most people hated, and still hate, JavaScript. When we look at today's JavaScript we see a field filled with packages and other stuff, but mostly homogeneous on every side. Well... It wasn't always like that.
 
