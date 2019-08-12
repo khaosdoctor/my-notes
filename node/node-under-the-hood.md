@@ -1142,7 +1142,11 @@ the solution to this was out of TurboFan or Crankshaft scope, this was solved by
 
 ##### Sea Of Nodes
 
+> Under construction
 
+https://grothoff.org/christian/teaching/2007/3353/papers/click95simple.pdf
+
+http://www.masonchang.com/blog/2010/8/9/sea-of-nodes-compilation-approach.html
 
 ### Bytecodes
 
@@ -1394,7 +1398,25 @@ The heap has two main segments: the *new space* and the *old space*. The new spa
 
 In contrast, the old space is where the objects that survived the last garbage collection resides, in our case, the `point1` and `point3` objects are in the old space. They are called the **old generation**. Allocation in the old space is pretty fast, however, GC is expensive, so it's hardly ever performed.
 
+But, hardly 20% of the young generation survives and it's promoted to the old generation, so this old space sweep does not actually need to be done very often. It's only performed when this space is getting exhausted, which means around 512mb, you can set this limit with the `--max-old-space-size` flag in Node.js. To reclaim the old space memory, the GC uses two different collection algorithms.
+
+**Scavenge and Mark-Sweep Collection**
+
+The scavenge collection is fast and runs in the young generation, while the mark-sweep collection method is slower and rund on the old generation.
+
+Mark & Sweep algorithm works in just a few steps:
+
+1. It starts with the root object. Roots are global variables which get referenced in the code. In JS this may be either the `window` object or, in Node, the `global` object. The complete list of all those roots is built by the GC.
+2. The algorithm then inspects all roots and all their children, marking each one as active - so that means they're not garbage yet - logically, anything else the root cannot reach will not be marked active, which means: garbage
+3. After that, all non-active objects are freed.
+
+![](assets/mark-sweep.gif)
+
 ## Compiler optimizations
+
+> This part is yet to be constructed
+
+https://en.wikipedia.org/wiki/Optimizing_compiler
 
 ### On Stack Replacement
 
