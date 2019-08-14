@@ -921,7 +921,7 @@ If ASTs make us able to identify performance stuff and analyse our code, it does
 
 #### Hidden Classes and variable allocation
 
-Another cool thing V8 does when it's dealing with JavaScript is that it makes possible for a statically typed language, such as C++, to run dynamically typed code, like JS. One of the simplest examples we have of Dynamic Typing is an object declaraion:
+Another cool thing V8 does when it's dealing with JavaScript is that it makes possible for a statically typed language, such as C++, to run dynamically typed code, like JS. One of the simplest examples we have of Dynamic Typing is an object declaration:
 
 ```js
 const myObj = {}
@@ -1060,7 +1060,7 @@ One thing to notice is that Ignition is **not** a parser, it is a bytecode inter
 
 So in short. This old compiling pipeline:
 
-![](old-assets/old-compiling-pipeline-mixed.png)
+![](assets/old-compiling-pipeline-mixed.png)
 
 > Note that this is the step in between the old compiling pipeline we just saw, and this new compiling pipeline that V8 uses now.
 
