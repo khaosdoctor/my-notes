@@ -841,7 +841,7 @@ V8 also uses a lot of different threads to make itself faster:
 
 #### Abstract Syntax Trees
 
-The first step in all compiling pipelines of almost every language out there is to generate what is called an **AST (Abstract Syntax Tree)**. An abstra syntax tree is a tree representation of the syntatic structure of a given source code in an abstract form, which means that it could, in theory, be translated to any other language. Each node of the tree denotes a language construct which occurs in the source code.
+The first step in all compiling pipelines of almost every language out there is to generate what is called an **AST (Abstract Syntax Tree)**. An abstract syntax tree is a tree representation of the syntatic structure of a given source code in an abstract form, which means that it could, in theory, be translated to any other language. Each node of the tree denotes a language construct which occurs in the source code.
 
 Let's recap our code:
 
