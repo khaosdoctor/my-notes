@@ -694,6 +694,8 @@ To be very specific and short. The Microtask Queue is a queue that is attached t
 
 Since there are no restrictions of what a Microtask can do to your code, it's possible for a Microtask to add another Microtask in the end of the same queue endlessly, causing what is called a "Microtask loop", which starves the program of the needed resources and prevent it from moving on the the next tick. This is the equivalent of having a `while(true)` loop running in your code, but asynchronously.
 
+In order to prevent such starvation, the engine has built-in protection called `process.maxTickDepth`, which is set to the value of 1000, after 1000 microtasks have been scheduled and ran in the same tick, then the next macrotask is run.
+
 > `setTimeout(cb, 0)` was a "workaround" to add callbacks that were sure to be added right after the execution on the queue, much like Microtasks do, however, Microtasks are a much more clean and defined specification of ordering, meaning things will execute later, but ASAP.
 
 According to the [WHATVG](https://html.spec.whatwg.org/multipage/webappapis.html#task-queue) specification, one, and exactly one, macrotask should be processed from the macrotask queue in one tick of the event loop. After this macrotask has finished, all other available microtasks should be processed within the same tick. Since microtasks can queue other microtasks, while there are microtasks in the microtask queue, they should all be run one by one until the microtask queue is empty. As shows this diagram:
@@ -1496,6 +1498,7 @@ https://blog.sessionstack.com/how-javascript-works-inside-the-v8-engine-5-tips-o
 - [FS read_file_context source](https://github.com/nodejs/node/blob/master/lib/internal/fs/read_file_context.js)
 - [V8 Under The Hood Examples](https://github.com/Horaddrim/v8-under-the-hood)
 - [Internals of Node with crypto library](https://medium.com/front-end-weekly/internals-of-node-advance-node-%EF%B8%8F-8612f6a957d7)
+- [Microtasks and Macrotasks](https://stackoverflow.com/questions/25915634/difference-between-microtask-and-macrotask-within-an-event-loop-context)
 - [Lauching ignition and turbofan](https://v8.dev/blog/launching-ignition-and-turbofan)
 - [Performance Optimizations in V8](https://v8-io12.appspot.com/index.html)
 - [Sea of Nodes approach](http://www.masonchang.com/blog/2010/8/9/sea-of-nodes-compilation-approach.html)
