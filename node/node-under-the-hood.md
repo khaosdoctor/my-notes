@@ -1054,7 +1054,7 @@ Basically, the initial steps have not changed, we still need to generate an AST 
 
 ![](assets/v8-ignition.svg)
 
-Ignition is a byutecode interpreter for V8, but why do we need a interpreter? Compilers are much faster than an interpreter. Ignition was mainly created for the purpose of reducing memory usage. Since V8 don't have a parser, most code is parsed and compiled on the fly, so several parts of the code are actually compiled and recompiled more than once. This locks up to 20% of memory in V8's heap and it's specially bad for devices with low memory capabilities.
+Ignition is a bytecode interpreter for V8, but why do we need a interpreter? Compilers are much faster than an interpreter. Ignition was mainly created for the purpose of reducing memory usage. Since V8 don't have a parser, most code is parsed and compiled on the fly, so several parts of the code are actually compiled and recompiled more than once. This locks up to 20% of memory in V8's heap and it's specially bad for devices with low memory capabilities.
 
 One thing to notice is that Ignition is **not** a parser, it is a bytecode interpreter, which means that the code is being read in bytecode and outputed in bytecode, basically, what ignition does is take a bytecode source and optimized it to generate much smaller bytecode and remove unused code as well. This means that, instead of lazy compiling the JS on the fly, like before, Ignition just takes the whole script, parses it and compiles all at once, reducing compiling time and also generating much smaller bytecode footprints.
 
