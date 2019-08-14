@@ -40,9 +40,8 @@
     - [New Compiling pipeline](#new-compiling-pipeline)
       - [Ignition](#ignition)
       - [Turbofan](#turbofan)
-        - [Deoptimization cliffs](#deoptimization-cliffs)
-        - [Early optimization](#early-optimization)
-        - [Sea Of Nodes](#sea-of-nodes)
+        - [Deoptimisation cliffs](#deoptimisation-cliffs)
+        - [Early optimisation](#early-optimisation)
     - [Bytecodes](#bytecodes)
       - [Registers](#registers)
       - [Hands on](#hands-on)
@@ -51,14 +50,14 @@
       - [Memory Management in Node.js](#memory-management-in-nodejs)
       - [Memory management in practice](#memory-management-in-practice)
       - [GC Methods](#gc-methods)
-  - [Compiler optimizations](#compiler-optimizations)
+  - [Putting it all together](#putting-it-all-together)
+- [Compiler optimisations](#compiler-optimisations)
     - [On Stack Replacement](#on-stack-replacement)
     - [Constant Folding](#constant-folding)
     - [Induction Variable Analysis](#induction-variable-analysis)
     - [Rematerialization](#rematerialization)
     - [Removing Recursion](#removing-recursion)
-    - [Deforestation](#deforestation)
-    - [Peephole Optimizations](#peephole-optimizations)
+    - [Peephole Optimisations](#peephole-optimisations)
     - [Inline Expansion](#inline-expansion)
     - [Inline Caching](#inline-caching)
     - [Dead Code Elimination](#dead-code-elimination)
@@ -66,21 +65,7 @@
     - [Jump Threading](#jump-threading)
     - [Trampolines](#trampolines)
     - [Commom subexpression elimination](#commom-subexpression-elimination)
-    - [Loops](#loops)
-      - [Loop Fission/distribution](#loop-fissiondistribution)
-      - [Loop Fusion/ramming/jamming](#loop-fusionrammingjamming)
-      - [Loop Inversion](#loop-inversion)
-      - [Loop Interchange](#loop-interchange)
-      - [Loop-Invariant Code Motion](#loop-invariant-code-motion)
-      - [Loop Nest Optimization](#loop-nest-optimization)
-      - [Loop Reversal](#loop-reversal)
-      - [Loop Unrolling](#loop-unrolling)
-      - [Loop Splitting](#loop-splitting)
-      - [Loop Unswitching](#loop-unswitching)
-  - [Native Modules](#native-modules)
-    - [N-API](#n-api)
-  - [Putting it all together](#putting-it-all-together)
-  - [References](#references)
+- [References](#references)
 
 ## Goal
 
@@ -115,13 +100,13 @@ The goal of this document is to make possible the understanding of how Node.js w
          1. Sea Of Nodes
          2. Hidden Classes and variable allocation
    5. Garbage collection
-6. Compiler optimizations
+6. Compiler optimisations
    1. Constant Folding
    2. Induction Variable Analysis
    3. Rematerialization
    4. Removing Recursion
    5. Deforestation
-   6. Peephole Optimizations
+   6. Peephole Optimisations
    7. Inline Expansion
    8. Inline Caching
    9. Dead Code Elimination
@@ -135,7 +120,7 @@ The goal of this document is to make possible the understanding of how Node.js w
       3.  Loop Inversion
       4.  Loop Interchange
       5.  Loop-Invariant Code Motion
-      6.  Loop Nest Optimization
+      6.  Loop Nest Optimisation
       7.  Loop Reversal
       8.  Loop Unrolling
       9.  Loop Splitting
@@ -837,8 +822,8 @@ As of now, most engines actually works the same way, the biggest difference betw
 V8 also uses a lot of different threads to make itself faster:
 
 - The main thread is the one that fetches, compiles and executes JS code
-- Another thread is used for optimization compiling so the main thread continues the execution while the former is optimizing the running code
-- A third thread is used only for profilling, which tells the runtime which methods need optimization
+- Another thread is used for optimisation compiling so the main thread continues the execution while the former is optimizing the running code
+- A third thread is used only for profilling, which tells the runtime which methods need optimisation
 - A few other threads to handle garbage collection
 
 #### Abstract Syntax Trees
@@ -934,9 +919,9 @@ myObj.y = 2 // Dynamically changing the type
 console.log(myObj) // { x: 1, y: 2 }
 ```
 
-Since JavaScript is a dynamic language, properties from our objects can be added and removed on the fly - like we did. These operations require a dynamic lookup to resolve where this property's location is in memory so it can get back the value for you. Dynamic lookups are a high-cost operation for processors. So how does V8 handles this to make JS so fast? The answer is **hidden classes**. And it's one of the optimization tricks V8 is so famous about.
+Since JavaScript is a dynamic language, properties from our objects can be added and removed on the fly - like we did. These operations require a dynamic lookup to resolve where this property's location is in memory so it can get back the value for you. Dynamic lookups are a high-cost operation for processors. So how does V8 handles this to make JS so fast? The answer is **hidden classes**. And it's one of the optimisation tricks V8 is so famous about.
 
-> We'll talk about other compiler optimization techniques later
+> We'll talk about other compiler optimisation techniques later
 
 Generally when we have statically-typed languages, we can easily determine where a property is in memory, since all objects and variables are determined by a fixed object layout you'll define as its type, and new properties cannot be added during runtime, which makes pretty easy for the compiler to find this properties' values (or pointers) in memory since they can be stored as a continuous buffer with a fixed [offset](http://en.wikipedia.org/wiki/Offset_%28computer_science%29) between each object. And this [offset](http://en.wikipedia.org/wiki/Offset_%28computer_science%29) can be easily determined by the object type, since all types have a fixed memory value. V8 takes advantage of these fixed layout object concept to use the approach of a hidden class. Let's see how it works:
 
@@ -952,7 +937,7 @@ Now as the last statement we add `y`, this does the exact same steps as before: 
 
 ![](assets/h2.jpg)
 
-This little trick makes possible for V8 to reuse hidden classes for new object. If we create a new object like `{}`, no new classes will be created, instead V8 will point the new object to C0. As we add the new properties `x` and `y`, the new object will point to the classes C1 and C2 writing the values on the offsets those classes specify. This concept makes possible for a compiler to bypass a dictionary lookup for when a proprety is accessed. Since it already knows to what class the object points to and where is the offset to that property, it can simply go straight there. This also makes V8 able to use class-based optimizations and inline caching - which we'll see later.
+This little trick makes possible for V8 to reuse hidden classes for new object. If we create a new object like `{}`, no new classes will be created, instead V8 will point the new object to C0. As we add the new properties `x` and `y`, the new object will point to the classes C1 and C2 writing the values on the offsets those classes specify. This concept makes possible for a compiler to bypass a dictionary lookup for when a proprety is accessed. Since it already knows to what class the object points to and where is the offset to that property, it can simply go straight there. This also makes V8 able to use class-based optimisations and inline caching - which we'll see later.
 
 However, hidden classes are extremely volatile, they are one and only to that specific type of object. So, if we swap the order of our properties to be `y` and `x` instead of the opposite, V8 would have to create new hidden classes since C1 only has offsets for x in the position 0 and C2 only has offsets for y in the first position.
 
@@ -972,7 +957,7 @@ A hot function is a function that is called several times during the execution o
 
 #### Crankshaft
 
-The Crankshaft compiler used to be the default JIT compiler that handled all the optimization parts of JS.
+The Crankshaft compiler used to be the default JIT compiler that handled all the optimisation parts of JS.
 
 After receiving the type information and call information from the runtime that full-codegen created, it analyses the data and see which functions have become hot. Then Crankshaft can walk the AST generating optimized code for these particular functions. Aftwards, the optimized function will replace the un-optimized one using what is called **on-stack replacement (OSR)**.
 
@@ -1030,7 +1015,7 @@ exit:
 
 In SSA variables are never assigned again; they are bound once to their value and that's it. This form breaks down any procedure into several basic blocks of computation which ends with a branch to another block whether this branch is conditional or not. As you can see variables are bound to unique names at each assignment and, in the end, the `phi` function takes all the `x`s and merge them together, returning the one which has a value.
 
-When the HIR is being generated, Hydrogen applies several optimizations to the code such as contant folding, method inlining and other stuff we'll see at the end of this guide - there's a whole section to it.
+When the HIR is being generated, Hydrogen applies several optimisations to the code such as contant folding, method inlining and other stuff we'll see at the end of this guide - there's a whole section to it.
 
 The result Hydrogen outputs is an optimized CFG which the next compiler, Lithium, takes as input to generate actual optimized code.
 
@@ -1038,7 +1023,7 @@ The result Hydrogen outputs is an optimized CFG which the next compiler, Lithium
 
 As we said, the Lithium compiler takes the HIR and translates into a machine-specific low-level intermediate representation (LIR). Which is conceptually similar to what a machine code should be, but also platform independent.
 
-While this LIR is being generated, new code optimizations are applied, but this time those are low-level optimizations.
+While this LIR is being generated, new code optimisations are applied, but this time those are low-level optimisations.
 
 In the end, this LIR is read and Crankshaft generates a sequence of native instructions for every Lithium instruction, the OSR is applied and then the code is executed.
 
@@ -1090,11 +1075,11 @@ Add a0 -> Adds the first parameter a0 (a) into the accumulator and stores the re
 Return -> Return
 ```
 
-After walking the AST, the generated bytecode is feeded one at a time to an optimization pipeline. So before Ignition can interpret anything, some optimization techniques like register optimization, peephole optimizations and deadcode removal are applied by the parser.
+After walking the AST, the generated bytecode is feeded one at a time to an optimisation pipeline. So before Ignition can interpret anything, some optimisation techniques like register optimisation, peephole optimisations and deadcode removal are applied by the parser.
 
 ![](assets/ignition-pipeline.png)
 
-The optimization pipeline is sequential, which makes possible for Ignition to read smaller bytecode and interpret more optimized code.
+The optimisation pipeline is sequential, which makes possible for Ignition to read smaller bytecode and interpret more optimized code.
 
 So this is the full pipeline **before** from the parser to Ignition:
 
@@ -1106,49 +1091,41 @@ Ignition is not written in C++ since it'd need trampolines between interpreted a
 
 It's also not written in hand-crafted assembly, like a lot of things in V8, because it'd need to be ported to 9 different architectures, which is not practical.
 
-Rather than doing that stuff, Ignition is basically written using the backend of the TurboFan compiler, a write-once macro assembler and compiles to all architectures. And also, we can have the low level optimizations that TurboFan generates for free.
+Rather than doing that stuff, Ignition is basically written using the backend of the TurboFan compiler, a write-once macro assembler and compiles to all architectures. And also, we can have the low level optimisations that TurboFan generates for free.
 
 #### Turbofan
 
 ![](assets/v8-turbofan.svg)
 
-TurboFan is the JS optimizing compiler which, now, replaced Crankshaft as official JIT compiler. But it wasn't always like that. TurboFan was initially designed to be a very good webasm compiler. the initial version of TurboFan was actually pretty smart, with a lot of type and code optimizations that would perform very well in general JavaScript.
+TurboFan is the JS optimizing compiler which, now, replaced Crankshaft as official JIT compiler. But it wasn't always like that. TurboFan was initially designed to be a very good webasm compiler. the initial version of TurboFan was actually pretty smart, with a lot of type and code optimisations that would perform very well in general JavaScript.
 
 TurboFan uses what is called a Sea-of-Nodes representation (We'll talk about it in the next chapter, but there are reference links in the bottom) that alone increased the overall compiling performance of JavaScript code by a lot. The whole idea of TurboFan is to implement everything that Crankshaft already had, but also make possible for V8 to compile faster ES6 code, which Crankshaft did not know how to deal with. So TurboFan started as a secondary compiler only for ES6 code:
 
 ![](assets/v8-old-pipeline-20161125.png)
 
-The whole problem with this, besides the technical complexity, is that the language features should be implemented in different parts of the pipeline and all those pipelines should be compatible with each other, including the code optimizations they all generated. V8 used this compiling pipeline for a while, when TurboFan couldn't actually handle all the use cases, but, eventually, this pipeline was replaced by this other one:
+The whole problem with this, besides the technical complexity, is that the language features should be implemented in different parts of the pipeline and all those pipelines should be compatible with each other, including the code optimisations they all generated. V8 used this compiling pipeline for a while, when TurboFan couldn't actually handle all the use cases, but, eventually, this pipeline was replaced by this other one:
 
 ![](assets/v8-new-pipeline-20161125.png)
 
-As we saw in the previous chapter, Ignition came to interpret the parsed JS code into bytecode, which became the new source of truth for all compilers in the pipeline, the AST was no longer the single source of truth which all compilers relied on while compiling code. This simple change made possible a number of different optimization techniques such as the faster removal of deadcode and also a lot smaller memory and startup footprint.
+As we saw in the previous chapter, Ignition came to interpret the parsed JS code into bytecode, which became the new source of truth for all compilers in the pipeline, the AST was no longer the single source of truth which all compilers relied on while compiling code. This simple change made possible a number of different optimisation techniques such as the faster removal of deadcode and also a lot smaller memory and startup footprint.
 
 Aside of that, TurboFan is celarly divided into 3 separate layers: the frontend, the optimizing layer and the backend.
 
-The frontend layer is responsible for the generation of bytecode which is run by the Ignition interpreter, the optimizing layer is responsible solely for optimizing code using the TurboFan optimizing compiler. All other lower level tasks, such as low level optimizations, scheduling and generation of machine code for supported architectures is handled by the backend layer - Ignition also relies on TurboFan's backend layer to generate its bytecode. The separation of the layers alone led to 29% less machine-specific code than before.
+The frontend layer is responsible for the generation of bytecode which is run by the Ignition interpreter, the optimizing layer is responsible solely for optimizing code using the TurboFan optimizing compiler. All other lower level tasks, such as low level optimisations, scheduling and generation of machine code for supported architectures is handled by the backend layer - Ignition also relies on TurboFan's backend layer to generate its bytecode. The separation of the layers alone led to 29% less machine-specific code than before.
 
 ![](assets/tf-opt-pipeline.png)
 
-##### Deoptimization cliffs
+##### Deoptimisation cliffs
 
 All in all, TurboFan was solely designed and created to handle a constantly evolving language like JavaScript, something that Crankshaft wasn't build to handle.
 
-This is due to the fact that, in the past, V8 team was focused on writing optimized code and neglected the bytecode that came with it. This generated a few performance cliffs, which made runtime execution pretty unpredictable. Sometimes, a fast running code would fall into a case Crankshaft couldn't handle and then this could would be deoptimized and could run up to a 100 times slower than the former. This is an optimization cliff. And the worst part is that, due to the unpredictable execution of the runtime code, it was not possible to isolate, neither solve this sorts of problems. So it fell onto developers' shoulders to write "CrankScript", which was JavaScript code that was written to make Crankshaft happy.
+This is due to the fact that, in the past, V8 team was focused on writing optimized code and neglected the bytecode that came with it. This generated a few performance cliffs, which made runtime execution pretty unpredictable. Sometimes, a fast running code would fall into a case Crankshaft couldn't handle and then this could would be deoptimized and could run up to a 100 times slower than the former. This is an optimisation cliff. And the worst part is that, due to the unpredictable execution of the runtime code, it was not possible to isolate, neither solve this sorts of problems. So it fell onto developers' shoulders to write "CrankScript", which was JavaScript code that was written to make Crankshaft happy.
 
-##### Early optimization
+##### Early optimisation
 
-Early optimizations are the source of all evil. This is true even to compilers. In benchmarks, it was proven that optimizer compilers were not as important as the interpreter. Since JavaScript code needs to execute fast and quickly, there's no time to compile, recompile, analyse and optimize the code before the execution.
+Early optimisations are the source of all evil. This is true even to compilers. In benchmarks, it was proven that optimizer compilers were not as important as the interpreter. Since JavaScript code needs to execute fast and quickly, there's no time to compile, recompile, analyse and optimize the code before the execution.
 
-the solution to this was out of TurboFan or Crankshaft scope, this was solved by creating Ignition. Optimizing the bytecode generated by the parser led to a much smaller AST, which led to a smaller bytecode which finally led to a much smaller memory footprint, since further optimizations could be deferred to a later time. And executing code a while longer led to more type-feedback to the optimizing compiler and finally this led to less deoptimizations due to wrong type-feedback information.
-
-##### Sea Of Nodes
-
-> Under construction
-
-https://grothoff.org/christian/teaching/2007/3353/papers/click95simple.pdf
-
-http://www.masonchang.com/blog/2010/8/9/sea-of-nodes-compilation-approach.html
+the solution to this was out of TurboFan or Crankshaft scope, this was solved by creating Ignition. Optimizing the bytecode generated by the parser led to a much smaller AST, which led to a smaller bytecode which finally led to a much smaller memory footprint, since further optimisations could be deferred to a later time. And executing code a while longer led to more type-feedback to the optimizing compiler and finally this led to less deoptimisations due to wrong type-feedback information.
 
 ### Bytecodes
 
@@ -1221,7 +1198,7 @@ In this particular bytecode, we're looking up the named property on `a0`, so we'
            1: 0x2ddf8db67544 <String[1]: y>
 ```
 
-So we see that position 0 is `x`. The `[1]` is the index of what is called "feedback vector", which contains runtime information that is used for optimizations.
+So we see that position 0 is `x`. The `[1]` is the index of what is called "feedback vector", which contains runtime information that is used for optimisations.
 
 **Star r0**
 
@@ -1414,73 +1391,91 @@ Mark & Sweep algorithm works in just a few steps:
 
 ![](assets/mark-sweep.gif)
 
-## Compiler optimizations
+## Putting it all together
 
-> This part is yet to be constructed
+---
 
-https://en.wikipedia.org/wiki/Optimizing_compiler
+# Compiler optimisations
+
+This is a brief summary of several compiler optimisations V8 might perform in the code. The whole point of this section is only to introduce what sort of things are included when we say "optimisation". We won't be digging deeper into how compilers do this.
+
+All of the optimisations below are done while the compiler is analysing the code.
 
 ### On Stack Replacement
 
-https://wingolog.org/archives/2011/06/20/on-stack-replacement-in-v8
+On Stack Replacement is the optimisation technique that replaces a chunk of not-optimizsed code by another chunk of optimised code during execution. V8 does that everytime it needs to optimize a single function or the running code. In short, on stack replacement means that the current stack frame will be replaced by another stack frame of optimised code without losing any other information and while the code is still executing. It's like changing the tires of a car in the middle of a race without stopping.
 
 ### Constant Folding
 
+Replaces constant expressions by their final value at compile time, rather than doing the calculation at run-time.
+
+Example:
+
+*not compiled:*
+
+```js
+const j = 3 + 9
+```
+
+*compiled:*
+
+```js
+const j = 12
+```
+
 ### Induction Variable Analysis
+
+In a loop, if a variable is a simple linear function of the index variable, for instance, `const p = 4 * i +1` then it can be updated appropriately each time the loop variable is changed.
+
+This is what is called a strength reduction, a form of optimisation where costly operations are replaced by equivalent less costly ones, for instance, a costly multiplication is replaced by a series of cheaper additions.
 
 ### Rematerialization
 
+The act of recalculating a value instead of loading it from memory, which prevents memory access to be performed too many times.
+
 ### Removing Recursion
 
-### Deforestation
+Recursion is often very expensive, as we saw about stack overflows. Tail recursive algorithms (code that ends returning a call to itself) can be converted to iterative algorithms, which eliminates the stack problems. This is often done by using **[Tail Call Optimisations](https://en.wikipedia.org/wiki/Tail_call)**, which is the process where you are able to avoid allocation a new stack frame for a function because the calling function will simple return the value that it gets from the called function. So this last call can be replaced by the function itself.
 
-### Peephole Optimizations
+### Peephole Optimisations
+
+These are usually performed late in the compilation process, after the machine code has been generated. This optimisation technique examines a few adjacent instructions (like looking through a peephole) to see if they can be replaced by a single instruction or a shorter sequence of instructions. An example is a multiplication by a power of 2, which can be replaced by a bitwise left-shift. (which is also a strength reduction optimisation)
 
 ### Inline Expansion
 
+This is the technique of replacing the call to a function by it's body. This saves the overhead of adding another stack frame and also adds a great opportunity for parameter specific optimisations, but this comes at the cost of space. If the procedure is called several times during a program, it's body will be replaced several times, which can lead to a bigger, heavier code.
+
+Generally, inlining is very useful to performance-critical code that makes a large number of calls to small procedures, so there are fewer jumps.
+
 ### Inline Caching
 
-https://blog.sessionstack.com/how-javascript-works-inside-the-v8-engine-5-tips-on-how-to-write-optimized-code-ac089e62b12e
+Inline caching relies on the observation that repeated calls to the same method tend to occur on the same type of object
 
 ### Dead Code Elimination
 
+This process eliminates code that is never called in the program. It does this, roughly, by passing through all bytecodes during program execution, generates a graph and eliminates those parts which does not belong to any code path. V8 maintains a cache of the type of objects that were passed as a parameter in recent method calls and uses this information to make an assumption about the type of object that'll be passed as a parameter in the future. If this assumption is good, than the next call can bypass the process of figuring out how to access the object's properties and, instead, use the stored information from precious lookups to the hidden class of that object.
+
+This relates specifically to the concept of hidden classes because whenever a method is called on a specific object, the engine has to lookup the hidden class in order to find the memory offset for such called property. After two successful calls of that same method to the same hidden class, V8 omits the hidden class lookup and adds the offset to that property to the object pointer itself. This greatly increases execution speed.
+
 ### Code Block Reordering
+
+Code-block reordering alters the order of the basic blocks in a program in order to reduce conditional branches and improve locality of reference, which is the tendency of a processor to access the same set of memory locations repetitively over a short period of time.
 
 ### Jump Threading
 
+Consecutive conditional jumps predicated entirely or partially on the same condition can be merged. E.g: `if (c) { foo; } if (c) { bar; }` becomes `if (c) { foo; bar; }`
+
 ### Trampolines
+
+Many CPUs have smaller subroutines call instructions in order to access low memory. The compiler can save space using these small calls in the function's body. Multiplying space savings from code refactoring.
 
 ### Commom subexpression elimination
 
-### Loops
+Whenever we have repeated subexpressions, like in `(a+b) * 2+(a+b)`, the *common subexpression* is `a+b`. So, the compiler calculates the value of `a+b` only once and uses *constant folding* to replace it in the expression call, assuming the common subexpression will **not** change.
 
-#### Loop Fission/distribution
+---
 
-#### Loop Fusion/ramming/jamming
-
-#### Loop Inversion
-
-#### Loop Interchange
-
-#### Loop-Invariant Code Motion
-
-#### Loop Nest Optimization
-
-#### Loop Reversal
-
-#### Loop Unrolling
-
-#### Loop Splitting
-
-#### Loop Unswitching
-
-## Native Modules
-
-### N-API
-
-## Putting it all together
-
-## References
+# References
 
 - [LibUV](https://github.com/libuv/libuv)
 - [N-API](https://nodejs.org/api/n-api.html)
@@ -1500,7 +1495,8 @@ https://blog.sessionstack.com/how-javascript-works-inside-the-v8-engine-5-tips-o
 - [Internals of Node with crypto library](https://medium.com/front-end-weekly/internals-of-node-advance-node-%EF%B8%8F-8612f6a957d7)
 - [Microtasks and Macrotasks](https://stackoverflow.com/questions/25915634/difference-between-microtask-and-macrotask-within-an-event-loop-context)
 - [Lauching ignition and turbofan](https://v8.dev/blog/launching-ignition-and-turbofan)
-- [Performance Optimizations in V8](https://v8-io12.appspot.com/index.html)
+- [Performance Optimisations in V8](https://v8-io12.appspot.com/index.html)
+- [In-Depth of Inline caching](https://github.com/sq/JSIL/wiki/Optimizing-dynamic-JavaScript-with-inline-caches)
 - [Sea of Nodes approach](http://www.masonchang.com/blog/2010/8/9/sea-of-nodes-compilation-approach.html)
 - [Sea of Nodes explanation](http://grothoff.org/christian/teaching/2007/3353/papers/click95simple.pdf)
 - [How to get bytecode from NodeJS](https://medium.com/@drag13dev/https-medium-com-drag13dev-how-to-get-javascript-bytecode-from-nodejs-7bd396805d30)
@@ -1510,18 +1506,18 @@ https://blog.sessionstack.com/how-javascript-works-inside-the-v8-engine-5-tips-o
 - [V8 Interpreter Generator](https://github.com/v8/v8/blob/master/src/interpreter/interpreter-generator.cc)
 - [What are Stacks?](https://en.wikipedia.org/wiki/Stack_(abstract_data_type))
 - [What are queues?](https://www.studytonight.com/data-structures/queue-data-structure)
-- [Compiler Optimization list](https://en.wikipedia.org/wiki/Optimizing_compiler)
+- [Compiler Optimisation list](https://en.wikipedia.org/wiki/Optimizing_compiler)
 - [What are Static Single Assignments?](https://wingolog.org/archives/2011/07/12/static-single-assignment-for-functional-programmers)
 - [On stack replacement in V8](https://wingolog.org/archives/2011/06/20/on-stack-replacement-in-v8)
 - [Why is Node.js so Fast](https://blog.ghaiklor.com/2015/11/14/why-nodejs-is-so-fast/)
 - [You don't know Node.js](https://medium.com/edge-coders/you-dont-know-node-6515a658a1ed)
 - [V8 - A tale of Turbofan](https://dzone.com/articles/v8-behind-the-scenes-and-a-tale-of-turbofan)
-- [Optimization tricks in V8](https://blog.ghaiklor.com/2016/04/05/optimizations-tricks-in-v8/)
+- [Optimisation tricks in V8](https://blog.ghaiklor.com/2016/04/05/optimisations-tricks-in-v8/)
 - [V8 Internals for Developers](https://slidr.io/mathiasbynens/v8-internals-for-javascript-developers#1)
 - [How V8 Optimizes the Code](https://blog.ghaiklor.com/2016/03/25/how-v8-optimises-javascript-code/)
 - [My personal notes (in Portuguese) about V8](https://github.com/khaosdoctor/my-notes/blob/master/node/V8.md)
 - [[BOOK] Node.js Under the Hood](https://resources.risingstack.com/Node.js+at+Scale+Vol.+2+-+Node.js+Under+the+Hood.pdf)
-- [Tracing de-optimizations in Node.js](https://blog.ghaiklor.com/2016/05/16/tracing-de-optimizations-in-nodejs/)
+- [Tracing de-optimisations in Node.js](https://blog.ghaiklor.com/2016/05/16/tracing-de-optimisations-in-nodejs/)
 - [Understanding Promises Once and for All](https://medium.com/trainingcenter/entendendo-promises-de-uma-vez-por-todas-32442ec725c2)
 - [JS Rendering Engine](https://blog.sessionstack.com/how-javascript-works-the-rendering-engine-and-tips-to-optimize-its-performance-7b95553baeda)
 - [Memory Allocation in Javascript](https://blog.sessionstack.com/how-javascript-works-memory-management-how-to-handle-4-common-memory-leaks-3f28b94cfbec)
