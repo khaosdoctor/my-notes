@@ -1449,13 +1449,13 @@ Generally, inlining is very useful to performance-critical code that makes a lar
 
 ### Inline Caching
 
-Inline caching relies on the observation that repeated calls to the same method tend to occur on the same type of object
+Inline caching relies on the observation that repeated calls to the same method tend to occur on the same type of object. V8 maintains a cache of the type of objects that were passed as a parameter in recent method calls and uses this information to make an assumption about the type of object that'll be passed as a parameter in the future. If this assumption is good, than the next call can bypass the process of figuring out how to access the object's properties and, instead, use the stored information from precious lookups to the hidden class of that object.
+
+This relates specifically to the concept of hidden classes because whenever a method is called on a specific object, the engine has to lookup the hidden class in order to find the memory offset for such called property. After two successful calls of that same method to the same hidden class, V8 omits the hidden class lookup and adds the offset to that property to the object pointer itself. This greatly increases execution speed.
 
 ### Dead Code Elimination
 
-This process eliminates code that is never called in the program. It does this, roughly, by passing through all bytecodes during program execution, generates a graph and eliminates those parts which does not belong to any code path. V8 maintains a cache of the type of objects that were passed as a parameter in recent method calls and uses this information to make an assumption about the type of object that'll be passed as a parameter in the future. If this assumption is good, than the next call can bypass the process of figuring out how to access the object's properties and, instead, use the stored information from precious lookups to the hidden class of that object.
-
-This relates specifically to the concept of hidden classes because whenever a method is called on a specific object, the engine has to lookup the hidden class in order to find the memory offset for such called property. After two successful calls of that same method to the same hidden class, V8 omits the hidden class lookup and adds the offset to that property to the object pointer itself. This greatly increases execution speed.
+This process eliminates code that is never called in the program. It does this, roughly, by passing through all bytecodes during program execution, generates a graph and eliminates those parts which does not belong to any code path.
 
 ### Code Block Reordering
 
