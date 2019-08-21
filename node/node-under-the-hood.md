@@ -2,6 +2,8 @@
 
 > The complete guide for understanding node.js to the bare bone
 
+Check out the presentation about this guide [here](https://speakerdeck.com/khaosdoctor/dissecting-node-dot-js-understanding-the-most-famous-js-runtime-to-the-bare-bone)
+
 ## Summary
 
 - [Node.js Under The Hood](#nodejs-under-the-hood)
