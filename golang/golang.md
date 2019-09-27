@@ -11,6 +11,13 @@
     - [Descobrindo o tipo das variáveis](#descobrindo-o-tipo-das-variáveis)
     - [Declaração curta de variáveis](#declaração-curta-de-variáveis)
   - [Recebendo inputs de usuário](#recebendo-inputs-de-usuário)
+  - [Controle de Fluxo](#controle-de-fluxo)
+    - [If](#if)
+    - [Switch](#switch)
+  - [Funções](#funções)
+  - [Web Requests](#web-requests)
+    - [Funções com múltiplos retornos](#funções-com-múltiplos-retornos)
+    - [Monitorando continuamente](#monitorando-continuamente)
 
 ## História
 
@@ -180,3 +187,156 @@ func main() {
 ```
 
 Se colocarmos um valor inválido, por exemplo, uma string ao invés de um int, o Go **não irá alocar nada na variável `choice`**, isto porque ela está esperando um inteiro, então o valor dela será o valor padrão de todas as variáveis inteiras alocadas: 0.
+
+## Controle de Fluxo
+
+### If
+
+Vamos continuar a nossa implementação usando os controles de fluxo com a keyword `if`. Vamos implementar o nosso switch de comandos:
+
+```go
+if choice == 1 {
+  fmt.Println("Monitoring...")
+} else if choice == 2 {
+  fmt.Println("Showing logs:")
+} else if choice == 0 {
+  fmt.Println("Exiting...")
+} else {
+  fmt.Println("Invalid command")
+}
+```
+
+Uma coisa interessante de notar é que, no go, todas as condições de existencia de um `if` **precisam** voltar um `boolean`, o Go não aceita nenhum tipo de condição que não seja um boolean.
+
+### Switch
+
+Vamos utilizar o switch para fazer a mesma coisa:
+
+```go
+switch choice {
+case 1:
+  fmt.Println("Monitoring...")
+case 2:
+  fmt.Println("Showing logs:")
+case 0:
+  fmt.Println("Exiting...")
+default:
+  fmt.Println("Invalid Command")
+}
+```
+
+Algo interessante no `switch` é que o Go não possui uma keyword `break` para o `switch`, se ele entrou em uma condição, ele só vai executar aquela condição. Mas se você quiser colocar `break`, ninguém vai reclamar.
+
+## Funções
+
+No Go, declaramos a função com a keyword `func`:
+
+```go
+func introduction () {
+	name := "Lucas"
+	version := 1.0
+
+	fmt.Println("Hello", name)
+	fmt.Println("You're running version", version)
+}
+```
+
+Neste exemplo, a função não retorna nada e nem leva nada como parâmetro. Uma função que retornaria um resultado precisa ter o mesmo especificado após a sua declaração:
+
+```go
+func readCommand() int {
+	var choice int
+	fmt.Scan(&choice)
+	return choice
+}
+```
+
+## Web Requests
+
+Vamos começar a fazer a nossa função de início de monitoramento para testar se nosso site está online ou não. Para isso precisamos acessar o site e verificar se ele está respondendo.
+
+Para isso temos um pacote específico chamado `net/http`, utilizado para acessar o protocolo HTTP usando Go. Então nosso programa seria:
+
+```go
+import "net/http"
+
+func beginMonitoring() {
+	fmt.Println("Monitoring...")
+	fmt.Println("Which website do you wish to monitor? (http://...)")
+	var website string
+	fmt.Scan(&website)
+	response, err := http.Get(website)
+}
+```
+
+> Veja que a função `get` retorna mais de uma variável, a primeira delas é a resposta e a segunda é um possível erro
+
+### Funções com múltiplos retornos
+
+Para o Go, uma função pode retornar múltiplos valores, então podemos ter uma função assim:
+
+```go
+func hello(nome: string) string {
+  return nome
+}
+```
+
+Ela só está retornando um único valor. Agora, podemos ter uma função que retorna mais de um valor:
+
+```go
+func calculateData() (string, int) {
+  nome := "Lucas"
+  age := 24
+  return name, age
+}
+```
+
+A grande maioria das funções do Go retornam um possível erro que **obrigatoriamente** precisa ser tratado se for declarada.
+
+Quando não queremos utilizar um dos valores, podemos utilizar o operador de identificador em branco `_`:
+
+```go
+func calculateData() (string, int) {
+  nome := "Lucas"
+  age := 24
+  return name, age
+}
+
+func main() {
+  _, age := calculateData()
+  fmt.Println("Hello, you have", age, "years-old")
+}
+```
+
+Na minha função, estou apenas pegando a idade e não estou mais interessado no nome.
+
+### Monitorando continuamente
+
+Para finalizar nossa função vamos fazer o seguinte:
+
+```go
+func beginMonitoring(website string) {
+	fmt.Println("Monitoring...")
+	if website == "" {
+		fmt.Println("Which website do you wish to monitor? (http://...)")
+		fmt.Scan(&website)
+	}
+	response, _ := http.Get(website)
+
+	if response.StatusCode != 200 {
+		fmt.Println("Website is down with status", response.StatusCode)
+	} else {
+		fmt.Println("Website is up and running")
+	}
+
+	fmt.Println("Should we test it again? (0/1)")
+	var choice bool
+	fmt.Scan(&choice)
+
+	if choice {
+		beginMonitoring(website)
+	}
+}
+```
+
+> Poderíamos também utilizar a instrução `for` sem nenhum tipo de condição, isto cria um loop infinito
