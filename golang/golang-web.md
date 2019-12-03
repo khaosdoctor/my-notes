@@ -10,6 +10,7 @@
     - [Templates](#templates)
     - [Criando rotas](#criando-rotas)
     - [Criando o template](#criando-o-template)
+  - [Criando uma Struct de produtos](#criando-uma-struct-de-produtos)
 
 ## Criando um servidor web
 
@@ -107,3 +108,48 @@ Vamos alterar o nosso `index.html` para que ele seja compreendido como um templa
 ```
 
 Agora vamos poder servir o nosso conteúdo via Web.
+
+## Criando uma Struct de produtos
+
+Sempre que quisermos criar um produto novo, temos que editar o nosso HTML e incluir novas TDs e outras partes da tabela, um jeito mais simples de fazer isso é criar uma estrutura. Esta estrutura se assemelha a interfaces ou classes de outras linguagens. Para criar uma nova estrutura no Go, vamos simplesmente usar a palavra chave `struct`:
+
+```go
+type Product struct {
+	Name        string
+	Description string
+	Price       float64
+	Quantity    int
+}
+```
+
+Agora vamos poder criar um modelo de produto a partir dessa struct, instanciando uma nova struct.
+
+```go
+func index(w http.ResponseWriter, r *http.Request) {
+	products := []Product{
+		{Name: "Camiseta", Description: "Camiseta Azul", Price: 18.95, Quantity: 10},
+		{"Tênis", "Confortável", 25.50, 30},
+		{"Fone", "Redução de ruído", 59, 2},
+	}
+	templates.ExecuteTemplate(w, "Index", products)
+}
+```
+
+Veja que podemos instanciar uma struct de duas formas diferentes, a primeira delas é passando todos os campos com as descrições e as labels do que estamos setando e a segunda é apenas passando os valores na ordem que a Struct é formada.
+
+Depois disso vamos ao nosso `index.html` e vamos criar uma estrutura de repetição para que possamos renderizar todos os produtos dinamicamente.
+
+```html
+<tbody>
+  {{range .}}
+  <tr>
+    <td>{{.Name}}</td>
+    <td>{{.Description}}</td>
+    <td>{{.Price}}</td>
+    <td>{{.Quantity}}</td>
+  </tr>
+  {{end}}
+</tbody>
+```
+
+Veja que estamos usando a notação `range .` isto porque o `.` é o caminho do objeto ou da struct que estamos passando para o template que está sendo renderizado.

@@ -20,18 +20,14 @@
       </tr>
     </thead>
     <tbody>
+      {{range .}}
       <tr>
-        <td>Camiseta</td>
-        <td>Camiseta X</td>
-        <td>29</td>
-        <td>10</td>
+        <td>{{.Name}}</td>
+        <td>{{.Description}}</td>
+        <td>{{.Price}}</td>
+        <td>{{.Quantity}}</td>
       </tr>
-      <tr>
-        <td>Notebook</td>
-        <td>Notebook Y</td>
-        <td>1999</td>
-        <td>2</td>
-      </tr>
+      {{end}}
     </tbody>
   </table>
 </body>
