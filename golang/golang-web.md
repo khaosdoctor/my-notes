@@ -11,6 +11,10 @@
     - [Criando rotas](#criando-rotas)
     - [Criando o template](#criando-o-template)
   - [Criando uma Struct de produtos](#criando-uma-struct-de-produtos)
+  - [Banco de dados](#banco-de-dados)
+    - [Conectando o banco com nossa aplicação](#conectando-o-banco-com-nossa-aplicação)
+    - [Exibindo os dados do banco](#exibindo-os-dados-do-banco)
+  - [Modularizando o código](#modularizando-o-código)
 
 ## Criando um servidor web
 
@@ -153,3 +157,105 @@ Depois disso vamos ao nosso `index.html` e vamos criar uma estrutura de repetiç
 ```
 
 Veja que estamos usando a notação `range .` isto porque o `.` é o caminho do objeto ou da struct que estamos passando para o template que está sendo renderizado.
+
+## Banco de dados
+
+Nossos dados estão fixos no nosso sistema. Precisamos instalar um novo banco de dados e puxar estes dados a partir do nosso banco. Neste caso vamos utilizar o PostgreSQL, instalaremos o PGSQL normalmente como uma versão simples e instalar na nossa máquina.
+
+Vamos criar uma tabela `products` e vamos ter a seguinte estrutura:
+
+- name: string
+- description: string
+- price: float
+- quantity: integer
+- id: integer auto gerado
+
+### Conectando o banco com nossa aplicação
+
+O que vamos fazer é instalar um pacote para o driver do PGSQL, vamos entrar em https://godoc.org para achar um pacote do PGSQL que possamos utilizar. Vamos utilizar o pacote [PQ](https://godoc.org/github.com/lib/pq). Vamos entrar na página da lib e veremos que precisamos digitar `go get github.com/lib/pq` para podermos instalar o pacote. Vamos executar isso no nosso terminal.
+
+A primeira coisa que vamos ter que fazer, é importar a lib no nosso projeto:
+
+```go
+import (
+	"html/template"
+	"net/http"
+
+	_ "github.com/lib/pq"
+)
+```
+
+> O `_` significa que vamos utilizar a biblioteca durante o tempo de execução da nossa aplicação
+
+Agora vamos escrever a função que vai conectar com o nosso banco e retornar o ponteiro para a instância do banco de dados:
+
+```go
+func connectDatabase() *sql.DB {
+	connection := "user=postgres dbname=store password=mysecretpass host=localhost sslmode=disable"
+	db, err := sql.Open("postgres", connection)
+	if err != nil {
+		panic(err.Error)
+	}
+
+	return db
+}
+```
+
+Assim, podemos conectar no nosso banco de dados pela função principal com a seguinte chamada:
+
+```go
+func main() {
+  db := connectDatabase()
+  defer db.Close()
+	http.HandleFunc("/", index)
+	http.ListenAndServe(":8000", nil)
+}
+```
+
+> A keyword `defer` faz com que a instrução após ela seja executada **após** todas as outras instruções da função serem executadas, ou seja, estamos deferindo uma execução para o final da função
+
+### Exibindo os dados do banco
+
+Vamos conectar e trazer os dados que estão na nossa tabela no banco:
+
+```go
+func index(w http.ResponseWriter, r *http.Request) {
+	db := connectDatabase()
+
+	allProducts, err := db.Query("SELECT * FROM products")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	product := Product{}
+	products := []Product{}
+
+	for allProducts.Next() {
+		var id, quantity int
+		var name, description string
+		var price float64
+
+		err = allProducts.Scan(&id, &name, &description, &price, &quantity)
+		if err != nil {
+			panic(err.Error())
+		}
+
+		product.Name = name
+		product.Id = id
+		product.Description = description
+		product.Price = price
+		product.Quantity = quantity
+
+		products = append(products, product)
+	}
+
+	templates.ExecuteTemplate(w, "Index", products)
+	defer db.Close()
+}
+```
+
+Veja que estamos usando a própria função que renderiza a nossa página `index`, o que fazemos é basicamente uma query no banco de dados buscando todos os produtos, depois criamos duas variáveis, uma delas é a instância de um produto individual, a outra é a lista de todos os produtos do nosso banco de dados.
+
+Vamos iterar pela lista de linhas trazidas pelo banco e montar um produto de cada vez na memória, depois vamos inserir este produto no nosso array de produtos e mandar para o nosso template.
+
+## Modularizando o código
