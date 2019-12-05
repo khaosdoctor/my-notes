@@ -2,10 +2,13 @@ package main
 
 import (
 	"net/http"
-	"package-2/routes"
+	"project-2/routes"
 )
 
 func main() {
 	routes.LoadRoutes()
-	http.ListenAndServe(":8000", nil)
+	var err = http.ListenAndServe(":8000", nil)
+	if err != nil {
+		panic(err.Error())
+	}
 }
