@@ -367,3 +367,55 @@ func index(w http.ResponseWriter, r *http.Request) {
 	templates.ExecuteTemplate(w, "Index", products)
 }
 ```
+
+Vamos modularizar ainda mais, extraindo a função de handling do nosso template para outra pasta chamada `routes`, mas antes vamos passar a lógica de carregamento dos nossos templates para uma pasta `controllers` em um arquivo `products.go`:
+
+```go
+package controllers
+
+import (
+	"html/template"
+	"net/http"
+	"project-2/models"
+)
+
+var templates = template.Must(template.ParseGlob("templates/**/*.html"))
+
+func Index(w http.ResponseWriter, r *http.Request) {
+	products := models.ListAll()
+
+	templates.ExecuteTemplate(w, "Index", products)
+}
+```
+
+Depois vamos para a pasta `routes` no arquivo `routes.go` e vamos passar a lógica de execução das nossas rotas:
+
+```go
+package routes
+
+import (
+	"net/http"
+	"project-2/controllers"
+)
+
+// LoadRoutes loads all routes
+func LoadRoutes() {
+	http.HandleFunc("/", controllers.Index)
+}
+```
+
+Nosso arquivo `main.go` agora está assim:
+
+```go
+package main
+
+import (
+	"net/http"
+	"package-2/routes"
+)
+
+func main() {
+	routes.LoadRoutes()
+	http.ListenAndServe(":8000", nil)
+}
+```
