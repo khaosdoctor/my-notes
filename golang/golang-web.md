@@ -15,6 +15,7 @@
     - [Conectando o banco com nossa aplicação](#conectando-o-banco-com-nossa-aplicação)
     - [Exibindo os dados do banco](#exibindo-os-dados-do-banco)
   - [Modularizando o código](#modularizando-o-código)
+  - [Criando novos produtos na loja](#criando-novos-produtos-na-loja)
 
 ## Criando um servidor web
 
@@ -419,3 +420,7 @@ func main() {
 	http.ListenAndServe(":8000", nil)
 }
 ```
+
+Modularizamos o código em um formato MVC.
+
+## Criando novos produtos na loja
