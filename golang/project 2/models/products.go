@@ -26,7 +26,7 @@ func ListAll() []Product {
 	}
 
 	product := Product{}
-	products := []Product{}
+	var products []Product
 
 	for allProducts.Next() {
 		var id, quantity int
