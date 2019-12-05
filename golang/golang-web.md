@@ -259,3 +259,111 @@ Veja que estamos usando a própria função que renderiza a nossa página `index
 Vamos iterar pela lista de linhas trazidas pelo banco e montar um produto de cada vez na memória, depois vamos inserir este produto no nosso array de produtos e mandar para o nosso template.
 
 ## Modularizando o código
+
+Nosso arquivo `main.go` faz muita coisa, precisamos começar a modularizar esse nosso código para manter de forma mais simples. A primeira coisa que vamos fazer é criar uma nova pasta chamada `db`, nela vamos criar um arquivo chamado `db.go` e vamos passar a nossa função de conexão com o banco e colocar lá dentro, nosso arquivo `db.go` ficaria assim:
+
+```go
+package db
+
+import (
+	"database/sql"
+	_ "github.com/lib/pq"
+)
+
+func connectDatabase() *sql.DB {
+	connection := "user=postgres dbname=store password=mysecretpass host=localhost sslmode=disable"
+	db, err := sql.Open("postgres", connection)
+	if err != nil {
+		panic(err.Error)
+	}
+
+	return db
+}
+```
+
+O próximo passo é passar a nossa struct para uma pasta chamada `models`, dentro dela vamos criar um arquivo chamado `products.go`, nesse arquivo vamos passar a nossa struct e vamos criar uma nova função que vai abstrair a busca de produtos do banco de dados:
+
+```go
+package models
+
+import localDB "project-2/db"
+
+// Product is the representation of a store Product
+// Name: Name of the product
+// Description: Description of the product
+// Price: Product Price
+// Quantity: How much product is available in stock
+type Product struct {
+	ID          int
+	Name        string
+	Description string
+	Price       float64
+	Quantity    int
+}
+
+// ListAll lists all products in the database
+func ListAll() []Product {
+	db := localDB.ConnectDatabase()
+	defer db.Close()
+
+	allProducts, err := db.Query("SELECT * FROM products")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	product := Product{}
+	products := []Product{}
+
+	for allProducts.Next() {
+		var id, quantity int
+		var name, description string
+		var price float64
+
+		err = allProducts.Scan(&id, &name, &description, &price, &quantity)
+		if err != nil {
+			panic(err.Error())
+		}
+
+		product.Name = name
+		product.ID = id
+		product.Description = description
+		product.Price = price
+		product.Quantity = quantity
+
+		products = append(products, product)
+	}
+
+	return products
+}
+```
+
+Veja duas coisas:
+
+1. Temos que primeiro renomear a nossa função para `ConnectDatabase` para que ela seja pública
+2. Temos que importar o nosso package `db` de dentro do nosso projeto, para isso vamos dar um `go mod init` para criar a pasta do projeto e do módulo depois podemos importar como `project-2/db`
+3. Tivemos que nomear nosso import para `localDB` pois a extensão `pq` já exporta um namespace com o mesmo nome
+
+Agora no nosso arquivo `main.go` vamos importar os nossos models e então retornar a lista dos produtos:
+
+```go
+package main
+
+import (
+	"html/template"
+	"net/http"
+	"project-2/models"
+)
+
+var templates = template.Must(template.ParseGlob("templates/**/*.html"))
+
+func main() {
+	http.HandleFunc("/", index)
+	http.ListenAndServe(":8000", nil)
+}
+
+func index(w http.ResponseWriter, r *http.Request) {
+	products := models.ListAll()
+
+	templates.ExecuteTemplate(w, "Index", products)
+}
+```
