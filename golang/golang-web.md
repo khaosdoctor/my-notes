@@ -16,6 +16,7 @@
     - [Exibindo os dados do banco](#exibindo-os-dados-do-banco)
   - [Modularizando o código](#modularizando-o-código)
   - [Criando novos produtos na loja](#criando-novos-produtos-na-loja)
+    - [Buscando dados da Página](#buscando-dados-da-página)
 
 ## Criando um servidor web
 
@@ -424,3 +425,211 @@ func main() {
 Modularizamos o código em um formato MVC.
 
 ## Criando novos produtos na loja
+
+Sempre que queremos criar um novo produto na nossa loja temos que ir no banco de dados e criar um produto diretamente no banco. Vamos criar um botão embaixo do nosso site onde possamos preencher um formulário e ele vai criar o conteúdo no banco de dados.
+
+Vamos criar uma página HTML nova chamada `new.html` e colocar na nossa pasta `templates`. Ela vai ter um formulário de cadastro de novos produtos. Vamos fazer uma pequena alteração na nossa tela `index.html` para criar um novo botão que nos leva para o caminho `/new`.
+
+```html
+{{ define "NewProduct" }}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+        crossorigin="anonymous">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+    <title>Alura loja</title>
+</head>
+<nav class="navbar navbar-light bg-light mb-4">
+    <a class="navbar-brand" href="/">Alura Loja</a>
+</nav>
+<div class="container">
+
+    <body>
+        <div class="jumbotron jumbotron-fluid">
+            <div class="container">
+                <h1 class="display-5">Novo produto</h1>
+                <p class="lead">Insira os detalhes</p>
+            </div>
+        </div>
+        <form method="POST" action="insert">
+            <div class="row">
+                <div class="col-sm-8">
+                    <div class="form-group">
+                        <label for="nome">Nome:</label>
+                        <input type="text" name="nome" class="form-control">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-8">
+                    <div class="form-group">
+                        <label for="descricao">Descrição:</label>
+                        <input type="text" name="descricao" class="form-control">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-2">
+                    <div class="form-group">
+                        <label for="preco">Preço:</label>
+                        <input type="number" name="preco" class="form-control" step="0.01">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-2">
+                    <div class="form-group">
+                        <label for="quantidade">Quantidade:</label>
+                        <input type="number" name="quantidade" class="form-control">
+                    </div>
+                </div>
+            </div>
+            <button type="submit" value="salvar" class="btn btn-success">Salvar</button>
+            <a class="btn btn-info" href="/">Voltar</a>
+        </form>
+    </body>
+
+</html>
+</div>
+</body>
+
+</html>
+{{end}}
+```
+
+Para podermos registrar nossa nova rota vamos precisar de um comando no arquivo `routes.go` que vai registrar nosso template para a nossa nova rota:
+
+```go
+package routes
+
+import (
+	"net/http"
+	"project-2/controllers"
+)
+
+// LoadRoutes loads all routes
+func LoadRoutes() {
+	http.HandleFunc("/", controllers.Index)
+	http.HandleFunc("/new", controllers.NewProduct)
+}
+```
+
+E ai vamos adicionar o controller no nosso `products.go`:
+
+```go
+package controllers
+
+import (
+	"html/template"
+	"net/http"
+	"project-2/models"
+)
+
+var templates = template.Must(template.ParseGlob("templates/**/*.html"))
+
+func Index(w http.ResponseWriter, r *http.Request) {
+	products := models.ListAll()
+
+	templates.ExecuteTemplate(w, "Index", products)
+}
+
+func NewProduct(w http.ResponseWriter, r *http.Request) {
+	templates.ExecuteTemplate(w, "NewProduct", nil)
+}
+```
+
+Agora devemos ter uma nova tela funcionando.
+
+### Buscando dados da Página
+
+No nosso formulário, vamos ter um POST com action `insert` que vai nos levar para `/insert`. Mas não estamos tratando esses dados quando recebemos na página `/insert`. Vamos no nosso arquivo `products.go` e vamos criar uma nova função chamada `InsertNewProduct` que vai levar os mesmos parâmetros dos demais:
+
+```go
+func InsertNew(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" { return }
+
+	name := r.FormValue("nome")
+	description := r.FormValue("descricao")
+	price := r.FormValue("preco")
+	quantity := r.FormValue("quantidade")
+
+}
+```
+
+Vamos utilizar um early return para poder voltar caso o método da chamada não seja POST, então vamos pegar os dados dos nossos campos do formulário, porém todos os campos que vem do formulário através da nossa request vão ser do formato String, então temos que converter o preço e a quantidade para os tipos do nosso struct. Para isso vamos utilizar a função da biblioteca `strconv`:
+
+```go
+func InsertNew(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		return
+	}
+
+	name := r.FormValue("nome")
+	description := r.FormValue("descricao")
+	price, err := strconv.ParseFloat(r.FormValue("preco"), 64)
+	if err != nil {
+		log.Println("Failed to convert price to Float:", err)
+	}
+
+	quantity, err := strconv.Atoi(r.FormValue("quantidade"))
+	if err != nil {
+		log.Println("Failed to convert quantity to Int:", err)
+	}
+
+  models.InsertNewProduct(name, description, price, quantity)
+	http.Redirect(w, r, "/", 301) // Damos um redirect para a página principal
+}
+```
+
+Agora que temos os nossos dados convertidos, vamos mandar essas informações para o nosso Model criar o produto, para isso vamos fazer uma nova função no arquivo `products.go` na pasta `models`:
+
+```go
+func InsertNewProduct(name string, description string, price float64, quantity int) Product {
+	db := localDB.ConnectDatabase()
+	insertQuery, err := db.Prepare("INSERT INTO products (name, description, price, quantity) VALUES ($1, $2, $3, $4)")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	result, err := insertQuery.Exec(name, description, price, quantity)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	defer db.Close()
+
+	id, _ := result.LastInsertId()
+	return Product{
+		int(id),
+		name,
+		description,
+		price,
+		quantity,
+	}
+}
+```
+
+Veja que na nossa função, nós estamos utilizando o statement de `Prepare` do mbanco de dados para preparar uma query de inserção onde passamos nossos parâmetros, ao executar `Exec` passamos os dados que queremos inserir no banco, esta inserção nos gera um resultado e um erro, vamos ignorar o erro e pegar o último ID inserido, já que nosso banco gera os IDs automaticamente, então vamos montar um novo `Product` e retornar este produto.
+
+Agora a única coisa que falta é rotearmos o nosso caminho `/insert` para a nossa função de inserção. Vamos editar o nosso `routes.go` e criar essa rota:
+
+```go
+
+package routes
+
+import (
+	"net/http"
+	"project-2/controllers"
+)
+
+// LoadRoutes loads all routes
+func LoadRoutes() {
+	http.HandleFunc("/", controllers.Index)
+	http.HandleFunc("/new", controllers.NewProduct)
+	http.HandleFunc("/insert", controllers.InsertNew)
+}
+```
