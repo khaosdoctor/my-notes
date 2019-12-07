@@ -8,8 +8,12 @@ import (
 
 var templates = template.Must(template.ParseGlob("templates/**/*.html"))
 
-func Index(w http.ResponseWriter, r *http.Request) {
+func Index(w http.ResponseWriter, _ *http.Request) {
 	products := models.ListAll()
 
-	templates.ExecuteTemplate(w, "Index", products)
+	_ = templates.ExecuteTemplate(w, "Index", products)
+}
+
+func NewProduct(w http.ResponseWriter, _ *http.Request) {
+	_ = templates.ExecuteTemplate(w, "NewProduct", nil)
 }

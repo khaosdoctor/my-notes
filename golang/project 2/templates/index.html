@@ -10,26 +10,33 @@
 </head>
 
 <body>
+<section class="table">
   <table>
     <thead>
-      <tr>
-        <th>Nome</th>
-        <th>Descrição</th>
-        <th>Preço</th>
-        <th>Quantidade</th>
-      </tr>
+    <tr>
+      <th>Nome</th>
+      <th>Descrição</th>
+      <th>Preço</th>
+      <th>Quantidade</th>
+    </tr>
     </thead>
     <tbody>
-      {{range .}}
+    {{range .}}
       <tr>
         <td>{{.Name}}</td>
         <td>{{.Description}}</td>
         <td>{{.Price}}</td>
         <td>{{.Quantity}}</td>
       </tr>
-      {{end}}
+    {{end}}
     </tbody>
   </table>
+</section>
+
+<section class="button">
+  <a href="/new" class="btn btn-primary mb-2">Novo Produto</a>
+</section>
+
 </body>
 
 </html>
