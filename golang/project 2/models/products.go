@@ -49,3 +49,27 @@ func ListAll() []Product {
 
 	return products
 }
+
+func InsertNewProduct(name string, description string, price float64, quantity int) Product {
+	db := localDB.ConnectDatabase()
+	insertQuery, err := db.Prepare("INSERT INTO products (name, description, price, quantity) VALUES ($1, $2, $3, $4)")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	result, err := insertQuery.Exec(name, description, price, quantity)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	defer db.Close()
+
+	id, _ := result.LastInsertId()
+	return Product{
+		int(id),
+		name,
+		description,
+		price,
+		quantity,
+	}
+}
