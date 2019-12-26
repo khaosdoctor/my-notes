@@ -1,69 +1,61 @@
 {{ define "NewProduct" }}
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta http-equiv="X-UA-Compatible" content="ie=edge">
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
-              crossorigin="anonymous">
-        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
-                crossorigin="anonymous"></script>
-        <title>Alura loja</title>
-    </head>
-    <body>
-    <nav class="navbar navbar-light bg-light mb-4">
-        <a class="navbar-brand" href="/">Alura Loja</a>
-    </nav>
-    <div class="container">
+{{template "_head"}}
+
+<body>
+  <nav class="navbar navbar-light bg-light mb-4">
+    <a class="navbar-brand" href="/">Alura Loja</a>
+  </nav>
+  <div class="container">
 
 
-        <div class="jumbotron jumbotron-fluid">
-            <div class="container">
-                <h1 class="display-5">Novo produto</h1>
-                <p class="lead">Insira os detalhes</p>
-            </div>
-        </div>
-        <form method="POST" action="insert">
-            <div class="row">
-                <div class="col-sm-8">
-                    <div class="form-group">
-                        <label for="nome">Nome:</label>
-                        <input type="text" name="nome" class="form-control">
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-sm-8">
-                    <div class="form-group">
-                        <label for="descricao">Descrição:</label>
-                        <input type="text" name="descricao" class="form-control">
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-sm-2">
-                    <div class="form-group">
-                        <label for="preco">Preço:</label>
-                        <input type="number" name="preco" class="form-control" step="0.01">
-                    </div>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-sm-2">
-                    <div class="form-group">
-                        <label for="quantidade">Quantidade:</label>
-                        <input type="number" name="quantidade" class="form-control">
-                    </div>
-                </div>
-            </div>
-            <button type="submit" value="salvar" class="btn btn-success">Salvar</button>
-            <a class="btn btn-info" href="/">Voltar</a>
-        </form>
-        </body>
-
-        </html>
+    <div class="jumbotron jumbotron-fluid">
+      <div class="container">
+        <h1 class="display-5">Novo produto</h1>
+        <p class="lead">Insira os detalhes</p>
+      </div>
     </div>
-    </body>
+    <form method="POST" action="insert">
+      <div class="row">
+        <div class="col-sm-8">
+          <div class="form-group">
+            <label for="nome">Nome:</label>
+            <input type="text" name="nome" class="form-control">
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-8">
+          <div class="form-group">
+            <label for="descricao">Descrição:</label>
+            <input type="text" name="descricao" class="form-control">
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-2">
+          <div class="form-group">
+            <label for="preco">Preço:</label>
+            <input type="number" name="preco" class="form-control" step="0.01">
+          </div>
+        </div>
+      </div>
 
-    </html>
+      <div class="row">
+        <div class="col-sm-2">
+          <div class="form-group">
+            <label for="quantidade">Quantidade:</label>
+            <input type="number" name="quantidade" class="form-control">
+          </div>
+        </div>
+      </div>
+      <button type="submit" value="salvar" class="btn btn-success">Salvar</button>
+      <a class="btn btn-info" href="/">Voltar</a>
+    </form>
+</body>
+
+</html>
+</div>
+</body>
+
+</html>
 {{end}}

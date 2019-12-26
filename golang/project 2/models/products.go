@@ -50,6 +50,17 @@ func ListAll() []Product {
 	return products
 }
 
+func RemoveProduct(id string) {
+	db := localDB.ConnectDatabase()
+	removeQuery, err := db.Prepare("DELETE FROM products WHERE id = $1")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	removeQuery.Exec(id)
+	defer localDB.Close()
+}
+
 func InsertNewProduct(name string, description string, price float64, quantity int) Product {
 	db := localDB.ConnectDatabase()
 	insertQuery, err := db.Prepare("INSERT INTO products (name, description, price, quantity) VALUES ($1, $2, $3, $4)")

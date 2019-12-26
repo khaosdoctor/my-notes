@@ -10,4 +10,5 @@ func LoadRoutes() {
 	http.HandleFunc("/", controllers.Index)
 	http.HandleFunc("/new", controllers.NewProduct)
 	http.HandleFunc("/insert", controllers.InsertNew)
+	http.HandleFunc("/delete", controllers.Delete)
 }

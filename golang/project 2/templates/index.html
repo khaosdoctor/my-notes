@@ -1,41 +1,34 @@
 {{ define "Index" }}
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Loja</title>
-</head>
+{{template "_head"}}
 
 <body>
-<section class="table">
-  <table>
-    <thead>
-    <tr>
-      <th>Nome</th>
-      <th>Descrição</th>
-      <th>Preço</th>
-      <th>Quantidade</th>
-    </tr>
-    </thead>
-    <tbody>
-    {{range .}}
-      <tr>
-        <td>{{.Name}}</td>
-        <td>{{.Description}}</td>
-        <td>{{.Price}}</td>
-        <td>{{.Quantity}}</td>
-      </tr>
-    {{end}}
-    </tbody>
-  </table>
-</section>
+  <section class="table">
+    <table>
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Descrição</th>
+          <th>Preço</th>
+          <th>Quantidade</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .}}
+        <tr>
+          <td>{{.Name}}</td>
+          <td>{{.Description}}</td>
+          <td>{{.Price}}</td>
+          <td>{{.Quantity}}</td>
+          <td><a href="/delete?id={{.ID}}">Remover produto</a></td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </section>
 
-<section class="button">
-  <a href="/new" class="btn btn-primary mb-2">Novo Produto</a>
-</section>
+  <section class="button">
+    <a href="/new" class="btn btn-primary mb-2">Novo Produto</a>
+  </section>
 
 </body>
 

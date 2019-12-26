@@ -17,6 +17,8 @@
   - [Modularizando o código](#modularizando-o-código)
   - [Criando novos produtos na loja](#criando-novos-produtos-na-loja)
     - [Buscando dados da Página](#buscando-dados-da-página)
+    - [Removendo produtos](#removendo-produtos)
+  - [Partials](#partials)
 
 ## Criando um servidor web
 
@@ -618,7 +620,6 @@ Veja que na nossa função, nós estamos utilizando o statement de `Prepare` do 
 Agora a única coisa que falta é rotearmos o nosso caminho `/insert` para a nossa função de inserção. Vamos editar o nosso `routes.go` e criar essa rota:
 
 ```go
-
 package routes
 
 import (
@@ -633,3 +634,110 @@ func LoadRoutes() {
 	http.HandleFunc("/insert", controllers.InsertNew)
 }
 ```
+
+### Removendo produtos
+
+Vamos criar primeiramente um novo botão no nosso template HTML com a seguinte tag:
+
+```html
+<td><a href="/delete?id={{.ID}}">Remover produto</a></td>
+```
+
+Veja que estamos já dentro do `range` de produtos que estamos passando então podemos utilizar o template `{{.ID}}`. Agora vamos até nosso controller e vamos criar uma função que deleta nossos produtos:
+
+```go
+func Delete(w http.ResponseWriter, r *http.Request) {
+	productId := r.URL.Query().Get("id")
+	models.RemoveProduct(productId)
+	http.Redirect(w, r, "/", 301)
+}
+```
+
+E vamos até o nosso Model de produto para poder criar a nossa função que, de fato vai remover o produto do banco de dados:
+
+```go
+func RemoveProduct(id string) {
+	db := localDB.ConnectDatabase()
+	removeQuery, err := db.Prepare("DELETE FROM products WHERE id = $1")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	removeQuery.Exec(id)
+	defer localDB.Close()
+}
+```
+
+Por fim vamos até nossas rotas e vamos criar mais uma rota para poder tratar a nossa chamada:
+
+```go// LoadRoutes loads all routes
+func LoadRoutes() {
+	http.HandleFunc("/", controllers.Index)
+	http.HandleFunc("/new", controllers.NewProduct)
+	http.HandleFunc("/insert", controllers.InsertNew)
+	http.HandleFunc("/delete", controllers.Delete)
+}
+```
+
+## Partials
+
+Nos nossos templates vamos ver que temos diversas partes duplicadas de código, por exemplo, a navbar. Então podemos criar template partials, para poder quebrar o HTML em várias partes e importá-las em outros lugares.
+
+Para isso, vamos criar um novo arquivo `_head.html` dentro da pasta templates e colocar o conteúdo do `<head>` das nossas páginas lá dentro:
+
+```html
+{{define "_head"}}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Loja</title>
+</head>
+{{end}}
+```
+
+Veja que estamos utilizando o `{{define}}` assim como usamos nos demais templates.
+
+Agora para poder importar este pedaço de código, vamos utilizar `{{template "_head"}}` no nosso template principal:
+
+```html{{ define "Index" }}
+{{template "_head"}}
+
+<body>
+  <section class="table">
+    <table>
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Descrição</th>
+          <th>Preço</th>
+          <th>Quantidade</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .}}
+        <tr>
+          <td>{{.Name}}</td>
+          <td>{{.Description}}</td>
+          <td>{{.Price}}</td>
+          <td>{{.Quantity}}</td>
+          <td><a href="/delete?id={{.ID}}">Remover produto</a></td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="button">
+    <a href="/new" class="btn btn-primary mb-2">Novo Produto</a>
+  </section>
+
+</body>
+
+</html>
+{{end}}
+```
+

@@ -20,6 +20,12 @@ func NewProduct(w http.ResponseWriter, _ *http.Request) {
 	_ = templates.ExecuteTemplate(w, "NewProduct", nil)
 }
 
+func Delete(w http.ResponseWriter, r *http.Request) {
+	productId := r.URL.Query().Get("id")
+	models.RemoveProduct(productId)
+	http.Redirect(w, r, "/", 301)
+}
+
 func InsertNew(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		return
