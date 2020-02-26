@@ -1,0 +1,28 @@
+syntax = "proto3";
+package meetings;
+
+message User {
+  string firstName = 1;
+  string lastName = 2;
+  string email = 3;
+
+  enum AddressType {
+    HOME = 0;
+    POSTAL = 1;
+    WORK = 2;
+  }
+
+  message Address {
+    string line1 = 1;
+    string line2 = 2;
+    string region = 3;
+    string city = 4;
+    string suburb = 5;
+    string code = 6;
+    AddressType type = 7;
+  }
+
+  repeated Address addresses = 4;
+}
+
+message Meeting { repeated User users = 1; }
