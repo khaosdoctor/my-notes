@@ -1,10 +1,23 @@
-# gRPC e protobuf
+# gRPC
 
 ## Sumário
 
+
+<!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
+
+<!-- code_chunk_output -->
+
 - [gRPC](#grpc)
   - [Sumário](#sumário)
-  - [O que é](#o-que-é)
+  - [O Que é?](#o-que-é)
+  - [Protobuf](#protobuf)
+  - [gRPC](#grpc-1)
+    - [Por que aprender gRPC](#por-que-aprender-grpc)
+    - [Ferramentas](#ferramentas)
+  - [Criando uma aplicação gRPC com Node.js](#criando-uma-aplicação-grpc-com-nodejs)
+
+<!-- /code_chunk_output -->
+
 
 ## O Que é?
 
@@ -45,114 +58,49 @@ Agora o resultado é simples, basta que mudemos as duas pessoas por dois sistema
 
 ## Protobuf
 
-Os *protocol buffers*, ou simplesmente, *protobuf*, são mecanismos para serializar dados estruturados. No gRPC eles são o modelo de serialização padrão, embora eles não precisem ser utilizados somente com o gRPC.
-
-### Utilizando protobufs
-
-Como o protobuf é utilizado para serializar dados, vamos ter que definir uma estrutura que vai representar a informação que queremos serializar. Para isso vamos definir em um arquivo `.proto`.
-
-```proto
-message User {
-  string firstName = 1;
-  string lastName = 2;
-  string email = 3;
-
-  enum AddressType {
-    HOME = 0;
-    POSTAL = 1;
-    WORK = 2;
-  }
-
-  message Address {
-    string line1 = 1;
-    string line2 = 2;
-    string region = 3;
-    string city = 4;
-    string suburb = 5;
-    string code = 6;
-    AddressType type = 7;
-  }
-
-  repeated Address addresses = 4;
-}
-```
-
-Para utilizar este arquivo, que vamos chamar de `meetings.proto`, vamos ter que instalar o `protoc`, que é o compilador do protobuf para diversas linguagens de programação.
-
-> Os links e guias para instalação do protoc podem ser encontrados [no repositório oficial](https://github.com/protocolbuffers/protobuf)
-
-> Para instalação no MacOS, você pode executar `brew install protobuf`
-
-Então, após termos o compilador instalado, podemos utilizar o serializador através do comando: `protoc --js_out=import_style=commonjs,binary:. meetings.proto`.
-
-> **Nota**: Isto é válido __somente__ para JavaScript
-
-Assim que o processo terminar, vamos ter um arquivo `meetings_pb.js` criado na mesma pasta.
-
-#### Utilizando protobufs com JS e TS
-
-Além disso, podemos utilizar uma biblioteca própria para manipulação de protobuf em Node.js chamada [protobufjs](https://www.npmjs.com/package/protobufjs). Ela facilita bastante a comunicação entre um cliente e um servidor utilizando protobuf.
-
-Com ele podemos utilizar uma série de formatos para poder criar nossos arquivos de _protobuf_, por exemplo, podemos criar e ler o arquivo `.proto` diretamente do arquivo `.js` através de sua API:
-
-```js
-// Veja o arquivo ./examples/protobuf-js/index.js
-const protobuf = require('protobufjs')
-const path = require('path')
-
-protobuf.load(path.resolve('../protobuf/meetings.proto'))
-  .then(start)
-  .catch(console.error)
-
-function start (root) {
-  const User = root.lookupType('meetings.User')
-  const payload = {
-    firstName: 'Lucas',
-    lastName: 'Santos',
-    addresses: [
-      {
-        line1: 'Rua X',
-        line2: 3540,
-        type: 0
-      }
-    ]
-  }
-
-  const message = User.fromObject(payload)
-  const buffer = User.encode(message).finish()
-  console.log(buffer, message)
-
-  const decoded = User.decode(buffer)
-  const obj = User.toObject(decoded)
-  console.log(decoded, obj)
-}
-```
-
-Ou então podemos rodar o comando `pbjs`, já incluso no pacote, na linha de comando da seguinte forma: `pbjs -t static-module -w commonjs -o compiledUser.js ../protobuf/meetings.proto`
-
-Isto criará um arquivo chamado `compiledUser.js` que vamos importar como importamos um módulo JS normalmente.
-
-```js
-const { meetings: { User } } = require('./compiledUser')
-
-const user = new User({
-  firstName: 'Lucas',
-  addresses: [new User.Address({ line1: 'Rua X' })]
-}
-)
-const err = User.verify(user)
-if (err) console.error(err)
-console.log(`Created user: ${user.firstName}`)
-
-const encoded = User.encode(user).finish()
-console.log(encoded)
-
-const decoded = User.decode(encoded)
-console.log(decoded)
-```
-
-Todas as funcionalidades tem sua contraparte em TypeScript, a vantagem é que podemos utilizar o sistema de tipos que é gerado no final para poder tipar os nossos próprios envios e retornos.
+Para saber mais sobre protobufs veja o [arquivo deste repositório](../protobuf/protobuf.md) que explica totalmente o funcionamento do mecanismo
 
 ## gRPC
 
-o gRPC é um framework RPC grátis e open-source
+O gRPC é um framework RPC grátis e open-source de RPC (**R**emote **P**rocedure **C**all). De acordo com a Wikipédia, um _RPC_ é definido da seguinte forma:
+
+> Em computação distribuída, um RPC é quando um programa de computador faz com que uma procedure (subrotina) seja executada em um espaço de endereçamento diferente (geralmente em outro computador em uma rede compartilhada), codificado como se fosse uma chamada de rotina local dentro do próprio sistema, sem que o programador codifique os detalhes de conexão de rede ou interação remota. Essencialmente, o programador escreve o mesmo código que escreveria se estivesse chamando uma procedure localmente. Esta é uma forma de interação cliente-servidor (quem chama é o cliente e o executor é o servidor), tipicamente implementado via sistema de requisição e resposta através de mensageria.
+
+O gRPC usa o protobuf que vimos no outro arquivo deste repositório. No resto, o gRPC pode ser sumarizado em uma série de tópicos:
+
+- Criado pelo Google
+- Se tornou open source através da CNCF, assim como o Kubernetes e o Helm
+- Suporte amplo para linguagens:
+  - C++
+  - Java
+  - Python
+  - Go
+  - C#
+  - Node.js
+  - Android
+  - Dart
+- O client pode executar o método na aplicação do servidor, como se fosse um objeto local, mesmo o servidor sendo outro computador da rede
+- Um serviço gRPC é definido por uma interface composta de serviços (com métodos, parâmetros e tipos de retorno) e mensagens (contratos de dados com tipos especificados)
+- A interface é implementada pelo servidor e executa como um serviço que aceita chamadas de clientes remotos
+- O client usa um _stub_ (que é uma representação exata da interface do servidor) para fazer as chamadas remotas
+- O servidores e clients são agnósticos de linguagens. Isso significa que o servidor pode ser implementado em Java e os clientes podem ser implementados em quaisquer outras linguagens suportadas
+- Protobuf é utilizado como linguagem de definição principal e padrão como uma _Linguagem de definição das interfaces_ e também como o modelo de troca de mensagens
+
+### Por que aprender gRPC
+
+- Possui um fit natural quando construímos APIs porque temos que ter um contrato de entrada e saída e também facilita na hora de podermos construir clients que podem se comunicar remotamente com uma chamada de função
+- O gRPC é reconhecido pela eficiência e baixa latência por conta de sua serialização e transferência binária
+
+Geralmente desenvolvemos três tipos de APIs:
+
+- Internas: Feito para uso interno ou de uma rede e aplicações bem definidas
+- Parceiras: São meio publicas e meio privadas, porque são feitas para integrarem sistemas terceiros em sistemas locais
+- Públicas: auto explicativo
+
+Inicialmente, o gRPC é mais útil para APIs internas, pois temos o controle de ambas as partes do sistema. Quanto mais tempo passa, mais empresas estão desenvolvendo APIs usando gRPC, então isso acaba levando para uma adoção em massa do protocolo.
+
+### Ferramentas
+
+Geralmente, quando estamos testando uma API, utilizamos ferramentas de request, como o `Postman`, `Insomnia` ou `PostWoman`, porém para as chamadas gRPC algumas não oferecem suporte. Por isso utilizamos o [bloomRPC](https://github.com/uw-labs/bloomrpc)
+
+## Criando uma aplicação gRPC com Node.js
