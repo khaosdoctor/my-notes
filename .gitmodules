@@ -1,3 +1,6 @@
 [submodule "vuejs/vuejs-test"]
 	path = vuejs/vuejs-test
 	url = https://github.com/khaosdoctor/vuejs-test
+[submodule "deno/examples/hello-world"]
+	path = deno/examples/hello-world
+	url = https://github.com/khaosdoctor/deno-hello-world
