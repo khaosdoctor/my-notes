@@ -4,3 +4,6 @@
 [submodule "deno/examples/hello-world"]
 	path = deno/examples/hello-world
 	url = https://github.com/khaosdoctor/deno-hello-world
+[submodule "deno/examples/deno-http-request"]
+	path = deno/examples/deno-http-request
+	url = https://github.com/khaosdoctor/deno-http-request
