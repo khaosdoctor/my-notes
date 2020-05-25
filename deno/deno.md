@@ -93,3 +93,26 @@ run:
 
 ## Fazendo uma request web
 
+Como podemos ver no [repositório de exemplo](./examples/deno-http-request), para fazer uma request com o Deno é mais simples do que com o Node.js porque não precisamos de um módulo externo para se comportar como o `fetch` do Browser. O Deno já possui o objeto `fetch` nativamente. Então podemo utilizá-lo logo de cara.
+
+No primeiro exemplo, vamos fazer uma requisição para a URL passada por parâmetro e depois vamos printar o resultado em JSON na tela:
+
+```typescript
+const url = Deno.args[0]
+const res = await fetch(url)
+
+const body = await res.json()
+console.log(body)
+```
+
+Note que podemos utilizar o Top-Level-Await que é uma especificação do ECMA262 que está vindo para o JS.
+
+Além disso podemos também transformar nossos dados em uma stream e carregá-los diretamente para o stdout à medida que eles são lidos:
+
+```typescript
+const url = Deno.args[0]
+const res = await fetch(url)
+
+const body = new Uint8Array(await res.arrayBuffer())
+Deno.stdout.write(body)
+```
