@@ -12,6 +12,7 @@
   - [Sumário](#sumário)
   - [O que é](#o-que-é)
   - [Comparando com o Node.js](#comparando-com-o-nodejs)
+    - [Por que o Deno surgiu](#por-que-o-deno-surgiu)
   - [Instalação](#instalação)
   - [Setup de ambiente](#setup-de-ambiente)
     - [VSCode](#vscode)
@@ -19,6 +20,9 @@
   - [Hello World](#hello-world)
     - [Utilizando scripts simples](#utilizando-scripts-simples)
   - [Fazendo uma request web](#fazendo-uma-request-web)
+  - [Lendo arquivos](#lendo-arquivos)
+  - [Copiando arquivos com a lib fs](#copiando-arquivos-com-a-lib-fs)
+  - [Referências](#referências)
 
 <!-- /code_chunk_output -->
 
@@ -154,7 +158,36 @@ const body = new Uint8Array(await res.arrayBuffer())
 Deno.stdout.write(body)
 ```
 
-# Referências
+## Lendo arquivos
+
+O Deno tem uma abstração chamada `Deno.File` que representa um arquivo no SO. Essa abstração raramente será utilizada de forma natural, porém o Deno também possui uma série de APIs nativas para a utilização em FS, como o módulo `fs` do Node, porém nativo da API.
+
+Para ler um arquivo basta executar o comando `Deno.open(filename)` e este comando vai te retornar uma instancia de `File` que pode ser manipulada com `Deno.copy`, o que isto faz é copiar o conteúdo de uma stream para outra:
+
+```typescript
+const filenames = Deno.args
+
+for (const filename of filenames) {
+  const file = await Deno.open(filename)
+  await Deno.copy(file, Deno.stdout)
+  file.close()
+}
+```
+
+Podemos criar um Makefile igual ao que criamos para o fetch:
+
+```makefile
+run:
+  deno run --allow-read index.ts $(FILE)
+```
+
+Depois temos que rodar com o comando: `make FILE=./arquivo`.
+
+## Copiando arquivos com a lib fs
+
+
+
+## Referências
 
 - https://stackoverflow.com/questions/61949441/difference-between-deno-and-nodejs
 - https://medium.com/@raj.fungus/what-is-deno-is-nodejs-dead-4fea8d447be9
