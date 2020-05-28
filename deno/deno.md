@@ -185,7 +185,26 @@ Depois temos que rodar com o comando: `make FILE=./arquivo`.
 
 ## Copiando arquivos com a lib fs
 
+O Deno possui uma lib de alto nível igual ao `fs` do Node, temos que importá-la no início do arquivo, vamos escolher somente as funções `copySync`, que copia o arquivo e a função `ensureDirSync` que cria uma pasta se não existir.
 
+Vamos também importar a stdlib `path` que é a mesma coisa do `path` do Node. Para podermos tratar os caminhos dos arquivos.
+
+```typescript
+import { copySync, ensureDirSync } from 'https://deno.land/std@0.53.0/fs/mod.ts'
+import * as path from 'https://deno.land/std/path/mod.ts'
+const { args: filenames, cwd } = Deno
+
+for (const filename of filenames) {
+  console.log(`Copying ${filename}`)
+  const dest = path.join(cwd(), '/copied/', `${filename}.dcp`)
+  ensureDirSync(path.join(cwd(), '/copied/'))
+  copySync(
+    filename,
+    dest,
+    { overwrite: true }
+  )
+}
+```
 
 ## Referências
 
