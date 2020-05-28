@@ -10,3 +10,6 @@
 [submodule "deno/examples/deno-read-file"]
 	path = deno/examples/deno-read-file
 	url = https://github.com/khaosdoctor/deno-read-file
+[submodule "deno/examples/deno-tcp-server"]
+	path = deno/examples/deno-tcp-server
+	url = https://github.com/khaosdoctor/deno-tcp-server
