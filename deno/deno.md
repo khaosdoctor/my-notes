@@ -31,21 +31,58 @@ As principais diferenças do Deno em relação ao Node são:
 - Executa TypeScript nativamente
 - Precisa de permissão explícita para poder executar alguns módulos, como rede e armazenamento
 - Não possui um sistema de gerenciamento de pacotes como o NPM
-  - Ao invés disso os pacotes são baixados diretamnte pela URL da lib
+  - Ao invés disso os pacotes são baixados diretamente pela URL da lib
+- `require` não é suportado
+  - Todos os módulos precisam ter `.ts` no final
 - Ele só possui um executável no final, o `deno`
 - Já possui algumas funcionalidades built-in como um inspetor de dependencias `deno info` e um formatador de código `deno fmt`
 - Todos os scripts podem sofrer um `bundle` em um único arquivo JS
 - Possui uma série de [módulos auditados pelo core team](https://github.com/denoland/deno/tree/master/std) que são garantidos de funcionarem com o Deno
+  - Isso faz com que a API do core seja bem menor
+  - Enquanto disponibiliza uma stdlib sem dependências externas
 
 ## Comparando com o Node.js
+
+![](2020-05-28-15-32-33.png)
 
 - Deno não usa NPM
 - Deno não usa `package.json`
 - Deno precisa de permissões explicitas para `fs`, `network` e acesso a qualquer coisa que seja do ambiente
 - O Deno __sempre__ vai dar um `panic` e morrer em erros não tratados
 - Usa `import` (ES Modules) ao invés do `require()` do CommonJS e todos os módulos são importados por URLs como `import * as log from "https://deno.land/std/log/mod.ts"`
+- O Deno está atrás de uma compatibilidade maior com Browsers através de mais WebAPIs
+- Deno tem Top-Level Await
+- Deno é construído em Rust então o próprio ecossistema da linguagem e a forma como o package manager do rust funciona pode permitir que usuários criem suas versões modificadas so Deno, como, por exemplo, um Electron
 
 Além disso todos os códigos remotos são baixados e cacheados na primeira execução e não são mais atualizados até o código do usuário ser executado com a flag `--reload`. O que significa que você pode baixar e atualizar seus pacotes mesmo sem rede.
+
+Uma outra coisa interessante que o Deno permite é a execução de código pela linha de comando direto de uma URL, por exemplo: `deno run --allow-net=example.com https://deno.land/std/examples/curl.ts https://example.com`, que permite executar um código da stdlib diretamente passando como permissão somente o site necessário:
+
+![](2020-05-28-15-46-16.png)
+
+Se tentarmos executar em outro site:
+
+![](2020-05-28-15-46-36.png)
+
+### Por que o Deno surgiu
+
+Em uma [palestra](https://www.youtube.com/watch?v=M3BM9TB-8yA) em 2018, Ryan Dahl citou 10 coisas que ele se arrependeu de ter feito no Node.js:
+
+1. Não ter continuado com a API de promises em 2009
+2. Segurança
+    - O V8 em si é bastante seguro
+    - Mas outras aplicações externas não deveriam ter acesso a todo o seu sistema de arquivos ou então sua rede, por exemplo, seu linter não precisaria disso
+3. O sistema de build (GYP)
+4. O Package.json
+    - Contém muita informação extra desnecessária
+    - Centralização de pacotes
+5. Node Modules
+    - Pesado
+    - Repetitivo
+    - Complica o algoritmo de resolução de módulos
+6. `require` sem o `.js` no final do arquivo
+    - Adiciona complexidade ao algoritmo de resolução de módulos para entender o que o usuário quis dizer
+7. `index.js` como entrypoint
 
 ## Instalação
 
@@ -116,3 +153,13 @@ const res = await fetch(url)
 const body = new Uint8Array(await res.arrayBuffer())
 Deno.stdout.write(body)
 ```
+
+# Referências
+
+- https://stackoverflow.com/questions/61949441/difference-between-deno-and-nodejs
+- https://medium.com/@raj.fungus/what-is-deno-is-nodejs-dead-4fea8d447be9
+- https://medium.com/@rlogicaltech/whats-deno-understanding-of-deno-framework-cab06b2b11b2
+- https://crunchskills.com/deno-vs-node/
+- https://www.youtube.com/watch?v=M3BM9TB-8yA
+- https://deno.land/manual/getting_started/first_steps
+- https://makefiletutorial.com/
