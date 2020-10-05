@@ -17,6 +17,14 @@
   - [Análise de concorrentes](#análise-de-concorrentes)
   - [Funil de buscas](#funil-de-buscas)
     - [Palavras chave](#palavras-chave)
+  - [Momentos de busca](#momentos-de-busca)
+  - [Tipos de resultados de busca](#tipos-de-resultados-de-busca)
+  - [Hierarquia de textos](#hierarquia-de-textos)
+  - [Tempo de carregamento](#tempo-de-carregamento)
+  - [SEO Para imagens e vídeos](#seo-para-imagens-e-vídeos)
+    - [Otimização de imagens](#otimização-de-imagens)
+    - [Cuidados com imagens](#cuidados-com-imagens)
+    - [Otimização de vídeos](#otimização-de-vídeos)
 
 <!-- /code_chunk_output -->
 
@@ -81,3 +89,59 @@ Utilizando a ferramenta gratuita [UberSuggest](https://app.neilpatel.com/pt/uber
 A própria ferramenta mostra o volume de buscas de uma determinada palavra chave. É importante ter palavras chave com um volume de buscas maior, porém mais difíceis de ranquear, bem como palavras chave com um volume de buscas menor, mas ao mesmo tempo mais simples de serem ranqueadas.
 
 Por exemplo: "Curso de violão" tem mais buscas, porém é mais complicada de ranquear porque é muito genérica. Já "Curso de violão iniciante" tem menos buscas, mas é mais fácil de ranquear porque é mais específica.
+
+## Momentos de busca
+
+Os momentos de busca são extremamente importantes porque o motor de busca vai observar o que está presente no seu site.
+
+O conceito de momentos de busca é um conceito importante dividido em três partes: __Começo, meio e final do funil__.
+
+No começo do funil, serão os usuários que estarão buscando uma cauda mais longa, por exemplo, "Qual é a melhor linguagem de programação para aprender". Ou seja, o usuário ainda não sabe o que ele está procurando. Portanto temos uma palavra chave mais longa.
+
+O meio do funil é quando o usuário já tem uma ideia mas ao mesmo tempo ainda está indeciso, por exemplo, "JavaScript ou Golang?".
+
+E o final do funil é a decisão final do usuário. Por exemplo, "Como aprender JavaScript".
+
+É importante que seu site tenha as três informações para que o usuário se sinta amparado pelas suas escolhas.
+
+## Tipos de resultados de busca
+
+Existem diversos tipos de resultado de busca. Temos os anúncios, que sempre ocupam os primeiros resultados. Temos os vídeos, resultados de localização e então os anúncios orgânicos.
+
+Então a ideia seria sempre mostrar o que o usuário está procurando, sendo o mais direto possível.
+
+## Hierarquia de textos
+
+As header tags `<h1>` até `<h6>`, são importantes porque podemos dizer ao buscador qual é a parte mais importante do site. as tags `h1` são as mais importantes e só pode haver uma delas dentro de cada página. As demais tags são relacionadas a outros títulos.
+
+Geralmente as tags `h2` são subtitulos relacionados a categorias enquanto as tags `h3` são os temas dessas categorias.
+
+## Tempo de carregamento
+
+O tempo de carregamento é uma das partes mais importantes. Uma página lenta vai afastar o possível cliente. Um site gratuito para verificação de tempos é o [Web Page Test](https://www.webpagetest.org/)
+
+## SEO Para imagens e vídeos
+
+### Otimização de imagens
+
+Imagens e vídeos são muito importantes para poder mostrar o que seu conteúdo está dizendo. Buscadores conseguem identificar imagens e mostrá-las para os usuários de forma estruturada.
+
+As principais tags para podermos ranquear bem no google são as propriedades `alt` e `title` de uma image. Então devemos seguir o checklist:
+
+1. A imagem deve sempre possuir um nome que ilustra o que ela está dizendo. Não utilize espaços, sempre `-` no lugar
+2. A propriedade `alt` deve dizer exatamente o que existe na imagem, também sem espaços, usando apenas `-`
+3. A propriedade `title` é o texto que aparecerá quando o usuário fizer um hover por cima da imagem, neste texto podemos utilizar espaços para descrever exatamente o que está acontecendo.
+
+### Cuidados com imagens
+
+As imagens são pesadas, portanto elas demoram muito para serem carregadas. Uma imagem otimizada tem 72dpi.
+
+Uma outra forma é reduzir o tamanho da mesma reduzindo metadados. Sites como o [TinyPNG](https://tinypng.com) podem fazer a redução da imagem, comprimindo a imagem.
+
+É importante que as imagens sejam otimizadas para manter entre 200kb ou menos.
+
+### Otimização de vídeos
+
+Em vídeos do YouTube (que é uma das maiores ferramentas de busca do mundo), temos que também ter as mesmas ideias do SEO para o site.
+
+Temos que ter as primeiras três linhas com uma pequena descrição, após as primeiras três linhas o Youtube mostra o botão "ver mais". Abaixo disso temos que ter os links diretos para as páginas relevantes, não apenas à home do site.
