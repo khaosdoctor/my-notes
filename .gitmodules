@@ -13,3 +13,6 @@
 [submodule "deno/examples/deno-tcp-server"]
 	path = deno/examples/deno-tcp-server
 	url = https://github.com/khaosdoctor/deno-tcp-server
+[submodule "electron/electron-learn-project"]
+	path = electron/electron-learn-project
+	url = https://github.com/khaosdoctor/electron-learn-project
