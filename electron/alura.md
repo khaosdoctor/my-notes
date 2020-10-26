@@ -32,4 +32,20 @@ Fora que é muito mais fácil para encontrar pessoas para realizar o desenvolvim
 
 ## Instalação
 
-Para instalar o Electron, precisamos instalar o Node.js
+Para instalar o Electron, precisamos instalar o Node.js e depois iniciar um novo projeto com `npm init` em uma pasta vazia, então podemos instalar o electron como uma dependencia normal do node.
+
+Então podemos adicionar o Electron (aqui neste documento, na versão 1.6.1) através de `npm i electron`, depois podemos criar um novo arquivo chamado `main.js` e escrever um pequeno script de testes:
+
+```js
+console.log('hello world')
+process.exit(0)
+```
+
+E então modificamos o nosso arquivo `package.json` para adicionarmos o script de inicialização da seguinte forma:
+
+```json
+"scripts": {
+  "start": "electron ."
+},
+```
+
