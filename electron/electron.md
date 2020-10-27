@@ -15,6 +15,12 @@
   - [Introdução ao Electron](#introdução-ao-electron)
     - [Por que usar Electron?](#por-que-usar-electron)
   - [Instalação](#instalação)
+  - [Criando uma aplicação](#criando-uma-aplicação)
+  - [Distribuindo a aplicação](#distribuindo-a-aplicação)
+  - [Arquitetura do Electron](#arquitetura-do-electron)
+    - [Comunicando ambos os processos](#comunicando-ambos-os-processos)
+    - [Utilizando o Node](#utilizando-o-node)
+- [Recursos Úteis](#recursos-úteis)
 
 <!-- /code_chunk_output -->
 
@@ -196,3 +202,11 @@ console.log(root)
 ```
 
 Se você quiser utilizar um módulo, basta instalá-lo como dependência `npm i gotql` e depois importar normalmente pela aplicação.
+
+# Recursos Úteis
+
+- [Awesome List de Electron](https://github.com/sindresorhus/awesome-electron)
+- [Electron Packager](https://github.com/electron/electron-packager)
+- [Code Sign](https://www.electronjs.org/docs/tutorial/code-signing)
+- [Guias oficiais](https://www.electronjs.org/docs/tutorial)
+- [Documentação oficial](https://www.electronjs.org/docs)
