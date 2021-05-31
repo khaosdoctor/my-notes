@@ -46,3 +46,53 @@ Outra parte importante do processo é que os `snapshots` são partes que podem s
     - É uma interface com o runC
 - **Container runtimes:** são ferramentas como Docker, CRI-O, RKT, containerd
 - **Container Runtime ENGINES:** São ferramentas que os runtimes se conectam, como o runC e o kata
+
+## Deep Dive
+
+> Material Relacionado: https://www.youtube.com/watch?v=3AynH3c0F8M
+
+O containerd tem uma arquitetura dividida em vários serviços:
+
+![](containerd-arch.png)
+
+- **Storage**: O serviço de storage é o responsável por armazenar o conteúdo e snapshots das imagens.
+- **Metadata**: Armazena os metadados e ponteiros de imagens e containers que vão apontar para o serviço de storage para buscar seu conteúdo.
+- **Tasks**: A Task é o que executa o container de fato.
+
+Quando damos um pull em uma imagem, seguimos um fluxo parecido com este:
+
+![](containerd-pull.png)
+
+A ideia é que vamos puxar o conteúdo do repositório remoto através do fluxo que já fizemos lá no início do arquivo, e vamos armazená-lo no serviço de content (storage), as imagens então vão referênciar os layers desse content através de seus hashes.
+
+Depois vamos descompactar estes layers em snapshots e montá-los em algum lugar do disco.
+
+### Snapshots
+
+Snapshots são instruções de como construir um root filesystem no container. Nós podemos ver como eles funcionam através de função `ctr c info <nome do container> | jq -r .Spec.value | base64 -d | jq .` para mostrar o arquivo de configuração do container.
+
+Snapshots são transações de diffs, podemos commitar uma transação de um layer e assim sucessivamente. Listamos o snapshots com `ctr snapshot ls`.
+
+### Metadata
+
+> Conteúdo relacionado: https://www.youtube.com/watch?v=4f_2u6rIDTk
+
+Os metadados de imagem são apenas ponteiros para contents, os contents em si são manifestos que apontam para imagens e layers.
+
+![](containerd-metadata.png)
+
+Quando você remove uma imagem, temos que coletar o lixo porque o metadado só vai apagar a referencia:
+
+![](containerd-metadata-collection.png)
+
+O containerd possui um garbage collector que vai apagar referências não utilizadas automaticamente. Então basta deletar a imagem ou o metadado correspondente que todos os layers serão removidos.
+
+### Executando um container
+
+Quando executamos um container no containerd, o que estamos fazendo é montando o sistema de arquivos pelo client. Então o serviço de tasks do containerd entra em ação buscando esses mounts e buscando as configurações do container dos metadados do container, isso é passado para o runtime que inicia o container de acordo com o SO:
+
+![](containerd-tasks.png)
+
+Para iniciar um container, vamos sempre iniciar pelo comando `run`, que irá inicializar a imagem e o snapshot. O snapshot por sua vez vai criar um setup dos containers e iniciar a task que vai executar o container para o runtime.
+
+![](containerd-start.png)
