@@ -458,7 +458,7 @@ O Go possui um pacote chamado `time` que possui uma função `sleep`, essa funç
 ```go
 for _, site := range sites {
   testaSite(site)
-  time.sleep(5 = time.Second)
+  time.Sleep(5 * time.Second)
 }
 ```
 
