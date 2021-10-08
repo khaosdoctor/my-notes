@@ -5,3 +5,5 @@ package-lock.json
 yarn-error.log
 typescript/alurabank/app/js/
 .idea/
+go.sum
+dist/
