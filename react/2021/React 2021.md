@@ -19,6 +19,8 @@
     - [Ambientes do Webpack](#ambientes-do-webpack)
     - [Importar arquivos CSS](#importar-arquivos-css)
     - [Sass](#sass)
+  - [Iniciando a aplicação](#iniciando-a-aplicação)
+    - [Componentes](#componentes)
 
 <!-- /code_chunk_output -->
 
@@ -482,5 +484,40 @@ module.exports = {
       }
     ]
   }
+}
+```
+
+## Iniciando a aplicação
+
+Tudo isso foi apenas para configurar o React, vamos agora começar a desenvolver a nossa app.
+
+### Componentes
+
+O recurso principal do React são os componentes, um componente é uma função que retorna um elemento HTML. Uma convenção é sempre criar um componente com a primeira letra maiúscula e sempre um componente por arquivo.
+
+Outra boa prática é sempre criar uma pasta `components` para colocar os componentes dentro. Para começar, vamos criar um componente chamado `RepositoryList`:
+
+```jsx
+export function RepositoryList() {
+  return (
+    <section className="repository-list">
+      <h1>Lista de repositórios</h1>
+      <ul>
+        <li>
+          <strong>form</strong>
+        </li>
+      </ul>
+    </section>
+  )
+}
+```
+
+Agora podemos somente retornar ele no nosso componente `App`:
+
+```jsx
+import { RepositoryList } from './components/RepositoryList'
+
+export function App () {
+  return <RepositoryList />
 }
 ```
