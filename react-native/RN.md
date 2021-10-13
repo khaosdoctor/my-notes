@@ -30,3 +30,8 @@ Veja que para cada um dos elementos criados, o RN vai criar um elemento nativo d
 Vamos usar o [VSCode](http://code.visualstudio.com).
 
 Para configurar o RN vamos usar o manual da RocketSeat [neste link](https://react-native.rocketseat.dev/).
+
+## Criando um projeto com o CLI
+
+Podemos criar um novo projeto do RN usando o comando `npx react-native init <nome>`, isso vai criar ua pasta do projeto e tudo o que é necessário para ele rodar.
+
