@@ -21,4 +21,6 @@ O blockchain foi criado originalmente para poder satisfazer o problema de confia
 hostil. A criação de sistemas de contabilidade, por exemplo, o Bitcoin é um consenso entre todas as pessoas para um modelo de moeda aonde é possível
 trocar informações financeiras sem nenhum intermediário. Ou seja, cada modelo de moeda é uma plataforma de blockchain.
 
+> Mais sobre isso em um vídeo que fiz só para isso no meu canal com todos os links e pesquisas necessárias
 
+[![Criando uma blockchain thumbnail](http://img.youtube.com/vi/ztQEaQ06GYs/0.jpg)](http://www.youtube.com/watch?v=ztQEaQ06GYs "Bora codar uma blockchain do zero")
