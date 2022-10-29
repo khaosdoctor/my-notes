@@ -744,7 +744,6 @@ promise 3
 promise 4
 setInterval
 setTimeout 2
-setInterval
 promise5
 promise6
 ```
