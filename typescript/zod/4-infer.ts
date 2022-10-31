@@ -1,4 +1,5 @@
 // CODE
+import { expect, it } from 'vitest'
 import { z } from "zod"
 
 const StarWarsPerson = z.object({
@@ -14,3 +15,7 @@ const logStarWarsPeopleResults = (data: z.infer<typeof StarWarsPeopleResults>) =
     console.log(person.name)
   })
 }
+
+it('should not have any test', () => {
+  expect(true).toBe(true)
+})
