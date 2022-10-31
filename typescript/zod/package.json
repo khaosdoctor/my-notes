@@ -1,0 +1,16 @@
+{
+  "name": "zod",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "keywords": [],
+  "author": "Lucas Santos <hello@lsantos.dev> (https://lsantos.dev/)",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "vitest": "^0.24.4",
+    "zod": "^3.19.1"
+  }
+}
