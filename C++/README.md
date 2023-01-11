@@ -14,6 +14,7 @@
   - [Printing out](#printing-out)
   - [Reading in](#reading-in)
   - [Variables](#variables)
+  - [Strings](#strings)
 
 <!-- /code_chunk_output -->
 
@@ -44,7 +45,17 @@ int main() {
 }
 ```
 
-The `std::cout` is a static call to the `cout` object in the `iostream` header file. We use `<<` to input data in the output stream and `cin.ignore()` to ignore all input and also will stop the program from exiting immediately.
+The `std::cout` is a static call to the `cout` object in the `iostream` header file. We use `<<` to input data in the output stream and `cin.ignore()` to ignore all input and also will stop the program from exiting immediately. Also we can use `<<` to concatenate strings, since it's all a stream.
+
+```cpp
+#include <iostream>
+
+int main() {
+  std::cout << "Hey" << " I am" << " concatenated.";
+  std::cin.ignore();
+  return 0;
+}
+```
 
 ## Reading in
 
@@ -118,6 +129,67 @@ To declare a string variable, we need to import the `string` header file and use
 
 int main() {
   std::string name = "John";
+  return 0;
+}
+```
+
+## Strings
+
+The `String` class is not only used to store strings, but it is also used to manipulate strings. For example, we can use the `length()` method to get the length of a string:
+
+```cpp
+#include <iostream>
+#include <string>
+
+int main()
+{
+  std::string name;
+  std::cout << "Enter your name: ";
+  std::cin >> name;
+  std::cout << "Hello " << name << std::endl;
+  std::cout << "Your name is " << name.length() << " characters long." << std::endl;
+  std::cin.ignore();
+  return 0;
+}
+```
+
+We can also get the first or last character of a string using the method `front()` or `back()`:
+
+```cpp
+#include <iostream>
+#include <string>
+
+int main()
+{
+  std::string name;
+  std::cout << "Enter your name: ";
+  std::cin >> name;
+  std::cout << "Hello " << name << std::endl;
+  std::cout << "Your name is " << name.length() << " characters long." << std::endl;
+  std::cout << "The first character of your name is " << name.front() << std::endl;
+  std::cout << "The last character of your name is " << name.back() << std::endl;
+  std::cin.ignore();
+  return 0;
+}
+```
+
+We can also use `append()` to include or modify the string:
+
+```cpp
+#include <iostream>
+#include <string>
+
+int main()
+{
+  std::string name;
+  std::cout << "Enter your name: ";
+  std::cin >> name;
+  std::cout << "Hello " << name << std::endl;
+  std::cout << "Your name is " << name.length() << " characters long." << std::endl;
+  std::cout << "The first character of your name is " << name.front() << std::endl;
+  std::cout << "The last character of your name is " << name.back() << std::endl;
+  std::cout << "I'll call you " << name.append(" The Great") << std::endl;
+  std::cin.ignore();
   return 0;
 }
 ```
