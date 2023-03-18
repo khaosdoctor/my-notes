@@ -254,3 +254,225 @@ export const validateFormInput = (values: unknown) => {
 }
 ```
 
+## Enums
+
+Podemos também definir enumeradores para o Zod entender que um campo só pode receber um valor específico, por exemplo:
+
+```ts
+import { expect, it } from "vitest";
+import { z } from "zod";
+
+const Form = z.object({
+  repoName: z.string(),
+  privacyLevel: z.string(),
+  //              ^ 🕵️‍♂️
+});
+
+export const validateFormInput = (values: unknown) => {
+  const parsedData = Form.parse(values);
+
+  return parsedData;
+};
+```
+
+Neste caso como podemos fazer para que `privacyLevel` seja uma de duas strings: `Public` ou `Private`?
+
+Podemos adicionar um `z.enum`:
+
+```ts
+// CODE
+
+import { expect, it } from "vitest"
+import { z } from "zod"
+
+const Form = z.object({
+  repoName: z.string(),
+  privacyLevel: z.enum(['public', 'private'])
+})
+
+export const validateFormInput = (values: unknown) => {
+  const parsedData = Form.parse(values)
+
+  return parsedData
+}
+```
+
+Veja que estamos passando um array para esse `z.enum` e ele vai entender que o campo `privacyLevel` só pode receber um desses valores.
+
+Além disso, podemos jogar esses valores em uma constante e usar ela no `z.enum`:
+
+```ts
+const VALUES = ["Salmon", "Tuna", "Trout"] as const;
+const FishEnum = z.enum(VALUES);
+```
+
+## Unions e literals
+
+Podemos também usar o `z.union` para definir que um campo pode receber um tipo ou outro, por exemplo:
+
+```ts
+const Form = z.object({
+  repoName: z.string(),
+  privacyLevel: z.union([z.literal("private"), z.literal("public")]),
+})
+```
+
+Veja que estamos passando um array para o `z.union` e dentro deste array estamos passando dois tipos literais: `z.literal("private")` e `z.literal("public")`. O `z.union` vai entender que o campo `privacyLevel` pode receber um desses dois tipos literais.
+
+## Tipos complexos
+
+O Zod permite que você utilize validações pré prontas, como URL, Email e etc. O que podemos fazer para transformar esse formulário:
+
+```ts
+import { expect, it } from "vitest";
+import { z } from "zod";
+
+const Form = z.object({
+  name: z.string(),
+  //             ^ 🕵️‍♂️
+  phoneNumber: z.string().optional(),
+  //                    ^ 🕵️‍♂️
+  email: z.string(),
+  //              ^ 🕵️‍♂️
+  website: z.string().optional(),
+  //                ^ 🕵️‍♂️
+});
+
+export const validateFormInput = (values: unknown) => {
+  const parsedData = Form.parse(values);
+
+  return parsedData;
+};
+```
+
+Em um formulário que só aceita valores válidos? Podemos usar o `z.string().url()` para validar se o campo `website` é uma URL válida e o `z.string().email()` para validar se o campo `email` é um email válido:
+
+```ts
+// CODE
+
+import { expect, it } from "vitest"
+import { z } from "zod"
+
+const Form = z.object({
+  name: z.string(),
+  //             ^ 🕵️‍♂️
+  phoneNumber: z.string().min(8).max(11).optional(),
+  //                    ^ 🕵️‍♂️
+  email: z.string().email(),
+  //              ^ 🕵️‍♂️
+  website: z.string().url().optional(),
+  //                ^ 🕵️‍♂️
+})
+
+export const validateFormInput = (values: unknown) => {
+  const parsedData = Form.parse(values)
+
+  return parsedData
+}
+```
+
+Veja que estamos validando o campo `phoneNumber` para que ele tenha no mínimo 8 caracteres e no máximo 11 caracteres, que é um número brasileiro de telefone, porém podemos usar também `z.regex` para validar se o campo `phoneNumber` é um número de telefone válido:
+
+```ts
+// regex para telefone brasileiro
+const PHONE_REGEX = /^\([1-9]{2}\) [2-9][0-9]{3,4}\-[0-9]{4}$/;
+const Form = z.object({
+  name: z.string(),
+  //             ^ 🕵️‍♂️
+  phoneNumber: z.string().regex(PHONE_REGEX).optional(),
+  //                    ^ 🕵️‍♂️
+  email: z.string().email(),
+  //              ^ 🕵️‍♂️
+  website: z.string().url().optional(),
+  //                ^ 🕵️‍♂️
+});
+```
+
+## Extends e Merge
+
+Podemos também usar o `z.extend` para extender um schema e o `z.merge` para mesclar dois schemas:
+
+```ts
+const ObjectWithId = z.object({
+  id: z.string().uuid(),
+});
+
+const User = ObjectWithId.extend({
+  name: z.string(),
+});
+
+const Post = ObjectWithId.extend({
+  title: z.string(),
+  body: z.string(),
+});
+
+const Comment = ObjectWithId.extend({
+  text: z.string(),
+});
+```
+
+O objeto final de cada um vai ser o `ObjectWithId` com as propriedades adicionais que definimos no `extend`. Além disso podemos também mesclar dois schemas usando o `z.merge`:
+
+```ts
+const User = ObjectWithId.merge(
+  z.object({
+    name: z.string(),
+  }),
+);
+```
+
+Diferente do `z.extend` o `z.merge` vai mesclar os dois schemas, ou seja, o objeto final vai ser o `ObjectWithId` com as propriedades do `z.object` que definimos no `merge`. A maior diferença entre eles é que o `z.extend` vai sobrescrever as propriedades do schema que você está extendendo, já o `z.merge` vai mesclar os dois schemas.
+
+## Transform
+
+E se precisarmos fazer alguma transformação logo que recebemos os dados? Podemos usar o `z.transform` para fazer isso. Vamos imaginar que precisamos de uma nova propriedade no nosso objeto que é o `nameAsArray`, essa propriedade vai pegar a propriedade `name` que já existe e transformar em um array de strings:
+
+```ts
+import { expect, it } from "vitest"
+import { z } from "zod"
+
+const StarWarsPerson = z.object({
+  name: z.string(),
+})
+
+const StarWarsPeopleResults = z.object({
+  results: z.array(StarWarsPerson),
+})
+
+export const fetchStarWarsPeople = async () => {
+  const data = await fetch("https://swapi.dev/api/people/").then((res) =>
+    res.json(),
+  )
+
+  const parsedData = StarWarsPeopleResults.parse(data)
+
+  return parsedData.results
+}
+```
+
+Agora vamos usar o `z.transform` para transformar o `name` em um array de strings:
+
+```ts
+import { z } from "zod"
+
+const StarWarsPerson = z.object({
+  name: z.string(),
+}).transform((person) => ({
+  ...person,
+  nameAsArray: person.name.split(" ")
+}))
+
+const StarWarsPeopleResults = z.object({
+  results: z.array(StarWarsPerson),
+})
+
+export const fetchStarWarsPeople = async () => {
+  const data = await fetch("https://swapi.dev/api/people/").then((res) =>
+    res.json(),
+  )
+
+  const parsedData = StarWarsPeopleResults.parse(data)
+
+  return parsedData.results
+}
+```

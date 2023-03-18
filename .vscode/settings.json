@@ -4,5 +4,23 @@
     "MD025": {
       "front_matter_title": ""
     }
+  },
+  "files.associations": {
+    "*.ejs": "html",
+    "*.blade.php": "laravel-blade",
+    "*.yml.*": "yaml",
+    "*.pug": "jade",
+    "*.jade": "jade",
+    ".env": "ini",
+    "*.variables": "less",
+    "*.overrides": "less",
+    ".env-e2e": "ini",
+    ".envrc.*": "shellscript",
+    "*.sql": "sql",
+    "*.html": "html",
+    ".nycrc": "json",
+    "*.jsx": "javascriptreact",
+    ".gitexcludes": "gitignore",
+    "string": "cpp"
   }
 }
